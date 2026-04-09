@@ -25,9 +25,12 @@ import { showSuccess } from '@/utils/toast';
 
 const Index = () => {
   const [settings, setSettings] = React.useState({
+    companyName: 'LIDER REFRIGERAÇÃO',
     whatsapp: '11999999999',
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
+    latitude: '',
+    longitude: '',
     banners: [],
     carouselDelay: 6,
     aboutYears: '15+',
@@ -55,6 +58,10 @@ const Index = () => {
       contactSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const mapsUrl = settings.latitude && settings.longitude 
+    ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -184,13 +191,18 @@ const Index = () => {
                       <p className="text-xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-500 p-3 rounded-xl"><MapPin size={24} /></div>
+                  <a 
+                    href={mapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-4 group"
+                  >
+                    <div className="bg-blue-500 p-3 rounded-xl group-hover:bg-blue-400 transition-colors"><MapPin size={24} /></div>
                     <div>
-                      <p className="text-blue-200 text-sm">Endereço</p>
-                      <p className="text-xl font-bold">{settings.address}</p>
+                      <p className="text-blue-200 text-sm">Endereço (Ver no Mapa)</p>
+                      <p className="text-xl font-bold group-hover:underline">{settings.address}</p>
                     </div>
-                  </div>
+                  </a>
                 </div>
               </div>
               <div className="p-8 lg:p-12">

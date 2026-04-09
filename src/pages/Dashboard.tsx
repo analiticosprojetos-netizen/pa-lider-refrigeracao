@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,6 +93,8 @@ const Dashboard = () => {
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     cnpj: '00.000.000/0001-00',
+    latitude: '',
+    longitude: '',
     banners: [] as Banner[],
     carouselDelay: 6,
     aboutYears: '15+',
@@ -884,6 +886,23 @@ const Dashboard = () => {
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                          <div className="col-span-2 flex items-center gap-2 mb-2">
+                            <MapPin size={16} className="text-blue-600" />
+                            <span className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Localização (Google Maps)</span>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Latitude</label>
+                            <Input value={siteSettings.latitude} onChange={(e) => setSiteSettings({...siteSettings, latitude: e.target.value})} placeholder="-18.9723105" className="dark:bg-slate-950 dark:border-slate-800" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Longitude</label>
+                            <Input value={siteSettings.longitude} onChange={(e) => setSiteSettings({...siteSettings, longitude: e.target.value})} placeholder="-48.3720316" className="dark:bg-slate-950 dark:border-slate-800" />
+                          </div>
+                          <p className="col-span-2 text-[10px] text-gray-500 italic mt-2">Ao preencher, o endereço no site abrirá o Google Maps automaticamente.</p>
+                        </div>
+
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
                       </form>
                     </CardContent>
