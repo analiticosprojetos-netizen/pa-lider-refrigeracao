@@ -41,6 +41,13 @@ const Index = () => {
     aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
   });
 
+  const [contactForm, setContactForm] = React.useState({
+    name: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+
   React.useEffect(() => {
     const saved = localStorage.getItem('lider_site_settings');
     if (saved) {
@@ -50,8 +57,42 @@ const Index = () => {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    showSuccess('Mensagem enviada com sucesso! Entraremos em contato em breve.');
-    (e.target as HTMLFormElement).reset();
+    
+    // Criar um novo "Orçamento/Lead" a partir da mensagem do site
+    const newLead = {
+      id: `SITE-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
+      date: new Date().toLocaleString(),
+      status: 'Pendente',
+      clientName: contactForm.name,
+      phone: contactForm.phone,
+      email: '',
+      document: '',
+      plate: 'SITE',
+      vehicleModel: 'Mensagem via Site',
+      equipBrand: '',
+      equipModel: '',
+      serviceType: contactForm.subject || 'Contato Site',
+      problem: contactForm.message,
+      diagnosis: '',
+      travelValue: 0,
+      warranty: 'A definir',
+      technician: 'Atendimento Site',
+      observations: 'Mensagem recebida pelo formulário de contato do site.',
+      services: [],
+      parts: [],
+      partsValue: 0,
+      servicesValue: 0,
+      total: 0
+    };
+
+    // Salvar no histórico de orçamentos
+    const savedOrders = localStorage.getItem('lider_orders');
+    const orders = savedOrders ? JSON.parse(savedOrders) : [];
+    const updatedOrders = [newLead, ...orders];
+    localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+
+    showSuccess('Mensagem enviada! Você pode visualizá-la na aba de Orçamentos da Gestão.');
+    setContactForm({ name: '', phone: '', subject: '', message: '' });
   };
 
   const scrollToContact = () => {
@@ -230,11 +271,32 @@ const Index = () => {
               <div className="p-8 lg:p-12">
                 <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input placeholder="Nome" required />
-                    <Input placeholder="Telefone" required />
+                    <Input 
+                      placeholder="Nome" 
+                      required 
+                      value={contactForm.name}
+                      onChange={e => setContactForm({...contactForm, name: e.target.value})}
+                    />
+                    <Input 
+                      placeholder="Telefone" 
+                      required 
+                      value={contactForm.phone}
+                      onChange={e => setContactForm({...contactForm, phone: e.target.value})}
+                    />
                   </div>
-                  <Input placeholder="Assunto" required />
-                  <Textarea placeholder="Mensagem..." className="min-h-[120px]" required />
+                  <Input 
+                    placeholder="Assunto" 
+                    required 
+                    value={contactForm.subject}
+                    onChange={e => setContactForm({...contactForm, subject: e.target.value})}
+                  />
+                  <Textarea 
+                    placeholder="Mensagem..." 
+                    className="min-h-[120px]" 
+                    required 
+                    value={contactForm.message}
+                    onChange={e => setContactForm({...contactForm, message: e.target.value})}
+                  />
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg font-bold">
                     <MessageSquare className="mr-2" /> Enviar Mensagem
                   </Button>
