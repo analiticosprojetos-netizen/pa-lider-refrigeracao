@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, User, Truck, AlertCircle, Search } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,9 +37,19 @@ interface ServiceOrderFormProps {
   inventoryParts: InventoryPart[];
   customers: Customer[];
   previousOrders: any[];
+  initialData?: any;
+  onCancelEdit?: () => void;
 }
 
-const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, previousOrders }: ServiceOrderFormProps) => {
+const ServiceOrderForm = ({ 
+  onSave, 
+  technicianName, 
+  inventoryParts, 
+  customers, 
+  previousOrders,
+  initialData,
+  onCancelEdit
+}: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
@@ -51,15 +61,40 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
+  // Carrega dados iniciais se estiver em modo de edição
   React.useEffect(() => {
-    setFormData(prev => ({ ...prev, technician: technicianName }));
-  }, [technicianName]);
+    if (initialData) {
+      setFormData({
+        clientName: initialData.clientName || '',
+        document: initialData.document || '',
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        plate: initialData.plate || '',
+        vehicleModel: initialData.vehicleModel || '',
+        boxType: initialData.boxType || '',
+        equipBrand: initialData.equipBrand || '',
+        equipModel: initialData.equipModel || '',
+        serviceType: initialData.serviceType || 'Corretiva',
+        problem: initialData.problem || '',
+        diagnosis: initialData.diagnosis || '',
+        travelValue: initialData.travelValue || 0,
+        warranty: initialData.warranty || '90 dias',
+        technician: initialData.technician || technicianName,
+        observations: initialData.observations || ''
+      });
+      setServices(initialData.services || []);
+      setParts(initialData.parts || []);
+    } else {
+      setFormData(prev => ({ ...prev, technician: technicianName }));
+    }
+  }, [initialData, technicianName]);
 
   const handlePlateChange = (plate: string) => {
     const upperPlate = plate.toUpperCase();
     setFormData(prev => ({ ...prev, plate: upperPlate }));
     
-    if (upperPlate.length >= 7) {
+    // Só busca histórico se não estiver editando um orçamento já existente
+    if (!initialData && upperPlate.length >= 7) {
       const pastOrder = previousOrders.find(o => o.plate.toUpperCase() === upperPlate);
       if (pastOrder) {
         setFormData(prev => ({
@@ -80,18 +115,20 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
 
   const handleCustomerSearch = (val: string) => {
     setFormData(prev => ({ ...prev, clientName: val }));
-    const customer = customers.find(c => 
-      c.name.toLowerCase().includes(val.toLowerCase()) || 
-      c.document.includes(val)
-    );
-    if (customer && val.length > 3) {
-      setFormData(prev => ({
-        ...prev,
-        clientName: customer.name,
-        document: customer.document,
-        phone: customer.phone,
-        email: customer.email
-      }));
+    if (!initialData) {
+      const customer = customers.find(c => 
+        c.name.toLowerCase().includes(val.toLowerCase()) || 
+        c.document.includes(val)
+      );
+      if (customer && val.length > 3) {
+        setFormData(prev => ({
+          ...prev,
+          clientName: customer.name,
+          document: customer.document,
+          phone: customer.phone,
+          email: customer.email
+        }));
+      }
     }
   };
 
@@ -132,9 +169,9 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
     
     const order = {
       ...formData,
-      id: Math.random().toString(36).substr(2, 5).toUpperCase(),
-      date: new Date().toLocaleString(),
-      status: 'Pendente',
+      id: initialData ? initialData.id : Math.random().toString(36).substr(2, 5).toUpperCase(),
+      date: initialData ? initialData.date : new Date().toLocaleString(),
+      status: initialData ? initialData.status : 'Pendente',
       services,
       parts,
       partsValue: partsTotal,
@@ -151,21 +188,38 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
     };
 
     onSave(order, customerData);
-    showSuccess('Orçamento gerado com sucesso!');
+    showSuccess(initialData ? 'Orçamento atualizado!' : 'Orçamento gerado com sucesso!');
     
-    setServices([]);
-    setParts([]);
-    setFormData({
-      clientName: '', document: '', phone: '', email: '',
-      plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
-      serviceType: 'Corretiva', problem: '', diagnosis: '',
-      travelValue: 0,
-      warranty: '90 dias', technician: technicianName, observations: ''
-    });
+    if (!initialData) {
+      setServices([]);
+      setParts([]);
+      setFormData({
+        clientName: '', document: '', phone: '', email: '',
+        plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
+        serviceType: 'Corretiva', problem: '', diagnosis: '',
+        travelValue: 0,
+        warranty: '90 dias', technician: technicianName, observations: ''
+      });
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {initialData && (
+        <div className="bg-blue-600 text-white p-4 rounded-xl flex justify-between items-center shadow-lg">
+          <div className="flex items-center gap-3">
+            <AlertCircle />
+            <div>
+              <p className="font-bold">Editando Orçamento #{initialData.id}</p>
+              <p className="text-xs opacity-80">As alterações serão salvas sobre o registro original.</p>
+            </div>
+          </div>
+          <Button type="button" variant="ghost" onClick={onCancelEdit} className="text-white hover:bg-blue-700">
+            <X className="mr-2 h-4 w-4" /> Cancelar Edição
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-blue-100 shadow-sm">
           <CardHeader className="bg-blue-50/50 border-b border-blue-50">
@@ -173,8 +227,8 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
           </CardHeader>
           <CardContent className="pt-6 grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Nome / Empresa (Busca Automática)</label>
-              <Input value={formData.clientName} onChange={e => handleCustomerSearch(e.target.value)} required placeholder="Digite o nome para buscar..." />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Nome / Empresa</label>
+              <Input value={formData.clientName} onChange={e => handleCustomerSearch(e.target.value)} required placeholder="Digite o nome..." />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">CPF / CNPJ</label>
@@ -197,7 +251,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
           </CardHeader>
           <CardContent className="pt-6 grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Placa (Busca Automática)</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Placa</label>
               <Input value={formData.plate} onChange={e => handlePlateChange(e.target.value)} placeholder="ABC1234" />
             </div>
             <div className="space-y-1">
@@ -331,7 +385,9 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
                   onChange={e => setFormData({...formData, technician: e.target.value})} 
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 py-6 text-lg font-bold"><Save className="mr-2"/> GERAR ORÇAMENTO</Button>
+              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 py-6 text-lg font-bold">
+                <Save className="mr-2"/> {initialData ? 'SALVAR ALTERAÇÕES' : 'GERAR ORÇAMENTO'}
+              </Button>
             </div>
           </CardContent>
         </Card>
