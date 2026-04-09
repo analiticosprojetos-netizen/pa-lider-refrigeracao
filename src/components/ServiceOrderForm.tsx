@@ -21,9 +21,23 @@ const EQUIPMENT_DATABASE: Record<string, string[]> = {
     "SB 190", "SB 210", "SB 230", "SB 250", "SB 310", "SB Spectrum",
     "Advancer Spectrum", "Advancer A-400", "Advancer A-500", "Advancer A-600", "Advancer A-Vector"
   ],
-  "Carrier": ["Supra 750", "Supra 850", "Supra 950", "Vector 1550", "Vector 1950", "Xarios 350", "Xarios 600", "Maxima 1300"],
-  "Thermo Star": ["TSE-44", "TSE-60", "TSE-70", "TSF-22", "TSF-33", "TSF-44", "TSE-30"],
-  "Frigo King": ["Apollo 2500", "Apollo 3500", "Titan 500", "Titan 700", "Titan 900", "SA-210"],
+  "Carrier": [
+    "Xarios 150", "Xarios 200", "Xarios 300", "Xarios 350", "Xarios 400",
+    "Supra 450", "Supra 550", "Supra 650", "Supra 750", "Supra 850", "Supra 950",
+    "Vector 1350", "Vector 1550", "Vector 1800", "Vector 1950", "Vector HE 17", "Vector HE 19",
+    "Neos 100", "Neos 200", "Neos 300",
+    "Vector 1950 MT", "Supra 850 MT"
+  ],
+  "Thermo Star": [
+    "TS 200", "TS 300", "TS 400", "TS 500",
+    "TS 700", "TS 900",
+    "TS Light 150", "TS Light 250"
+  ],
+  "Frigo King": [
+    "FK 200", "FK 300", "FK 400", "FK 500",
+    "FK Light 100", "FK Light 200",
+    "FK Slim", "FK Plus", "FK Max"
+  ],
   "Rodofrio": ["RF-10", "RF-20", "RF-30", "RF-40", "RF-50"],
   "Macc": ["M-10", "M-20", "M-30"],
   "Eurofrigo": ["EF-200", "EF-300", "EF-400"]
