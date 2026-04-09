@@ -48,6 +48,17 @@ const Index = () => {
     message: ''
   });
 
+  const formatPhone = (value: string) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 3) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+    }
+    return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
   React.useEffect(() => {
     const saved = localStorage.getItem('lider_site_settings');
     if (saved) {
@@ -281,7 +292,8 @@ const Index = () => {
                       placeholder="Telefone" 
                       required 
                       value={contactForm.phone}
-                      onChange={e => setContactForm({...contactForm, phone: e.target.value})}
+                      onChange={e => setContactForm({...contactForm, phone: formatPhone(e.target.value)})}
+                      maxLength={15}
                     />
                   </div>
                   <Input 

@@ -95,6 +95,17 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
+  const formatPhone = (value: string) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 3) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+    }
+    return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
   const resetForm = () => {
     setFormData({
       clientName: '', document: '', phone: '', email: '',
@@ -274,7 +285,12 @@ const ServiceOrderForm = ({
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Telefone</label>
-                <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                <Input 
+                  value={formData.phone} 
+                  onChange={e => setFormData({...formData, phone: formatPhone(e.target.value)})} 
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
+                />
               </div>
               <div className="col-span-2 space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">E-mail</label>

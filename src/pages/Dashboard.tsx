@@ -111,6 +111,17 @@ const Dashboard = () => {
     aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
   });
 
+  const formatPhone = (value: string) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 3) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+    }
+    return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
   React.useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     const savedUser = localStorage.getItem('currentUser');
@@ -1131,8 +1142,9 @@ const Dashboard = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase">Telefone</label>
                 <Input 
                   value={editingCustomer.phone} 
-                  onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, phone: formatPhone(e.target.value)})} 
                   className="dark:bg-slate-950 dark:border-slate-800"
+                  maxLength={15}
                 />
               </div>
               <div className="grid gap-2">
