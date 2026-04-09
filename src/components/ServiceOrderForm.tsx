@@ -482,7 +482,7 @@ const ServiceOrderForm = ({
                   </div>
                   <div className="w-24 space-y-1">
                     <label className="text-[8px] font-bold text-gray-400 uppercase">Valor</label>
-                    <Input type="number" value={s.value} onChange={e => updateItem(s.id, 'service', 'value', Number(e.target.value))} />
+                    <Input type="number" value={s.value === 0 ? '' : s.value} onChange={e => updateItem(s.id, 'service', 'value', Number(e.target.value))} />
                   </div>
                   <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeItem(s.id, 'service')}><Trash2 size={16}/></Button>
                 </div>
@@ -514,11 +514,11 @@ const ServiceOrderForm = ({
                     </div>
                     <div className="w-16 space-y-1">
                       <label className="text-[8px] font-bold text-gray-400 uppercase">Qtd</label>
-                      <Input type="number" value={p.qty} onChange={e => updateItem(p.id, 'part', 'qty', Number(e.target.value))} />
+                      <Input type="number" value={p.qty === 0 ? '' : p.qty} onChange={e => updateItem(p.id, 'part', 'qty', Number(e.target.value))} />
                     </div>
                     <div className="w-24 space-y-1">
                       <label className="text-[8px] font-bold text-gray-400 uppercase">Unit.</label>
-                      <Input type="number" value={p.value} onChange={e => updateItem(p.id, 'part', 'value', Number(e.target.value))} />
+                      <Input type="number" value={p.value === 0 ? '' : p.value} onChange={e => updateItem(p.id, 'part', 'value', Number(e.target.value))} />
                     </div>
                   </div>
                 </div>
@@ -534,7 +534,7 @@ const ServiceOrderForm = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold opacity-50 uppercase h-4 flex items-center">Deslocamento</label>
-                  <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.travelValue} onChange={e => setFormData({...formData, travelValue: Number(e.target.value)})} />
+                  <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.travelValue === 0 ? '' : formData.travelValue} onChange={e => setFormData({...formData, travelValue: Number(e.target.value)})} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold opacity-50 uppercase h-4 flex items-center gap-1"><ShieldCheck size={10}/> Garantia</label>
@@ -549,7 +549,7 @@ const ServiceOrderForm = ({
                     <Input 
                       type="number" 
                       className="bg-blue-800 border-blue-700 text-white" 
-                      value={formData.discountPercent} 
+                      value={formData.discountPercent === 0 ? '' : formData.discountPercent} 
                       onChange={e => handleDiscountPercentChange(Number(e.target.value))} 
                     />
                   </div>
@@ -558,7 +558,7 @@ const ServiceOrderForm = ({
                     <Input 
                       type="number" 
                       className="bg-blue-800 border-blue-700 text-white" 
-                      value={formData.discountValue} 
+                      value={formData.discountValue === 0 ? '' : formData.discountValue} 
                       onChange={e => handleDiscountValueChange(Number(e.target.value))} 
                     />
                   </div>
