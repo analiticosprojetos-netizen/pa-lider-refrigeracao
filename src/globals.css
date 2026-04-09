@@ -7,50 +7,26 @@
     --background: 221 78% 24%; /* #0D2C6C */
     --foreground: 0 0% 100%;
     --border: 221 50% 40%;
-    --radius: 1rem;
+    --radius: 0.5rem;
   }
 }
 
 @layer base {
   body {
     @apply bg-[#0D2C6C] text-white antialiased;
-    background: radial-gradient(circle at 50% 0%, #1a365d 0%, #0D2C6C 100%);
   }
 }
 
 @layer components {
-  /* Efeito de Vidro com Reflexo */
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl relative overflow-hidden;
+  .btn-primary {
+    @apply bg-[#1E5BB8] hover:bg-[#2FA4FF] text-white font-bold transition-all duration-300 shadow-lg uppercase tracking-wider;
   }
   
-  .glass-card::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none;
+  .section-card {
+    @apply bg-white/5 border border-white/10 rounded-2xl p-8 shadow-xl;
   }
 
-  /* Botão com Reflexo Metálico */
-  .btn-reflective {
-    @apply relative overflow-hidden bg-gradient-to-r from-[#1E5BB8] to-[#2FA4FF] text-white font-bold transition-all duration-500 shadow-lg hover:shadow-[#66D1FF]/40;
-  }
-
-  .btn-reflective::after {
-    content: '';
-    @apply absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-25deg] transition-all duration-1000;
-  }
-
-  .btn-reflective:hover::after {
-    @apply left-[100%];
-  }
-
-  /* Texto com Brilho de Gelo */
-  .ice-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-[#66D1FF] drop-shadow-[0_0_10px_rgba(102,209,255,0.5)];
-  }
-
-  /* Reflexo de Luz no Fundo */
-  .light-reflection {
-    @apply absolute pointer-events-none;
-    background: radial-gradient(circle, rgba(102,209,255,0.15) 0%, transparent 70%);
+  .text-accent {
+    @apply text-[#66D1FF];
   }
 }
