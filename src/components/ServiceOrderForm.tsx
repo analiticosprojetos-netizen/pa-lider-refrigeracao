@@ -329,15 +329,18 @@ const ServiceOrderForm = ({
 
               <div className="col-span-2 space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Tipo de Serviço</label>
-                <Select value={formData.serviceType} onValueChange={v => setFormData({...formData, serviceType: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Preventiva">Preventiva</SelectItem>
-                    <SelectItem value="Corretiva">Corretiva</SelectItem>
-                    <SelectItem value="Emergencial">Emergencial</SelectItem>
-                    <SelectItem value="Instalação">Instalação</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input 
+                  list="service-types"
+                  value={formData.serviceType} 
+                  onChange={e => setFormData({...formData, serviceType: e.target.value})} 
+                  placeholder="Selecione ou digite o tipo..."
+                />
+                <datalist id="service-types">
+                  <option value="Preventiva" />
+                  <option value="Corretiva" />
+                  <option value="Emergencial" />
+                  <option value="Instalação" />
+                </datalist>
               </div>
             </CardContent>
           </Card>
