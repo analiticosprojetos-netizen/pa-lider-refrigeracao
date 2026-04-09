@@ -70,9 +70,12 @@ const Dashboard = () => {
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
+  
+  // Estados de busca
   const [searchTerm, setSearchTerm] = React.useState('');
   const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
   const [customerSearchTerm, setCustomerSearchTerm] = React.useState('');
+  
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -100,14 +103,12 @@ const Dashboard = () => {
       return;
     }
 
-    // Carregar ou inicializar usuários
     let users = [];
     const savedUsers = localStorage.getItem('lider_users');
     
     if (savedUsers) {
       users = JSON.parse(savedUsers);
     } else {
-      // Criar admin padrão se não existir
       const defaultAdmin: UserProfile = {
         id: '1',
         username: 'admin',
@@ -118,7 +119,6 @@ const Dashboard = () => {
       localStorage.setItem('lider_users', JSON.stringify(users));
     }
 
-    // Definir usuário logado (simulado como admin para este exemplo)
     const loggedUser = users.find((u: any) => u.username === 'admin');
     setCurrentUser(loggedUser || users[0]);
 
@@ -357,6 +357,7 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  // Filtros
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const filteredOrders = orders.filter(o => 
     o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
@@ -368,6 +369,7 @@ const Dashboard = () => {
     c.document.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
     c.email.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
+  
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
   if (!currentUser) return (
@@ -406,43 +408,14 @@ const Dashboard = () => {
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>}
           </TabsList>
 
-          {/* CONTEÚDO ESTOQUE (UNIFICADO) */}
+          {/* CONTEÚDO ESTOQUE */}
           <TabsContent value="estoque" className="space-y-8">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-900">Gestão de Estoque</h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="bg-blue-600 textthink
-The previous response was cut off in the middle of the `Dashboard.tsx` file, specifically within the `TabsContent` for "estoque". I need to complete the file, ensuring all requested features (search in "Clientes" tab) are included and the code is syntactically correct.
-
-Looking at the previous output:
-- It started writing `src/pages/Dashboard.tsx`.
-- It defined interfaces and the `Dashboard` component.
-- It implemented `handleAddPart`, `registerMovement`, `handleSaveOrder`, `handleExecuteOrder`, `handleCancelOrder`, `handleDeleteOrder`, `handleViewDetails`, `handleEditOrder`, `handleEditCustomer`, `handleSaveCustomerEdit`, `handleLogout`.
-- It defined `filteredParts`, `filteredOrders`, and `filteredCustomers`.
-- It started the JSX return, got through the header, main tabs list, and was in the middle of `TabsContent value="estoque"`.
-
-I will continue from `<Card className="bg-blue-600 text` and finish the file.
-
-Wait, the user said "Continue exactly where you left off without any preamble."
-The last line was: `<Card className="bg-blue-600 text`
-
-I will provide the rest of the file starting from that point.
-
-Actually, to be safe and ensure the file is valid, I should probably rewrite the whole file or at least the rest of it in a way that makes sense. But the prompt says "Continue exactly where you left off".
-
-However, the `dyad-write` tag needs to be closed. If I just output text, it won't be a valid `dyad-write` block.
-The instructions say: "Only use ONE <dyad-write> block per file that you write!" and "do NOT be lazy and ALWAYS write the entire file. It needs to be a complete file."
-
-Since the previous response was a failure (cut off), I should rewrite the *entire* file `src/pages/Dashboard.tsx` to ensure it's complete and correct.
-
-Let's check the changes needed:
-1. Add `customerSearchTerm` state.
-2. Add `filteredCustomers` logic.
-3. Add the search input in the "Clientes" tab.
-
-I'll rewrite the whole `src/pages/Dashboard.tsx`.-white shadow-xl border-none">
+              <Card className="bg-blue-600 text-white shadow-xl border-none">
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start mb-4">
                     <Package size={40} className="opacity-40" />
