@@ -72,7 +72,8 @@ const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void 
   const [settings, setSettings] = React.useState({
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     latitude: '',
-    longitude: ''
+    longitude: '',
+    googleMapsUrl: ''
   });
 
   React.useEffect(() => {
@@ -82,9 +83,9 @@ const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void 
     }
   }, []);
 
-  const mapsUrl = settings.latitude && settings.longitude 
+  const mapsUrl = settings.googleMapsUrl || (settings.latitude && settings.longitude 
     ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`);
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between gap-8">

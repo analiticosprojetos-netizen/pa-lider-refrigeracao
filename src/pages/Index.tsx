@@ -33,6 +33,7 @@ const Index = () => {
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     latitude: '',
     longitude: '',
+    googleMapsUrl: '',
     banners: [],
     carouselDelay: 6,
     aboutYears: '15+',
@@ -113,9 +114,9 @@ const Index = () => {
     }
   };
 
-  const mapsUrl = settings.latitude && settings.longitude 
+  const mapsUrl = settings.googleMapsUrl || (settings.latitude && settings.longitude 
     ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

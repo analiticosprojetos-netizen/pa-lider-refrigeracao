@@ -12,7 +12,8 @@ const Footer = () => {
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     latitude: '',
-    longitude: ''
+    longitude: '',
+    googleMapsUrl: ''
   });
 
   React.useEffect(() => {
@@ -22,9 +23,9 @@ const Footer = () => {
     }
   }, []);
 
-  const mapsUrl = settings.latitude && settings.longitude 
+  const mapsUrl = settings.googleMapsUrl || (settings.latitude && settings.longitude 
     ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`);
 
   return (
     <footer className="bg-blue-900 text-white pt-12 pb-6">

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -106,6 +106,7 @@ const Dashboard = () => {
     cnpj: '00.000.000/0001-00',
     latitude: '',
     longitude: '',
+    googleMapsUrl: '',
     banners: [] as Banner[],
     carouselDelay: 6,
     aboutYears: '15+',
@@ -724,7 +725,7 @@ const Dashboard = () => {
                               <TableRow key={part.id} className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
                                 <TableCell className="font-medium text-gray-700 dark:text-gray-300">{part.name}</TableCell>
                                 <TableCell className="text-center">
-                                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}>
+                                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-red-400'}`}>
                                     {part.quantity}
                                   </span>
                                 </TableCell>
@@ -1089,20 +1090,40 @@ const Dashboard = () => {
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                          <div className="col-span-1 sm:col-span-2 flex items-center gap-2 mb-2">
+                        <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                          <div className="flex items-center gap-2 mb-2">
                             <MapPin size={16} className="text-blue-600" />
-                            <span className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Localização (Google Maps)</span>
+                            <span className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Localização Exata (Google Maps)</span>
                           </div>
+                          
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Latitude</label>
-                            <Input value={siteSettings.latitude} onChange={(e) => setSiteSettings({...siteSettings, latitude: e.target.value})} placeholder="-18.9723105" className="dark:bg-slate-950 dark:border-slate-800" />
+                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Link Direto do Google Maps (Recomendado)</label>
+                            <div className="flex gap-2">
+                              <Input 
+                                value={siteSettings.googleMapsUrl} 
+                                onChange={(e) => setSiteSettings({...siteSettings, googleMapsUrl: e.target.value})} 
+                                placeholder="Cole o link de compartilhamento aqui..." 
+                                className="dark:bg-slate-950 dark:border-slate-800" 
+                              />
+                              {siteSettings.googleMapsUrl && (
+                                <a href={siteSettings.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-blue-100 dark:border-slate-700 flex items-center justify-center text-blue-600">
+                                  <ExternalLink size={18} />
+                                </a>
+                              )}
+                            </div>
+                            <p className="text-[9px] text-gray-500 italic mt-1">Dica: No Google Maps, clique em "Compartilhar" e copie o link.</p>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Longitude</label>
-                            <Input value={siteSettings.longitude} onChange={(e) => setSiteSettings({...siteSettings, longitude: e.target.value})} placeholder="-48.3720316" className="dark:bg-slate-950 dark:border-slate-800" />
+
+                          <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Latitude</label>
+                              <Input value={siteSettings.latitude} onChange={(e) => setSiteSettings({...siteSettings, latitude: e.target.value})} placeholder="-18.9723105" className="dark:bg-slate-950 dark:border-slate-800" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Longitude</label>
+                              <Input value={siteSettings.longitude} onChange={(e) => setSiteSettings({...siteSettings, longitude: e.target.value})} placeholder="-48.3720316" className="dark:bg-slate-950 dark:border-slate-800" />
+                            </div>
                           </div>
-                          <p className="col-span-1 sm:col-span-2 text-[10px] text-gray-500 italic mt-2">Ao preencher, o endereço no site abrirá o Google Maps automaticamente.</p>
                         </div>
 
                         <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
