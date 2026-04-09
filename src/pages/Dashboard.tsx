@@ -555,74 +555,76 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
-      <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 py-4 sticky top-0 z-10">
+      <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-600 p-2 rounded-lg"><Snowflake className="h-5 w-5 text-white" /></div>
-            <h1 className="text-xl font-bold text-blue-900 dark:text-white hidden md:block">Gestão Lider</h1>
-            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800">
-              <ShieldCheck size={14} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-black text-blue-900 dark:text-blue-200 uppercase">{currentUser.username} ({currentUser.role})</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-1.5 rounded-lg"><Snowflake className="h-4 w-4 text-white" /></div>
+            <h1 className="text-lg font-bold text-blue-900 dark:text-white hidden sm:block">Gestão Lider</h1>
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-800">
+              <ShieldCheck size={12} className="text-blue-600 dark:text-blue-400" />
+              <span className="text-[10px] font-black text-blue-900 dark:text-blue-200 uppercase truncate max-w-[80px] sm:max-w-none">{currentUser.username}</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
-            <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-100 dark:border-red-900/30 dark:hover:bg-red-900/20">
-              <LogOut className="mr-2 h-4 w-4" /> Sair
+            <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-600 border-red-100 dark:border-red-900/30 dark:hover:bg-red-900/20 h-9 px-3">
+              <LogOut className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <Tabs defaultValue="estoque" className="space-y-8">
-          <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 p-1 h-12 overflow-x-auto flex-nowrap">
-            {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>}
-            {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>}
-            {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>}
-            {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-6">Analytics</TabsTrigger>}
-            {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>}
-          </TabsList>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <Tabs defaultValue="estoque" className="space-y-6 sm:space-y-8">
+          <div className="relative">
+            <TabsList className="w-full bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 p-1 h-12 overflow-x-auto flex-nowrap justify-start scrollbar-hide">
+              {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-5 sm:px-8 flex-shrink-0">Estoque</TabsTrigger>}
+              {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-5 sm:px-8 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
+              {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-5 sm:px-8 flex-shrink-0">Clientes</TabsTrigger>}
+              {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-5 sm:px-8 flex-shrink-0">Analytics</TabsTrigger>}
+              {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-5 sm:px-8 flex-shrink-0">Configurações</TabsTrigger>}
+            </TabsList>
+          </div>
 
           {/* CONTEÚDO ESTOQUE */}
-          <TabsContent value="estoque" className="space-y-8">
+          <TabsContent value="estoque" className="space-y-6 sm:space-y-8">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Estoque</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-white">Gestão de Estoque</h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
               <Card className="bg-blue-600 text-white shadow-xl border-none overflow-hidden">
                 <CardContent className="pt-6 relative">
                   <div className="flex justify-between items-start mb-6">
-                    <Package size={48} className="opacity-20" />
+                    <Package size={40} className="opacity-20" />
                     <div className="text-right">
-                      <p className="text-[10px] font-black uppercase opacity-70 tracking-widest">Total de Peças em Estoque</p>
-                      <p className="text-5xl font-black">{totalStockQuantity}</p>
-                      <p className="text-[10px] opacity-50 mt-1">{parts.length} tipos de itens cadastrados</p>
+                      <p className="text-[9px] font-black uppercase opacity-70 tracking-widest">Total em Estoque</p>
+                      <p className="text-4xl sm:text-5xl font-black">{totalStockQuantity}</p>
+                      <p className="text-[9px] opacity-50 mt-1">{parts.length} tipos de itens</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl border border-white/10">
                       <div className="flex items-center gap-2 text-green-300 mb-1">
-                        <ArrowUpCircle size={14} />
-                        <span className="text-[10px] font-black uppercase">Entradas</span>
+                        <ArrowUpCircle size={12} />
+                        <span className="text-[9px] font-black uppercase">Entradas</span>
                       </div>
-                      <p className="text-xl font-bold">{totalEntradas}</p>
+                      <p className="text-lg font-bold">{totalEntradas}</p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl border border-white/10">
                       <div className="flex items-center gap-2 text-red-300 mb-1">
-                        <ArrowDownCircle size={14} />
-                        <span className="text-[10px] font-black uppercase">Saídas</span>
+                        <ArrowDownCircle size={12} />
+                        <span className="text-[9px] font-black uppercase">Saídas</span>
                       </div>
-                      <p className="text-xl font-bold">{totalSaidas}</p>
+                      <p className="text-lg font-bold">{totalSaidas}</p>
                     </div>
                   </div>
 
                   {lowStockCount > 0 && (
-                    <div className="flex items-center gap-3 bg-red-500/40 p-4 rounded-2xl border border-red-400/30 animate-pulse">
-                      <AlertTriangle size={20} className="text-yellow-300 shrink-0" />
-                      <span className="text-sm font-bold">{lowStockCount} itens com estoque baixo!</span>
+                    <div className="flex items-center gap-3 bg-red-500/40 p-3 rounded-xl border border-red-400/30 animate-pulse">
+                      <AlertTriangle size={18} className="text-yellow-300 shrink-0" />
+                      <span className="text-xs font-bold">{lowStockCount} itens com estoque baixo!</span>
                     </div>
                   )}
                 </CardContent>
@@ -630,21 +632,21 @@ const Dashboard = () => {
 
               <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-gray-400 flex items-center gap-2 uppercase tracking-wider">
-                    <BarChart3 size={16} className="text-blue-600" /> Níveis de Estoque (Top 10)
+                  <CardTitle className="text-[10px] font-bold text-gray-400 flex items-center gap-2 uppercase tracking-wider">
+                    <BarChart3 size={14} className="text-blue-600" /> Níveis de Estoque (Top 10)
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="h-[200px]">
+                <CardContent className="h-[180px] sm:h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={parts.slice(0, 10)}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
-                      <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} axisLine={false} />
-                      <YAxis fontSize={10} tick={{fill: '#64748b'}} axisLine={false} />
+                      <XAxis dataKey="name" fontSize={9} tick={{fill: '#64748b'}} axisLine={false} />
+                      <YAxis fontSize={9} tick={{fill: '#64748b'}} axisLine={false} />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff', fontSize: '10px' }}
                         cursor={{ fill: '#f8fafc', opacity: 0.1 }}
                       />
-                      <Bar dataKey="quantity" radius={[6, 6, 0, 0]}>
+                      <Bar dataKey="quantity" radius={[4, 4, 0, 0]}>
                         {parts.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.quantity < 5 ? '#ef4444' : '#3b82f6'} />
                         ))}
@@ -656,103 +658,105 @@ const Dashboard = () => {
             </div>
 
             <Tabs defaultValue="lista" className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6">
-                <TabsTrigger value="lista">Lista de Peças</TabsTrigger>
-                {currentUser.permissions.historico.view && <TabsTrigger value="historico">Histórico de Movimentações</TabsTrigger>}
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full sm:w-auto overflow-x-auto flex-nowrap justify-start">
+                <TabsTrigger value="lista" className="flex-shrink-0">Lista de Peças</TabsTrigger>
+                {currentUser.permissions.historico.view && <TabsTrigger value="historico" className="flex-shrink-0">Histórico</TabsTrigger>}
               </TabsList>
 
-              <TabsContent value="lista" className="space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <TabsContent value="lista" className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                   {hasPermission('estoque', 'edit') && (
                     <Card className="h-fit shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
                       <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                        <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
+                        <CardTitle className="text-base flex items-center gap-2 text-blue-900 dark:text-white"><PlusCircle className="text-blue-600" size={18} /> Nova Peça</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-6">
                         <form onSubmit={handleAddPart} className="space-y-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
+                            <label className="text-[9px] font-black text-gray-400 uppercase">Nome da Peça</label>
                             <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required className="dark:bg-slate-950 dark:border-slate-800" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
+                            <label className="text-[9px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
                             <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required className="dark:bg-slate-950 dark:border-slate-800" />
                           </div>
-                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
+                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-5 font-bold text-sm">Cadastrar</Button>
                         </form>
                       </CardContent>
                     </Card>
                   )}
 
-                  <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900`}>
-                    <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                      <CardTitle className="text-lg text-blue-900 dark:text-white">Controle de Peças</CardTitle>
-                      <div className="relative w-48 sm:w-64">
+                  <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900 overflow-hidden`}>
+                    <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800 gap-3">
+                      <CardTitle className="text-base text-blue-900 dark:text-white">Controle de Peças</CardTitle>
+                      <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                        <Input placeholder="Buscar peça..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <Input placeholder="Buscar peça..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                       </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                            <TableHead className="font-bold text-blue-900 dark:text-blue-400">Peça</TableHead>
-                            <TableHead className="text-center font-bold text-blue-900 dark:text-blue-400">Qtd Atual</TableHead>
-                            <TableHead className="text-right font-bold text-blue-900 dark:text-blue-400">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedParts.map((part) => (
-                            <TableRow key={part.id} className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
-                              <TableCell className="font-medium text-gray-700 dark:text-gray-300">{part.name}</TableCell>
-                              <TableCell className="text-center">
-                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}>
-                                  {part.quantity}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  {hasPermission('estoque', 'edit') && (
-                                    <>
-                                      <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/30 dark:text-green-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                                      <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
-                                      <Button size="sm" variant="ghost" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditPart(part)}><Edit2 size={16} /></Button>
-                                    </>
-                                  )}
-                                  {hasPermission('estoque', 'delete') && (
-                                    <Button size="sm" variant="ghost" className="text-red-500 dark:text-red-400" onClick={() => handleDeletePart(part.id)}><Trash2 size={16} /></Button>
-                                  )}
-                                </div>
-                              </TableCell>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                              <TableHead className="font-bold text-blue-900 dark:text-blue-400 text-xs">Peça</TableHead>
+                              <TableHead className="text-center font-bold text-blue-900 dark:text-blue-400 text-xs">Qtd</TableHead>
+                              <TableHead className="text-right font-bold text-blue-900 dark:text-blue-400 text-xs">Ações</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedParts.map((part) => (
+                              <TableRow key={part.id} className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                <TableCell className="font-medium text-gray-700 dark:text-gray-300 text-xs sm:text-sm">{part.name}</TableCell>
+                                <TableCell className="text-center">
+                                  <span className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl text-xs font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}>
+                                    {part.quantity}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-1 sm:gap-2">
+                                    {hasPermission('estoque', 'edit') && (
+                                      <>
+                                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 border-green-200 text-green-600 dark:border-green-900/30 dark:text-green-400" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={14} /></Button>
+                                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 border-red-200 text-red-600 dark:border-red-900/30 dark:text-red-400" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={14} /></Button>
+                                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-600 dark:text-blue-400" onClick={() => handleEditPart(part)}><Edit2 size={14} /></Button>
+                                      </>
+                                    )}
+                                    {hasPermission('estoque', 'delete') && (
+                                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 dark:text-red-400" onClick={() => handleDeletePart(part.id)}><Trash2 size={14} /></Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                       
-                      {/* Controles de Paginação */}
+                      {/* Controles de Paginação Estoque */}
                       {totalPages > 1 && (
-                        <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Página {currentPage} de {totalPages}
+                        <div className="flex items-center justify-between px-4 py-3 border-t border-blue-50 dark:border-slate-800">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                            Pág {currentPage}/{totalPages}
                           </p>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1">
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                               disabled={currentPage === 1}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0"
                             >
-                              <ChevronLeft size={16} />
+                              <ChevronLeft size={14} />
                             </Button>
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                               disabled={currentPage === totalPages}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0"
                             >
-                              <ChevronRight size={16} />
+                              <ChevronRight size={14} />
                             </Button>
                           </div>
                         </div>
@@ -763,69 +767,68 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="historico">
-                <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
+                <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
                   <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><History className="text-blue-600" /> Histórico de Movimentações</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2 text-blue-900 dark:text-white"><History className="text-blue-600" size={18} /> Histórico</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                          <TableHead className="font-bold">Data/Hora</TableHead>
-                          <TableHead className="font-bold">Peça</TableHead>
-                          <TableHead className="font-bold">Tipo</TableHead>
-                          <TableHead className="text-center font-bold">Qtd</TableHead>
-                          <TableHead className="font-bold">Operador</TableHead>
-                          <TableHead className="font-bold">Observação</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedMovements.map((m) => (
-                          <TableRow key={m.id}>
-                            <TableCell className="text-xs text-gray-500 dark:text-gray-400">{m.date}</TableCell>
-                            <TableCell className="font-medium dark:text-gray-300">{m.partName}</TableCell>
-                            <TableCell>
-                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${
-                                m.type === 'entrada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
-                                m.type === 'saida' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
-                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                              }`}>
-                                {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : m.type === 'saida' ? <ArrowDownCircle size={12} /> : <Settings size={12} />}
-                                {m.type}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center font-bold dark:text-gray-300">{m.quantity}</TableCell>
-                            <TableCell className="text-sm text-blue-600 dark:text-blue-400 font-bold">{m.user}</TableCell>
-                            <TableCell className="text-xs text-gray-500 dark:text-gray-400 italic">{m.note || '-'}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                            <TableHead className="font-bold text-xs">Data</TableHead>
+                            <TableHead className="font-bold text-xs">Peça</TableHead>
+                            <TableHead className="font-bold text-xs">Tipo</TableHead>
+                            <TableHead className="text-center font-bold text-xs">Qtd</TableHead>
+                            <TableHead className="font-bold text-xs">Operador</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedMovements.map((m) => (
+                            <TableRow key={m.id}>
+                              <TableCell className="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{m.date.split(',')[0]}</TableCell>
+                              <TableCell className="font-medium dark:text-gray-300 text-xs">{m.partName}</TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                  m.type === 'entrada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                  m.type === 'saida' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                }`}>
+                                  {m.type}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center font-bold dark:text-gray-300 text-xs">{m.quantity}</TableCell>
+                              <TableCell className="text-[10px] text-blue-600 dark:text-blue-400 font-bold truncate max-w-[60px]">{m.user}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
 
                     {/* Controles de Paginação Histórico */}
                     {totalMovementPages > 1 && (
-                      <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Página {currentMovementPage} de {totalMovementPages}
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-blue-50 dark:border-slate-800">
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                          Pág {currentMovementPage}/{totalMovementPages}
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={() => setCurrentMovementPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentMovementPage === 1}
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 p-0"
                           >
-                            <ChevronLeft size={16} />
+                            <ChevronLeft size={14} />
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={() => setCurrentMovementPage(prev => Math.min(prev + 1, totalMovementPages))}
                             disabled={currentMovementPage === totalMovementPages}
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 p-0"
                           >
-                            <ChevronRight size={16} />
+                            <ChevronRight size={14} />
                           </Button>
                         </div>
                       </div>
@@ -837,82 +840,72 @@ const Dashboard = () => {
           </TabsContent>
 
           {/* CONTEÚDO ORÇAMENTOS */}
-          <TabsContent value="orcamentos" className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Orçamentos</h2>
-              <div className="flex gap-2">
-                <div className="relative w-48 sm:w-64">
+          <TabsContent value="orcamentos" className="space-y-6 sm:space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-white">Orçamentos</h2>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                   <Input 
-                    placeholder="Buscar orçamento..." 
-                    className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" 
+                    placeholder="Buscar..." 
+                    className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" 
                     value={orderSearchTerm} 
                     onChange={(e) => setOrderSearchTerm(e.target.value)} 
                   />
                 </div>
-                <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos_lider')} className="dark:border-slate-800 dark:hover:bg-slate-800"><TableIcon className="mr-2 h-4 w-4" /> Exportar Excel</Button>
+                <Button variant="outline" size="sm" onClick={() => exportToExcel(orders, 'orcamentos_lider')} className="dark:border-slate-800 h-9"><TableIcon size={16} /></Button>
               </div>
             </div>
 
             <Tabs value={activeOrcamentoTab} onValueChange={setActiveOrcamentoTab} className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6">
-                <TabsTrigger value="lista">Histórico de Orçamentos</TabsTrigger>
-                {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full sm:w-auto overflow-x-auto flex-nowrap justify-start">
+                <TabsTrigger value="lista" className="flex-shrink-0">Histórico</TabsTrigger>
+                {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando' : 'Novo'}</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
-                <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
+                <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                          <TableHead className="font-bold">ID</TableHead>
-                          <TableHead className="font-bold">Cliente</TableHead>
-                          <TableHead className="font-bold">Veículo</TableHead>
-                          <TableHead className="font-bold">Total</TableHead>
-                          <TableHead className="font-bold">Status</TableHead>
-                          <TableHead className="text-right font-bold">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredOrders.map((order) => (
-                          <TableRow key={order.id} className="cursor-pointer hover:bg-blue-50/30 dark:hover:bg-slate-800/30" onClick={() => handleViewDetails(order)}>
-                            <TableCell className="font-bold text-blue-600 dark:text-blue-400">#{order.id}</TableCell>
-                            <TableCell className="dark:text-gray-300">{order.clientName}</TableCell>
-                            <TableCell className="dark:text-gray-300">{order.plate} - {order.vehicleModel}</TableCell>
-                            <TableCell className="font-bold dark:text-gray-300">R$ {order.total.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                                order.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
-                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                              }`}>
-                                {order.status}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end gap-2">
-                                {order.status === 'Pendente' && hasPermission('orcamentos', 'edit') && (
-                                  <>
-                                    <Button title="Executar (Baixa Estoque)" size="sm" variant="outline" className="border-green-200 text-green-600 dark:border-green-900/30 dark:text-green-400" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
-                                    <Button title="Cancelar" size="sm" variant="outline" className="border-red-200 text-red-600 dark:border-red-900/30 dark:text-red-400" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
-                                    <Button title="Editar" size="sm" variant="outline" className="border-blue-200 text-blue-600 dark:border-blue-900/30 dark:text-blue-400" onClick={() => handleEditOrder(order)}><Edit2 size={16} /></Button>
-                                  </>
-                                )}
-                                {order.status === 'Executado' && hasPermission('orcamentos', 'edit') && (
-                                  <Button title="Estornar (Devolver ao Estoque)" size="sm" variant="outline" className="border-orange-200 text-orange-600 dark:border-orange-900/30 dark:text-orange-400" onClick={() => handleRevertOrder(order.id)}><RotateCcw size={16} /></Button>
-                                )}
-                                <Button title="Visualizar" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
-                                <Button title="Baixar PDF" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
-                                {hasPermission('orcamentos', 'delete') && (
-                                  <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
-                                )}
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                            <TableHead className="font-bold text-xs">ID</TableHead>
+                            <TableHead className="font-bold text-xs">Cliente</TableHead>
+                            <TableHead className="font-bold text-xs">Total</TableHead>
+                            <TableHead className="font-bold text-xs">Status</TableHead>
+                            <TableHead className="text-right font-bold text-xs">Ações</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredOrders.map((order) => (
+                            <TableRow key={order.id} className="cursor-pointer hover:bg-blue-50/30 dark:hover:bg-slate-800/30" onClick={() => handleViewDetails(order)}>
+                              <TableCell className="font-bold text-blue-600 dark:text-blue-400 text-xs">#{order.id.split(' - ')[1] || order.id}</TableCell>
+                              <TableCell className="dark:text-gray-300 text-xs truncate max-w-[100px]">{order.clientName}</TableCell>
+                              <TableCell className="font-bold dark:text-gray-300 text-xs whitespace-nowrap">R$ {order.total.toFixed(0)}</TableCell>
+                              <TableCell>
+                                <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${
+                                  order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                                  order.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}>
+                                  {order.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex justify-end gap-1">
+                                  {order.status === 'Pendente' && hasPermission('orcamentos', 'edit') && (
+                                    <Button size="sm" variant="outline" className="h-7 w-7 p-0 border-green-200 text-green-600" onClick={() => handleExecuteOrder(order.id)}><Play size={12} /></Button>
+                                  )}
+                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleViewDetails(order)}><Eye size={12}/></Button>
+                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={12}/></Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -937,67 +930,57 @@ const Dashboard = () => {
           </TabsContent>
 
           {/* CONTEÚDO CLIENTES */}
-          <TabsContent value="clientes" className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Clientes</h2>
-              <div className="relative w-48 sm:w-64">
+          <TabsContent value="clientes" className="space-y-6 sm:space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-white">Clientes</h2>
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <Input 
                   placeholder="Buscar cliente..." 
-                  className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" 
+                  className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" 
                   value={customerSearchTerm} 
                   onChange={(e) => setCustomerSearchTerm(e.target.value)} 
                 />
               </div>
             </div>
 
-            <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Users className="text-blue-600" /> Clientes Cadastrados</CardTitle>
-              </CardHeader>
+            <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                      <TableHead className="font-bold dark:text-blue-400">Nome / Empresa</TableHead>
-                      <TableHead className="font-bold dark:text-blue-400">CPF / CNPJ</TableHead>
-                      <TableHead className="font-bold dark:text-blue-400">Telefone</TableHead>
-                      <TableHead className="font-bold dark:text-blue-400">E-mail</TableHead>
-                      <TableHead className="font-bold dark:text-blue-400">Data de Cadastro</TableHead>
-                      <TableHead className="text-right font-bold dark:text-blue-400">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map((c) => (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-bold dark:text-gray-300">{c.name}</TableCell>
-                        <TableCell className="dark:text-gray-400">{c.document}</TableCell>
-                        <TableCell className="dark:text-gray-400">{c.phone}</TableCell>
-                        <TableCell className="dark:text-gray-400">{c.email}</TableCell>
-                        <TableCell className="dark:text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <Calendar size={14} className="text-blue-400" />
-                            {c.createdAt || 'N/A'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>}
-                            {hasPermission('clientes', 'delete') && (
-                              <Button variant="ghost" size="sm" className="text-red-500 dark:text-red-400" onClick={() => {
-                                if (window.confirm('Excluir este cliente?')) {
-                                  const updated = customers.filter(cust => cust.id !== c.id);
-                                  setCustomers(updated);
-                                  localStorage.setItem('lider_customers', JSON.stringify(updated));
-                                }
-                              }}><Trash2 size={16}/></Button>
-                            )}
-                          </div>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                        <TableHead className="font-bold text-xs">Nome</TableHead>
+                        <TableHead className="font-bold text-xs">Documento</TableHead>
+                        <TableHead className="font-bold text-xs">Telefone</TableHead>
+                        <TableHead className="text-right font-bold text-xs">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell className="font-bold dark:text-gray-300 text-xs truncate max-w-[120px]">{c.name}</TableCell>
+                          <TableCell className="dark:text-gray-400 text-[10px] whitespace-nowrap">{c.document}</TableCell>
+                          <TableCell className="dark:text-gray-400 text-[10px] whitespace-nowrap">{c.phone}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-blue-600" onClick={() => handleEditCustomer(c)}><Edit2 size={12}/></Button>}
+                              {hasPermission('clientes', 'delete') && (
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500" onClick={() => {
+                                  if (window.confirm('Excluir este cliente?')) {
+                                    const updated = customers.filter(cust => cust.id !== c.id);
+                                    setCustomers(updated);
+                                    localStorage.setItem('lider_customers', JSON.stringify(updated));
+                                  }
+                                }}><Trash2 size={12}/></Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1008,79 +991,54 @@ const Dashboard = () => {
           </TabsContent>
 
           {/* CONTEÚDO CONFIGURAÇÕES */}
-          <TabsContent value="config" className="space-y-8">
+          <TabsContent value="config" className="space-y-6 sm:space-y-8">
             <Tabs defaultValue="site" className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6">
-                <TabsTrigger value="site">Site e Institucional</TabsTrigger>
-                <TabsTrigger value="banners">Banners</TabsTrigger>
-                <TabsTrigger value="regras">Regras de Negócio</TabsTrigger>
-                <TabsTrigger value="usuarios">Gestão de Usuários e Permissões</TabsTrigger>
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full sm:w-auto overflow-x-auto flex-nowrap justify-start">
+                <TabsTrigger value="site" className="flex-shrink-0">Site</TabsTrigger>
+                <TabsTrigger value="banners" className="flex-shrink-0">Banners</TabsTrigger>
+                <TabsTrigger value="regras" className="flex-shrink-0">Regras</TabsTrigger>
+                <TabsTrigger value="usuarios" className="flex-shrink-0">Usuários</TabsTrigger>
               </TabsList>
 
               <TabsContent value="site">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                   {/* COLUNA 1: CONTATOS E IDENTIDADE */}
                   <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
                     <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Globe className="text-blue-600" /> Contatos e Identidade</CardTitle>
+                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white text-base"><Globe className="text-blue-600" size={18} /> Identidade</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                       <form className="space-y-6">
-                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
-                          <label className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Logo da Empresa (Para o PDF)</label>
-                          <div className="flex items-center gap-6">
-                            <div className="w-24 h-24 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                        <div className="space-y-4 p-3 sm:p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
+                          <label className="text-[10px] font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Logo da Empresa</label>
+                          <div className="flex items-center gap-4 sm:gap-6">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
                               {siteSettings.logo ? (
                                 <img src={siteSettings.logo} alt="Logo" className="w-full h-full object-contain" />
                               ) : (
-                                <ImageIcon className="text-blue-200 dark:text-slate-700 w-8 h-8" />
+                                <ImageIcon className="text-blue-200 dark:text-slate-700 w-6 h-6 sm:w-8 sm:h-8" />
                               )}
                               <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                                <Upload size={20} />
+                                <Upload size={18} />
                                 <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                               </label>
                             </div>
                             <div className="flex-1 space-y-1">
-                              <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Upload da Logo</p>
-                              <p className="text-xs text-gray-500">Recomendado: PNG ou JPG com fundo branco ou transparente.</p>
-                              {siteSettings.logo && (
-                                <Button variant="ghost" size="sm" className="text-red-500 dark:text-red-400 h-8 px-2" onClick={() => setSiteSettings({...siteSettings, logo: ''})}>
-                                  <Trash2 size={14} className="mr-1" /> Remover Logo
-                                </Button>
-                              )}
+                              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">Upload da Logo</p>
+                              <p className="text-[10px] text-gray-500">PNG ou JPG.</p>
                             </div>
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold dark:text-gray-400">Nome da Empresa (PDF)</label>
-                          <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                          <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Nome da Empresa</label>
+                          <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
-                          <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1"><label className="text-[10px] font-bold dark:text-gray-400 uppercase">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" /></div>
+                          <div className="space-y-1"><label className="text-[10px] font-bold dark:text-gray-400 uppercase">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" /></div>
                         </div>
-                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
-                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
-                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
-                        
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                          <div className="col-span-2 flex items-center gap-2 mb-2">
-                            <MapPin size={16} className="text-blue-600" />
-                            <span className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Localização (Google Maps)</span>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Latitude</label>
-                            <Input value={siteSettings.latitude} onChange={(e) => setSiteSettings({...siteSettings, latitude: e.target.value})} placeholder="-18.9723105" className="dark:bg-slate-950 dark:border-slate-800" />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Longitude</label>
-                            <Input value={siteSettings.longitude} onChange={(e) => setSiteSettings({...siteSettings, longitude: e.target.value})} placeholder="-48.3720316" className="dark:bg-slate-950 dark:border-slate-800" />
-                          </div>
-                          <p className="col-span-2 text-[10px] text-gray-500 italic mt-2">Ao preencher, o endereço no site abrirá o Google Maps automaticamente.</p>
-                        </div>
-
-                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold dark:text-gray-400 uppercase">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" /></div>
                       </form>
                     </CardContent>
                   </Card>
@@ -1088,41 +1046,17 @@ const Dashboard = () => {
                   {/* COLUNA 2: CONTEÚDO INSTITUCIONAL */}
                   <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
                     <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Info className="text-blue-600" /> Conteúdo Institucional (Sobre Nós)</CardTitle>
+                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white text-base"><Info className="text-blue-600" size={18} /> Institucional</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-6">
-                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
-                        <label className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Imagem da Seção Sobre</label>
-                        <div className="flex items-center gap-6">
-                          <div className="w-32 h-32 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
-                            <img src={siteSettings.aboutImage} alt="Sobre" className="w-full h-full object-cover" />
-                            <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                              <Upload size={20} />
-                              <input type="file" className="hidden" accept="image/*" onChange={handleAboutImageUpload} />
-                            </label>
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Alterar Foto</p>
-                            <p className="text-xs text-gray-500">Esta imagem aparece ao lado do texto institucional na página inicial.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold dark:text-gray-400">Anos de Experiência</label>
-                          <Input value={siteSettings.aboutYears} onChange={(e) => setSiteSettings({...siteSettings, aboutYears: e.target.value})} placeholder="Ex: 15+" className="dark:bg-slate-950 dark:border-slate-800" />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold dark:text-gray-400">Título da Seção</label>
-                          <Input value={siteSettings.aboutTitle} onChange={(e) => setSiteSettings({...siteSettings, aboutTitle: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
-                        </div>
-                      </div>
-
                       <div className="space-y-1">
-                        <label className="text-xs font-bold dark:text-gray-400">Descrição / História</label>
+                        <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Título da Seção</label>
+                        <Input value={siteSettings.aboutTitle} onChange={(e) => setSiteSettings({...siteSettings, aboutTitle: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800 h-9 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Descrição / História</label>
                         <Textarea 
-                          className="min-h-[150px] dark:bg-slate-950 dark:border-slate-800" 
+                          className="min-h-[120px] dark:bg-slate-950 dark:border-slate-800 text-sm" 
                           value={siteSettings.aboutDescription} 
                           onChange={(e) => setSiteSettings({...siteSettings, aboutDescription: e.target.value})} 
                         />
@@ -1132,8 +1066,8 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="mt-8 flex justify-center">
-                  <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Configurações salvas!');}} className="bg-blue-600 px-12 py-6 text-lg font-bold shadow-xl hover:scale-105 transition-transform">
-                    <Save className="mr-2 h-5 w-5" /> SALVAR TODAS AS ALTERAÇÕES
+                  <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Configurações salvas!');}} className="bg-blue-600 w-full sm:w-auto sm:px-12 py-6 text-base font-bold shadow-xl">
+                    <Save className="mr-2 h-5 w-5" /> SALVAR ALTERAÇÕES
                   </Button>
                 </div>
               </TabsContent>
@@ -1141,14 +1075,14 @@ const Dashboard = () => {
               <TabsContent value="banners">
                 <Card className="border-blue-100 dark:border-slate-800 shadow-lg max-w-2xl dark:bg-slate-900">
                   <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><ImageIcon className="text-blue-600" /> Banners do Carrossel</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white text-base"><ImageIcon className="text-blue-600" size={18} /> Banners</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <PlusCircle className="w-8 h-8 text-blue-400 mb-2" />
-                          <p className="text-sm text-blue-500 font-medium">Subir nova foto</p>
+                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center">
+                          <PlusCircle className="w-6 h-6 text-blue-400 mb-1" />
+                          <p className="text-xs text-blue-500 font-medium">Subir nova foto</p>
                         </div>
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
@@ -1163,25 +1097,19 @@ const Dashboard = () => {
                         }} />
                       </label>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {siteSettings.banners.map((banner) => (
-                        <div key={banner.id} className="space-y-3 p-4 bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm">
+                        <div key={banner.id} className="space-y-3 p-3 bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-xl shadow-sm">
                           <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Prévia</span>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
                           </div>
-                          <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100 dark:border-slate-800">
+                          <div className="relative aspect-[21/9] w-full rounded-lg overflow-hidden bg-blue-900">
                             <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 pt-2">
-                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label><Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} /></div>
-                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label><Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} /></div>
                           </div>
                         </div>
                       ))}
                     </div>
-                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1189,20 +1117,19 @@ const Dashboard = () => {
               <TabsContent value="regras">
                 <Card className="border-blue-100 dark:border-slate-800 shadow-lg max-w-2xl dark:bg-slate-900">
                   <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><TrendingDown className="text-blue-600" /> Regras de Negócio e Financeiro</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white text-base"><TrendingDown className="text-blue-600" size={18} /> Regras de Negócio</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
                     <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 space-y-4">
                       <div className="flex items-center gap-2">
-                        <Percent size={18} className="text-blue-600" />
-                        <h3 className="text-sm font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Limites de Alerta de Desconto</h3>
+                        <Percent size={16} className="text-blue-600" />
+                        <h3 className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Limites de Desconto</h3>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Defina os percentuais que disparam avisos visuais no formulário de orçamento para proteger sua margem.</p>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                      <div className="space-y-6 pt-2">
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
-                            Alerta de Atenção (Amarelo)
+                          <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 flex justify-between uppercase">
+                            Atenção (Amarelo)
                             <span className="text-blue-600">{siteSettings.maxDiscountWarning}%</span>
                           </label>
                           <Slider 
@@ -1214,8 +1141,8 @@ const Dashboard = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
-                            Alerta Crítico (Vermelho)
+                          <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 flex justify-between uppercase">
+                            Crítico (Vermelho)
                             <span className="text-red-600">{siteSettings.maxDiscountDanger}%</span>
                           </label>
                           <Slider 
@@ -1228,17 +1155,6 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
-                      <Info size={20} className="text-blue-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-gray-500 leading-relaxed">
-                        Esses valores são usados apenas para fins de **alerta visual** durante a criação do orçamento. Eles não impedem a finalização da venda, mas servem como um guia para o técnico ou vendedor.
-                      </p>
-                    </div>
-
-                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Regras de negócio atualizadas!');}} className="w-full bg-blue-600">
-                      <Save className="mr-2 h-4 w-4" /> Salvar Regras
-                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1305,7 +1221,7 @@ const Dashboard = () => {
       <Dialog open={isEditPartOpen} onOpenChange={setIsEditPartOpen}>
         <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle className="text-blue-900 dark:text-white">Corrigir Peça no Estoque</DialogTitle>
+            <DialogTitle className="text-blue-900 dark:text-white">Corrigir Peça</DialogTitle>
           </DialogHeader>
           {editingPart && (
             <div className="grid gap-4 py-4">
@@ -1325,7 +1241,6 @@ const Dashboard = () => {
                   onChange={(e) => setEditingPart({...editingPart, quantity: Number(e.target.value)})} 
                   className="dark:bg-slate-950 dark:border-slate-800"
                 />
-                <p className="text-[10px] text-gray-500 italic">* Alterar a quantidade aqui registrará uma "correção" no histórico.</p>
               </div>
             </div>
           )}
