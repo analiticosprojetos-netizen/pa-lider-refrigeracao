@@ -116,6 +116,12 @@ const Dashboard = () => {
     maxDiscountDanger: 15
   });
 
+  // Função para formatar texto (Primeira letra de cada palavra em maiúsculo)
+  const formatToStandardCase = (str: string) => {
+    if (!str) return str;
+    return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+  };
+
   const formatPhone = (value: string) => {
     if (!value) return value;
     const phoneNumber = value.replace(/[^\d]/g, '');
@@ -184,15 +190,17 @@ const Dashboard = () => {
     }
     if (!newName || !newQty) return;
     const qty = parseInt(newQty);
+    const formattedName = formatToStandardCase(newName);
+    
     const newPart: Part = {
       id: Math.random().toString(36).substr(2, 9),
-      name: newName,
+      name: formattedName,
       quantity: qty
     };
     
     const newMovement: Movement = {
       id: Math.random().toString(36).substr(2, 9),
-      partName: newName,
+      partName: formattedName,
       type: 'entrada',
       quantity: qty,
       user: currentUser?.username || 'Sistema',
@@ -225,13 +233,14 @@ const Dashboard = () => {
     const oldPart = parts.find(p => p.id === editingPart.id);
     if (!oldPart) return;
 
-    const updatedParts = parts.map(p => p.id === editingPart.id ? editingPart : p);
+    const formattedPart = { ...editingPart, name: formatToStandardCase(editingPart.name) };
+    const updatedParts = parts.map(p => p.id === formattedPart.id ? formattedPart : p);
     
-    if (oldPart.quantity !== editingPart.quantity) {
-      const diff = editingPart.quantity - oldPart.quantity;
+    if (oldPart.quantity !== formattedPart.quantity) {
+      const diff = formattedPart.quantity - oldPart.quantity;
       const newMovement: Movement = {
         id: Math.random().toString(36).substr(2, 9),
-        partName: editingPart.name,
+        partName: formattedPart.name,
         type: 'correcao',
         quantity: Math.abs(diff),
         user: currentUser?.username || 'Sistema',
@@ -473,8 +482,9 @@ const Dashboard = () => {
   const handleSaveCustomerEdit = () => {
     if (!editingCustomer) return;
     
+    const formattedCustomer = { ...editingCustomer, name: formatToStandardCase(editingCustomer.name) };
     const updatedCustomers = customers.map(c => 
-      c.id === editingCustomer.id ? editingCustomer : c
+      c.id === formattedCustomer.id ? formattedCustomer : c
     );
     
     setCustomers(updatedCustomers);
@@ -672,7 +682,14 @@ const Dashboard = () => {
                         <form onSubmit={handleAddPart} className="space-y-4">
                           <div className="space-y-1">
                             <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
-                            <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required className="dark:bg-slate-950 dark:border-slate-800" />
+                            <Input 
+                              placeholder="Ex: Compressor TM16" 
+                              value={newName} 
+                              onChange={(e) => setNewName(e.target.value)} 
+                              onBlur={(e) => setNewName(formatToStandardCase(e.target.value))}
+                              required 
+                              className="dark:bg-slate-950 dark:border-slate-800" 
+                            />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
@@ -1272,6 +1289,7 @@ const Dashboard = () => {
                 <Input 
                   value={editingCustomer.name} 
                   onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} 
+                  onBlur={(e) => setEditingCustomer({...editingCustomer, name: formatToStandardCase(e.target.value)})}
                   className="dark:bg-slate-950 dark:border-slate-800"
                 />
               </div>
@@ -1322,6 +1340,7 @@ const Dashboard = () => {
                 <Input 
                   value={editingPart.name} 
                   onChange={(e) => setEditingPart({...editingPart, name: e.target.value})} 
+                  onBlur={(e) => setEditingPart({...editingPart, name: formatToStandardCase(e.target.value)})}
                   className="dark:bg-slate-950 dark:border-slate-800"
                 />
               </div>

@@ -114,6 +114,12 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
+  // Função para formatar texto (Primeira letra de cada palavra em maiúsculo)
+  const formatToStandardCase = (str: string) => {
+    if (!str) return str;
+    return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+  };
+
   // Lista de placas vinculadas ao cliente selecionado
   const clientPlates = React.useMemo(() => {
     if (!formData.clientName) return [];
@@ -294,8 +300,8 @@ const ServiceOrderForm = ({
       id: newId,
       date: initialData ? initialData.date : new Date().toLocaleString(),
       status: initialData ? initialData.status : 'Pendente',
-      services,
-      parts,
+      services: services.map(s => ({ ...s, description: formatToStandardCase(s.description) })),
+      parts: parts.map(p => ({ ...p, description: formatToStandardCase(p.description) })),
       partsValue: partsTotal,
       servicesValue: servicesTotal,
       subtotal,
@@ -304,7 +310,7 @@ const ServiceOrderForm = ({
 
     const customerData: Customer = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.clientName,
+      name: formatToStandardCase(formData.clientName),
       document: formData.document,
       phone: formData.phone,
       email: formData.email
@@ -351,6 +357,7 @@ const ServiceOrderForm = ({
                   list="customers-list"
                   value={formData.clientName} 
                   onChange={e => handleCustomerSearch(e.target.value)} 
+                  onBlur={e => setFormData({...formData, clientName: formatToStandardCase(e.target.value)})}
                   required 
                   placeholder="Digite o nome..." 
                 />
@@ -401,7 +408,11 @@ const ServiceOrderForm = ({
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Modelo Veículo</label>
-                <Input value={formData.vehicleModel} onChange={e => setFormData({...formData, vehicleModel: e.target.value})} />
+                <Input 
+                  value={formData.vehicleModel} 
+                  onChange={e => setFormData({...formData, vehicleModel: e.target.value})} 
+                  onBlur={e => setFormData({...formData, vehicleModel: formatToStandardCase(e.target.value)})}
+                />
               </div>
               
               <div className="space-y-1">
@@ -410,6 +421,7 @@ const ServiceOrderForm = ({
                   list="brands-list"
                   value={formData.equipBrand} 
                   onChange={e => setFormData({...formData, equipBrand: e.target.value, equipModel: ''})} 
+                  onBlur={e => setFormData({...formData, equipBrand: formatToStandardCase(e.target.value)})}
                   placeholder="Ex: Thermo King" 
                 />
                 <datalist id="brands-list">
@@ -425,6 +437,7 @@ const ServiceOrderForm = ({
                   list="models-list"
                   value={formData.equipModel} 
                   onChange={e => setFormData({...formData, equipModel: e.target.value})} 
+                  onBlur={e => setFormData({...formData, equipModel: formatToStandardCase(e.target.value)})}
                   placeholder="Selecione ou digite..."
                 />
                 <datalist id="models-list">
@@ -440,6 +453,7 @@ const ServiceOrderForm = ({
                   list="service-types"
                   value={formData.serviceType} 
                   onChange={e => setFormData({...formData, serviceType: e.target.value})} 
+                  onBlur={e => setFormData({...formData, serviceType: formatToStandardCase(e.target.value)})}
                   placeholder="Selecione ou digite o tipo..."
                 />
                 <datalist id="service-types">
@@ -482,7 +496,12 @@ const ServiceOrderForm = ({
                 <div key={s.id} className="flex gap-2 items-end">
                   <div className="flex-1 space-y-1">
                     <label className="text-[8px] font-bold text-gray-400 uppercase">Serviço</label>
-                    <Input value={s.description} onChange={e => updateItem(s.id, 'service', 'description', e.target.value)} placeholder="Descrição" />
+                    <Input 
+                      value={s.description} 
+                      onChange={e => updateItem(s.id, 'service', 'description', e.target.value)} 
+                      onBlur={e => updateItem(s.id, 'service', 'description', formatToStandardCase(e.target.value))}
+                      placeholder="Descrição" 
+                    />
                   </div>
                   <div className="w-24 space-y-1">
                     <label className="text-[8px] font-bold text-gray-400 uppercase">Valor</label>
@@ -514,7 +533,12 @@ const ServiceOrderForm = ({
                   <div className="flex gap-2 items-end">
                     <div className="flex-1 space-y-1">
                       <label className="text-[8px] font-bold text-gray-400 uppercase">Descrição da Peça</label>
-                      <Input value={p.description} onChange={e => updateItem(p.id, 'part', 'description', e.target.value)} placeholder="Descrição" />
+                      <Input 
+                        value={p.description} 
+                        onChange={e => updateItem(p.id, 'part', 'description', e.target.value)} 
+                        onBlur={e => updateItem(p.id, 'part', 'description', formatToStandardCase(e.target.value))}
+                        placeholder="Descrição" 
+                      />
                     </div>
                     <div className="w-16 space-y-1">
                       <label className="text-[8px] font-bold text-gray-400 uppercase">Qtd</label>
