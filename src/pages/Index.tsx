@@ -28,6 +28,13 @@ const Index = () => {
     (e.target as HTMLFormElement).reset();
   };
 
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contato');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -75,7 +82,6 @@ const Index = () => {
               <div className="space-y-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-blue-300">Representante Autorizada:</p>
                 <div className="flex flex-wrap gap-6 items-center">
-                  {/* Simulação dos Logos da Imagem */}
                   <div className="bg-white px-4 py-2 rounded-lg flex items-center justify-center">
                     <span className="text-blue-900 font-black italic text-xl">Carrier</span>
                   </div>
@@ -95,7 +101,10 @@ const Index = () => {
               </div>
 
               <div className="pt-4">
-                <Button className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all">
+                <Button 
+                  onClick={scrollToContact}
+                  className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all w-full md:w-auto"
+                >
                   SOLICITAR ORÇAMENTO AGORA
                 </Button>
               </div>
