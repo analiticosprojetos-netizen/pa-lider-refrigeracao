@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,7 @@ interface Movement {
   quantity: number;
   user: string;
   date: string;
+  note?: string;
 }
 
 interface Banner {
@@ -180,7 +181,8 @@ const Dashboard = () => {
       type: 'entrada',
       quantity: qty,
       user: currentUser?.username || 'Sistema',
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString(),
+      note: 'Cadastro inicial'
     };
 
     const updatedParts = [...parts, newPart];
@@ -218,7 +220,8 @@ const Dashboard = () => {
         type: 'correcao',
         quantity: Math.abs(diff),
         user: currentUser?.username || 'Sistema',
-        date: new Date().toLocaleString()
+        date: new Date().toLocaleString(),
+        note: 'Correção manual de estoque'
       };
       const updatedMovements = [newMovement, ...movements];
       setMovements(updatedMovements);
@@ -263,7 +266,8 @@ const Dashboard = () => {
           type,
           quantity: amount,
           user: currentUser?.username || 'Sistema',
-          date: new Date().toLocaleString()
+          date: new Date().toLocaleString(),
+          note: type === 'entrada' ? 'Entrada manual' : 'Saída manual'
         };
 
         const updatedMovements = [newMovement, ...movements];
@@ -340,7 +344,8 @@ const Dashboard = () => {
             type: 'saida',
             quantity: p.qty,
             user: currentUser?.username || 'Sistema',
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            note: `Baixa OS #${order.id}`
           };
           newMovements = [newMovement, ...newMovements];
           return { ...ip, quantity: ip.quantity - p.qty };
@@ -362,6 +367,52 @@ const Dashboard = () => {
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
 
     showSuccess('Orçamento executado e estoque atualizado!');
+  };
+
+  const handleRevertOrder = (orderId: string) => {
+    if (!hasPermission('orcamentos', 'edit')) return;
+    const order = orders.find(o => o.id === orderId);
+    if (!order || order.status !== 'Executado') return;
+
+    if (!window.confirm('Deseja estornar este orçamento? As peças retornarão ao estoque e o status voltará para Pendente.')) return;
+
+    const partsToReturn = order.parts.filter((p: any) => p.inventoryPartId);
+    
+    let updatedParts = [...parts];
+    let newMovements = [...movements];
+
+    partsToReturn.forEach((p: any) => {
+      updatedParts = updatedParts.map(ip => {
+        if (ip.id === p.inventoryPartId) {
+          const newMovement: Movement = {
+            id: Math.random().toString(36).substr(2, 9),
+            partName: ip.name,
+            type: 'entrada',
+            quantity: p.qty,
+            user: currentUser?.username || 'Sistema',
+            date: new Date().toLocaleString(),
+            note: `Estorno OS #${order.id}`
+          };
+          newMovements = [newMovement, ...newMovements];
+          return { ...ip, quantity: ip.quantity + p.qty };
+        }
+        return ip;
+      });
+    });
+
+    const updatedOrders = orders.map(o => 
+      o.id === orderId ? { ...o, status: 'Pendente' } : o
+    );
+
+    setParts(updatedParts);
+    setMovements(newMovements);
+    setOrders(updatedOrders);
+    
+    localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
+    localStorage.setItem('lider_movements', JSON.stringify(newMovements));
+    localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+
+    showSuccess('Orçamento estornado! Peças devolvidas ao estoque.');
   };
 
   const handleCancelOrder = (orderId: string) => {
@@ -709,6 +760,7 @@ const Dashboard = () => {
                           <TableHead className="font-bold">Tipo</TableHead>
                           <TableHead className="text-center font-bold">Qtd</TableHead>
                           <TableHead className="font-bold">Operador</TableHead>
+                          <TableHead className="font-bold">Observação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -728,6 +780,7 @@ const Dashboard = () => {
                             </TableCell>
                             <TableCell className="text-center font-bold dark:text-gray-300">{m.quantity}</TableCell>
                             <TableCell className="text-sm text-blue-600 dark:text-blue-400 font-bold">{m.user}</TableCell>
+                            <TableCell className="text-xs text-gray-500 dark:text-gray-400 italic">{m.note || '-'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -829,6 +882,9 @@ const Dashboard = () => {
                                     <Button title="Cancelar" size="sm" variant="outline" className="border-red-200 text-red-600 dark:border-red-900/30 dark:text-red-400" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
                                     <Button title="Editar" size="sm" variant="outline" className="border-blue-200 text-blue-600 dark:border-blue-900/30 dark:text-blue-400" onClick={() => handleEditOrder(order)}><Edit2 size={16} /></Button>
                                   </>
+                                )}
+                                {order.status === 'Executado' && hasPermission('orcamentos', 'edit') && (
+                                  <Button title="Estornar (Devolver ao Estoque)" size="sm" variant="outline" className="border-orange-200 text-orange-600 dark:border-orange-900/30 dark:text-orange-400" onClick={() => handleRevertOrder(order.id)}><RotateCcw size={16} /></Button>
                                 )}
                                 <Button title="Visualizar" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
                                 <Button title="Baixar PDF" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
