@@ -108,6 +108,15 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
+  // Lista de placas vinculadas ao cliente selecionado
+  const clientPlates = React.useMemo(() => {
+    if (!formData.clientName) return [];
+    const plates = previousOrders
+      .filter(o => o.clientName.toLowerCase() === formData.clientName.toLowerCase())
+      .map(o => o.plate.toUpperCase());
+    return Array.from(new Set(plates)); // Apenas placas únicas
+  }, [formData.clientName, previousOrders]);
+
   const formatPhone = (value: string) => {
     if (!value) return value;
     const phoneNumber = value.replace(/[^\d]/g, '');
@@ -161,20 +170,26 @@ const ServiceOrderForm = ({
     const upperPlate = plate.toUpperCase();
     setFormData(prev => ({ ...prev, plate: upperPlate }));
     
-    if (!initialData && upperPlate.length >= 7) {
-      const pastOrder = previousOrders.find(o => o.plate.toUpperCase() === upperPlate);
+    if (!initialData) {
+      // Busca no histórico se essa placa já existe para o cliente atual ou qualquer cliente
+      const pastOrder = previousOrders.find(o => 
+        o.plate.toUpperCase() === upperPlate && 
+        (formData.clientName ? o.clientName.toLowerCase() === formData.clientName.toLowerCase() : true)
+      );
+
       if (pastOrder) {
         setFormData(prev => ({
           ...prev,
           vehicleModel: pastOrder.vehicleModel,
           equipBrand: pastOrder.equipBrand,
           equipModel: pastOrder.equipModel,
-          clientName: pastOrder.clientName,
-          document: pastOrder.document,
-          phone: pastOrder.phone,
-          email: pastOrder.email
+          // Se o cliente ainda não foi preenchido, preenche também
+          clientName: prev.clientName || pastOrder.clientName,
+          document: prev.document || pastOrder.document,
+          phone: prev.phone || pastOrder.phone,
+          email: prev.email || pastOrder.email
         }));
-        showSuccess('Dados do veículo e cliente recuperados do histórico!');
+        showSuccess('Dados do veículo recuperados do histórico!');
       }
     }
   };
@@ -290,7 +305,18 @@ const ServiceOrderForm = ({
             <CardContent className="pt-6 grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Nome / Empresa</label>
-                <Input value={formData.clientName} onChange={e => handleCustomerSearch(e.target.value)} required placeholder="Digite o nome..." />
+                <Input 
+                  list="customers-list"
+                  value={formData.clientName} 
+                  onChange={e => handleCustomerSearch(e.target.value)} 
+                  required 
+                  placeholder="Digite o nome..." 
+                />
+                <datalist id="customers-list">
+                  {customers.map(c => (
+                    <option key={c.id} value={c.name} />
+                  ))}
+                </datalist>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">CPF / CNPJ</label>
@@ -319,7 +345,17 @@ const ServiceOrderForm = ({
             <CardContent className="pt-6 grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Placa</label>
-                <Input value={formData.plate} onChange={e => handlePlateChange(e.target.value)} placeholder="ABC1234" />
+                <Input 
+                  list="client-plates-list"
+                  value={formData.plate} 
+                  onChange={e => handlePlateChange(e.target.value)} 
+                  placeholder="ABC1234" 
+                />
+                <datalist id="client-plates-list">
+                  {clientPlates.map(plate => (
+                    <option key={plate} value={plate} />
+                  ))}
+                </datalist>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Modelo Veículo</label>
