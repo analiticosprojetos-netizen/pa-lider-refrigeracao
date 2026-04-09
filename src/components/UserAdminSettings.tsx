@@ -1,12 +1,13 @@
 "use client";
 
 import React from 'react';
-import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
 
 export interface Permission {
@@ -26,7 +27,7 @@ export interface RolePermissions {
 export interface UserProfile {
   id: string;
   username: string;
-  email: string; // Adicionado campo de e-mail
+  email: string;
   password?: string;
   role: string;
   permissions: RolePermissions;
@@ -53,6 +54,9 @@ const UserAdminSettings = () => {
   const [roles, setRoles] = React.useState<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA']);
   const [newRoleName, setNewRoleName] = React.useState('');
   const [newUser, setNewUser] = React.useState({ username: '', email: '', password: '', role: 'ANALISTA' });
+  
+  const [editingUser, setEditingUser] = React.useState<UserProfile | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     const savedUsers = localStorage.getItem('lider_users');
@@ -133,6 +137,25 @@ const UserAdminSettings = () => {
     saveUsers([...users, user]);
     setNewUser({ username: '', email: '', password: '', role: roles[0] || 'ANALISTA' });
     showSuccess('Usuário criado com sucesso!');
+  };
+
+  const handleEditUser = (user: UserProfile) => {
+    setEditingUser({ ...user });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveUserEdit = () => {
+    if (!editingUser) return;
+    
+    if (!editingUser.username || !editingUser.email) {
+      showError('Nome e E-mail são obrigatórios.');
+      return;
+    }
+
+    const updatedUsers = users.map(u => u.id === editingUser.id ? editingUser : u);
+    saveUsers(updatedUsers);
+    setIsEditModalOpen(false);
+    showSuccess('Dados do usuário atualizados!');
   };
 
   const togglePermission = (userId: string, tab: keyof RolePermissions, action: keyof Permission) => {
@@ -310,11 +333,16 @@ const UserAdminSettings = () => {
                     ))}
 
                     <TableCell className="text-right">
-                      {user.role !== 'ADMIN' && (
-                        <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteUser(user.id)}>
-                          <Trash2 size={16} />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditUser(user)}>
+                          <Edit2 size={16} />
                         </Button>
-                      )}
+                        {user.role !== 'ADMIN' && (
+                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteUser(user.id)}>
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -323,6 +351,66 @@ const UserAdminSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* MODAL DE EDIÇÃO DE USUÁRIO */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-blue-900 dark:text-white">Editar Perfil do Usuário</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Nome de Usuário</label>
+                <Input 
+                  value={editingUser.username} 
+                  onChange={(e) => setEditingUser({...editingUser, username: e.target.value})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">E-mail</label>
+                <Input 
+                  type="email"
+                  value={editingUser.email} 
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Nova Senha (Deixe em branco para manter)</label>
+                <Input 
+                  type="password"
+                  placeholder="Digite a nova senha..."
+                  onChange={(e) => setEditingUser({...editingUser, password: e.target.value})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Cargo / Hierarquia</label>
+                <Select 
+                  value={editingUser.role} 
+                  onValueChange={(v) => setEditingUser({...editingUser, role: v})}
+                  disabled={editingUser.username === 'admin'} // Proteção para o admin principal
+                >
+                  <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {roles.map(role => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="dark:border-slate-800">Cancelar</Button>
+            <Button className="bg-blue-600" onClick={handleSaveUserEdit}>
+              <Save className="mr-2 h-4 w-4" /> Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
