@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import { showSuccess, showError } from '@/utils/toast';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
+import ServiceOrderForm from '@/components/ServiceOrderForm';
+import { generateServiceOrderPDF, exportToExcel } from '@/utils/exportUtils';
 
 interface Part {
   id: string;
@@ -46,6 +48,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [parts, setParts] = React.useState<Part[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
+  const [orders, setOrders] = React.useState<any[]>([]);
   const [currentUser, setCurrentUser] = React.useState('Administrador');
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
@@ -58,7 +61,7 @@ const Dashboard = () => {
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     banners: [] as Banner[],
-    carouselDelay: 6 // segundos
+    carouselDelay: 6
   });
 
   React.useEffect(() => {
@@ -76,6 +79,9 @@ const Dashboard = () => {
 
     const savedSettings = localStorage.getItem('lider_site_settings');
     if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
+
+    const savedOrders = localStorage.getItem('lider_orders');
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
   }, [navigate]);
 
   const saveInventory = (updatedParts: Part[], updatedMovements: Movement[]) => {
@@ -111,11 +117,6 @@ const Dashboard = () => {
   };
 
   const registerMovement = (partId: string, type: 'entrada' | 'saida', amount: number) => {
-    if (!currentUser) {
-      showError('Informe o nome do operador!');
-      return;
-    }
-
     const updatedParts = parts.map(part => {
       if (part.id === partId) {
         const newTotal = type === 'entrada' ? part.quantity + amount : part.quantity - amount;
@@ -146,10 +147,14 @@ const Dashboard = () => {
     showSuccess(`${type === 'entrada' ? 'Entrada' : 'Saída'} registrada!`);
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings));
-    showSuccess('Configurações salvas!');
+  const handleSaveOrder = (order: any) => {
+    const updatedOrders = [order, ...orders];
+    setOrders(updatedOrders);
+    localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+  };
+
+  const handleSendEmail = (order: any) => {
+    showSuccess(`Orçamento #${order.id} enviado para ${order.email}!`);
   };
 
   const handleLogout = () => {
@@ -186,14 +191,14 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="estoque" className="space-y-8">
-          <TabsList className="bg-white border border-blue-100 p-1 h-12">
+          <TabsList className="bg-white border border-blue-100 p-1 h-12 overflow-x-auto flex-nowrap">
             <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>
-            <TabsTrigger value="historico" className="px-6">Histórico</TabsTrigger>
-            <TabsTrigger value="config" className="px-6">Configurações do Site</TabsTrigger>
+            <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>
+            <TabsTrigger value="historico" className="px-6">Histórico Estoque</TabsTrigger>
+            <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="estoque" className="space-y-8">
-            {/* Gráficos e Resumo */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <Card className="bg-blue-600 text-white shadow-xl border-none">
                 <CardContent className="pt-6">
@@ -241,7 +246,6 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Cadastro */}
               <Card className="h-fit shadow-lg border-blue-50">
                 <CardHeader className="bg-blue-50/50 border-b border-blue-50">
                   <CardTitle className="text-lg flex items-center gap-2 text-blue-900"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
@@ -261,7 +265,6 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* Tabela de Estoque */}
               <Card className="lg:col-span-2 shadow-lg border-blue-50">
                 <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 border-b border-blue-50">
                   <CardTitle className="text-lg text-blue-900">Controle de Peças</CardTitle>
@@ -290,22 +293,8 @@ const Dashboard = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="border-green-200 text-green-600 hover:bg-green-50"
-                                onClick={() => registerMovement(part.id, 'entrada', 1)}
-                              >
-                                <Plus size={16} />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="border-red-200 text-red-600 hover:bg-red-50"
-                                onClick={() => registerMovement(part.id, 'saida', 1)}
-                              >
-                                <Minus size={16} />
-                              </Button>
+                              <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
+                              <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -315,6 +304,69 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="orcamentos" className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-blue-900">Gestão de Orçamentos</h2>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos_lider')}><TableIcon className="mr-2 h-4 w-4" /> Exportar Excel</Button>
+              </div>
+            </div>
+
+            <Tabs defaultValue="lista" className="w-full">
+              <TabsList className="bg-white border border-blue-100 mb-6">
+                <TabsTrigger value="lista">Histórico de Orçamentos</TabsTrigger>
+                <TabsTrigger value="novo">Novo Orçamento</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="lista">
+                <Card className="shadow-lg border-blue-50">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50/50">
+                          <TableHead className="font-bold">ID</TableHead>
+                          <TableHead className="font-bold">Cliente</TableHead>
+                          <TableHead className="font-bold">Veículo</TableHead>
+                          <TableHead className="font-bold">Total</TableHead>
+                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="text-right font-bold">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-bold text-blue-600">#{order.id}</TableCell>
+                            <TableCell>{order.clientName}</TableCell>
+                            <TableCell>{order.plate} - {order.vehicleModel}</TableCell>
+                            <TableCell className="font-bold">R$ {order.total.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                {order.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)} title="Baixar PDF"><Download size={16}/></Button>
+                                <Button size="sm" variant="ghost" onClick={() => handleSendEmail(order)} title="Enviar por Email"><Mail size={16}/></Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {orders.length === 0 && (
+                          <TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-400 italic">Nenhum orçamento cadastrado.</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="novo">
+                <ServiceOrderForm onSave={handleSaveOrder} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="historico">
@@ -348,11 +400,6 @@ const Dashboard = () => {
                         <TableCell className="text-sm text-blue-600 font-bold">{m.user}</TableCell>
                       </TableRow>
                     ))}
-                    {movements.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12 text-gray-400 italic">Nenhuma movimentação registrada.</TableCell>
-                      </TableRow>
-                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -366,7 +413,7 @@ const Dashboard = () => {
                   <CardTitle className="flex items-center gap-2 text-blue-900"><Globe className="text-blue-600" /> Contatos e Redes</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <form onSubmit={handleSaveSettings} className="space-y-4">
+                  <form className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1"><label className="text-xs font-bold">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
                       <div className="space-y-1"><label className="text-xs font-bold">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
@@ -374,28 +421,7 @@ const Dashboard = () => {
                     <div className="space-y-1"><label className="text-xs font-bold">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
                     <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
                     <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
-                    
-                    <div className="pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock size={16} className="text-blue-600" />
-                        <label className="text-xs font-bold uppercase text-gray-500">Tempo do Carrossel (segundos)</label>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Slider 
-                          value={[siteSettings.carouselDelay]} 
-                          min={2} 
-                          max={20} 
-                          step={1}
-                          onValueChange={([v]) => setSiteSettings({...siteSettings, carouselDelay: v})} 
-                          className="flex-1"
-                        />
-                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-bold text-sm w-12 text-center">
-                          {siteSettings.carouselDelay}s
-                        </span>
-                      </div>
-                    </div>
-
-                    <Button type="submit" className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
+                    <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
                   </form>
                 </CardContent>
               </Card>
@@ -424,7 +450,6 @@ const Dashboard = () => {
                       }} />
                     </label>
                   </div>
-                  
                   <div className="space-y-6">
                     {siteSettings.banners.map((banner) => (
                       <div key={banner.id} className="space-y-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
@@ -432,14 +457,8 @@ const Dashboard = () => {
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
                         </div>
-                        
-                        {/* Mini Preview Realista */}
                         <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100">
-                          <img 
-                            src={banner.url} 
-                            className="w-full h-full object-cover" 
-                            style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} 
-                          />
+                          <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
                           <div className="absolute inset-0 flex items-center px-4">
                             <div className="scale-[0.3] origin-left">
@@ -448,21 +467,14 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
-
                         <div className="grid grid-cols-2 gap-4 pt-2">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label>
-                            <Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label>
-                            <Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} />
-                          </div>
+                          <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label><Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} /></div>
+                          <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label><Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} /></div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <Button onClick={handleSaveSettings} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
+                  <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
                 </CardContent>
               </Card>
             </div>
