@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -26,7 +26,8 @@ export interface RolePermissions {
 export interface UserProfile {
   id: string;
   username: string;
-  password?: string; // Adicionado campo de senha
+  email: string; // Adicionado campo de e-mail
+  password?: string;
   role: string;
   permissions: RolePermissions;
 }
@@ -51,7 +52,7 @@ const UserAdminSettings = () => {
   const [users, setUsers] = React.useState<UserProfile[]>([]);
   const [roles, setRoles] = React.useState<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA']);
   const [newRoleName, setNewRoleName] = React.useState('');
-  const [newUser, setNewUser] = React.useState({ username: '', password: '', role: 'ANALISTA' });
+  const [newUser, setNewUser] = React.useState({ username: '', email: '', password: '', role: 'ANALISTA' });
 
   React.useEffect(() => {
     const savedUsers = localStorage.getItem('lider_users');
@@ -60,7 +61,8 @@ const UserAdminSettings = () => {
       const admin: UserProfile = { 
         id: '1', 
         username: 'admin', 
-        password: '1234', // Senha padrão inicial
+        email: 'admin@lider.com',
+        password: '1234',
         role: 'ADMIN', 
         permissions: FULL_PERMISSIONS 
       };
@@ -110,25 +112,26 @@ const UserAdminSettings = () => {
   };
 
   const handleAddUser = () => {
-    if (!newUser.username || !newUser.password) {
-      showError('Preencha usuário e senha.');
+    if (!newUser.username || !newUser.email || !newUser.password) {
+      showError('Preencha todos os campos (Nome, E-mail e Senha).');
       return;
     }
     
-    if (users.some(u => u.username === newUser.username)) {
-      showError('Este nome de usuário já existe.');
+    if (users.some(u => u.username === newUser.username || u.email === newUser.email)) {
+      showError('Nome de usuário ou e-mail já cadastrado.');
       return;
     }
 
     const user: UserProfile = {
       id: Math.random().toString(36).substr(2, 9),
       username: newUser.username,
+      email: newUser.email,
       password: newUser.password,
       role: newUser.role,
       permissions: (newUser.role === 'ADMIN' || newUser.role === 'CEO') ? FULL_PERMISSIONS : DEFAULT_PERMISSIONS
     };
     saveUsers([...users, user]);
-    setNewUser({ username: '', password: '', role: roles[0] || 'ANALISTA' });
+    setNewUser({ username: '', email: '', password: '', role: roles[0] || 'ANALISTA' });
     showSuccess('Usuário criado com sucesso!');
   };
 
@@ -198,13 +201,23 @@ const UserAdminSettings = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">Nome de Usuário</label>
               <Input 
                 placeholder="Ex: joao.silva" 
                 value={newUser.username} 
                 onChange={e => setNewUser({...newUser, username: e.target.value})}
+                className="dark:bg-slate-950 dark:border-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase">E-mail</label>
+              <Input 
+                type="email"
+                placeholder="email@lider.com" 
+                value={newUser.email} 
+                onChange={e => setNewUser({...newUser, email: e.target.value})}
                 className="dark:bg-slate-950 dark:border-slate-800"
               />
             </div>
@@ -229,7 +242,7 @@ const UserAdminSettings = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAddUser} className="bg-blue-600">
+            <Button onClick={handleAddUser} className="bg-blue-600 w-full">
               Criar Usuário
             </Button>
           </div>
@@ -248,7 +261,7 @@ const UserAdminSettings = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 dark:bg-slate-800/30">
-                  <TableHead className="w-[200px] font-bold">Usuário / Cargo</TableHead>
+                  <TableHead className="w-[250px] font-bold">Usuário / E-mail</TableHead>
                   <TableHead className="text-center font-bold">Estoque</TableHead>
                   <TableHead className="text-center font-bold">Orçamentos</TableHead>
                   <TableHead className="text-center font-bold">Clientes</TableHead>
@@ -263,7 +276,8 @@ const UserAdminSettings = () => {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-blue-900 dark:text-white">{user.username}</span>
-                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">{user.role}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">{user.email}</span>
+                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter mt-1">{user.role}</span>
                       </div>
                     </TableCell>
                     

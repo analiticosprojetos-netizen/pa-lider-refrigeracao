@@ -10,19 +10,20 @@ import { showError, showSuccess } from '@/utils/toast';
 import { UserProfile } from '@/components/UserAdminSettings';
 
 const Login = () => {
-  const [username, setUsername] = React.useState('');
+  const [identifier, setIdentifier] = React.useState(''); // Pode ser username ou email
   const [password, setPassword] = React.useState('');
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Buscar usuários cadastrados
     const savedUsers = localStorage.getItem('lider_users');
     const users: UserProfile[] = savedUsers ? JSON.parse(savedUsers) : [];
     
-    // Verificar se existe usuário com essas credenciais
-    const user = users.find(u => u.username === username && u.password === password);
+    // Verifica se existe usuário com esse username OU email e a senha correta
+    const user = users.find(u => 
+      (u.username === identifier || u.email === identifier) && u.password === password
+    );
 
     if (user) {
       showSuccess(`Bem-vindo, ${user.username}!`);
@@ -30,7 +31,7 @@ const Login = () => {
       localStorage.setItem('currentUser', JSON.stringify(user));
       navigate('/dashboard');
     } else {
-      showError('Usuário ou senha incorretos.');
+      showError('Usuário/E-mail ou senha incorretos.');
     }
   };
 
@@ -50,7 +51,7 @@ const Login = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-blue-900 dark:text-white">Gestão Lider</CardTitle>
-          <CardDescription className="dark:text-gray-400">Entre com suas credenciais de acesso</CardDescription>
+          <CardDescription className="dark:text-gray-400">Entre com seu usuário ou e-mail</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -58,10 +59,10 @@ const Login = () => {
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input 
-                  placeholder="Usuário" 
+                  placeholder="Usuário ou E-mail" 
                   className="pl-10 dark:bg-slate-950 dark:border-slate-800"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                 />
               </div>
