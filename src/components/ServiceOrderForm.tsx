@@ -43,6 +43,19 @@ const EQUIPMENT_DATABASE: Record<string, string[]> = {
   "Eurofrigo": ["EF-200", "EF-300", "EF-400"]
 };
 
+const SERVICE_TYPES = [
+  "Preventiva",
+  "Corretiva",
+  "Reforma de Baú",
+  "Troca de Óleo/Filtros",
+  "Carga de Gás",
+  "Reparo Elétrico",
+  "Instalação de Equipamento",
+  "Higienização",
+  "Socorro Mecânico",
+  "Vistoria Técnica"
+];
+
 interface Customer {
   id: string;
   name: string;
@@ -352,10 +365,9 @@ const ServiceOrderForm = ({
                   placeholder="Selecione ou digite o tipo..."
                 />
                 <datalist id="service-types">
-                  <option value="Preventiva" />
-                  <option value="Corretiva" />
-                  <option value="Emergencial" />
-                  <option value="Instalação" />
+                  {SERVICE_TYPES.map(type => (
+                    <option key={type} value={type} />
+                  ))}
                 </datalist>
               </div>
             </CardContent>
