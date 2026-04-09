@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [activeOrcamentoTab, setActiveOrcamentoTab] = React.useState('lista');
   
   const [siteSettings, setSiteSettings] = React.useState({
+    companyName: 'LIDER REFRIGERAÇÃO',
     whatsapp: '11999999999',
     instagram: 'https://instagram.com/liderefrigeracao',
     facebook: 'https://facebook.com/liderefrigeracao',
@@ -634,7 +635,7 @@ const Dashboard = () => {
                                   </>
                                 )}
                                 <Button title="Visualizar" size="sm" variant="ghost" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
-                                <Button title="Baixar PDF" size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)}><Download size={16}/></Button>
+                                <Button title="Baixar PDF" size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
                                 {hasPermission('orcamentos', 'delete') && (
                                   <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
                                 )}
@@ -740,6 +741,10 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="pt-6">
                     <form className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Nome da Empresa (PDF)</label>
+                        <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} />
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1"><label className="text-xs font-bold">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
                         <div className="space-y-1"><label className="text-xs font-bold">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
@@ -859,7 +864,7 @@ const Dashboard = () => {
         order={selectedOrder} 
         isOpen={isDetailsOpen} 
         onClose={() => setIsDetailsOpen(false)}
-        onDownload={generateServiceOrderPDF}
+        onDownload={(order) => generateServiceOrderPDF(order, siteSettings)}
         onSendEmail={(order) => showSuccess(`Enviado para ${order.email}`)}
       />
     </div>

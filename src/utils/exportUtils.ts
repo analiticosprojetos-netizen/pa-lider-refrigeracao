@@ -13,23 +13,29 @@ export const exportToExcel = (data: any[], fileName: string) => {
   }
 };
 
-export const generateServiceOrderPDF = (order: any) => {
+export const generateServiceOrderPDF = (order: any, settings?: any) => {
   if (!order) return;
+
+  // Se não vier settings, tenta pegar do localStorage ou usa padrão
+  const companyInfo = settings || JSON.parse(localStorage.getItem('lider_site_settings') || '{}');
+  const companyName = companyInfo.companyName || "LIDER REFRIGERAÇÃO";
+  const cnpj = companyInfo.cnpj || "00.000.000/0001-00";
+  const email = companyInfo.email || "contato@liderefrigeracao.com.br";
+  const phone = companyInfo.whatsapp || "(11) 99999-9999";
+  const address = companyInfo.address || "Av. Industrial, 1000 - Setor de Transportes";
 
   try {
     const doc = new jsPDF();
-    const bluePrimary = [26, 54, 93];
-    const blueAccent = [59, 130, 246];
-
+    
     // --- CABEÇALHO PROFISSIONAL ---
     doc.setFillColor(26, 54, 93);
     doc.rect(0, 0, 210, 45, "F");
     
-    // Logo/Nome da Empresa
+    // Nome da Empresa Dinâmico
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("LIDER REFRIGERAÇÃO", 15, 22);
+    doc.text(companyName.toUpperCase(), 15, 22);
     
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
@@ -38,9 +44,9 @@ export const generateServiceOrderPDF = (order: any) => {
     
     // Info da Empresa no Topo Direito
     doc.setFontSize(8);
-    doc.text("CNPJ: 00.000.000/0001-00", 145, 20); // Placeholder para o usuário alterar
-    doc.text("contato@liderefrigeracao.com.br", 145, 25);
-    doc.text("(11) 99999-9999", 145, 30);
+    doc.text(`CNPJ: ${cnpj}`, 145, 20);
+    doc.text(email, 145, 25);
+    doc.text(phone, 145, 30);
 
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
@@ -143,10 +149,10 @@ export const generateServiceOrderPDF = (order: any) => {
       doc.line(15, 285, 195, 285);
       doc.setFontSize(7);
       doc.setTextColor(150, 150, 150);
-      doc.text("LIDER REFRIGERAÇÃO - Av. Industrial, 1000 - Setor de Transportes - São Paulo/SP", 105, 290, { align: 'center' });
+      doc.text(`${companyName.toUpperCase()} - ${address}`, 105, 290, { align: 'center' });
     }
 
-    doc.save(`Orcamento_Lider_${order.id}.pdf`);
+    doc.save(`Orcamento_${companyName.replace(/\s+/g, '_')}_${order.id}.pdf`);
   } catch (error) {
     console.error("Erro PDF:", error);
     alert("Erro ao gerar PDF profissional. Verifique os dados.");
