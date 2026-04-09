@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +70,10 @@ const Dashboard = () => {
   const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
   const [customerSearchTerm, setCustomerSearchTerm] = React.useState('');
   
+  // Paginação Estoque
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 7;
+
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -130,6 +134,11 @@ const Dashboard = () => {
     const savedOrders = localStorage.getItem('lider_orders');
     if (savedOrders) setOrders(JSON.parse(savedOrders));
   }, [navigate]);
+
+  // Resetar página ao buscar
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const hasPermission = (tab: keyof UserProfile['permissions'], action: 'view' | 'edit' | 'delete') => {
     if (!currentUser) return false;
@@ -422,6 +431,14 @@ const Dashboard = () => {
   };
 
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  // Lógica de Paginação
+  const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
+  const paginatedParts = filteredParts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const filteredOrders = orders.filter(o => 
     o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
     o.clientName.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
@@ -596,7 +613,7 @@ const Dashboard = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredParts.map((part) => (
+                          {paginatedParts.map((part) => (
                             <TableRow key={part.id} className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
                               <TableCell className="font-medium text-gray-700 dark:text-gray-300">{part.name}</TableCell>
                               <TableCell className="text-center">
@@ -622,6 +639,35 @@ const Dashboard = () => {
                           ))}
                         </TableBody>
                       </Table>
+                      
+                      {/* Controles de Paginação */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Página {currentPage} de {totalPages}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                              disabled={currentPage === 1}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronLeft size={16} />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                              disabled={currentPage === totalPages}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronRight size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
