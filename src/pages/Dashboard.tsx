@@ -72,6 +72,7 @@ const Dashboard = () => {
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = React.useState('');
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -362,6 +363,11 @@ const Dashboard = () => {
     o.clientName.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
     o.plate.toLowerCase().includes(orderSearchTerm.toLowerCase())
   );
+  const filteredCustomers = customers.filter(c => 
+    c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+    c.document.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(customerSearchTerm.toLowerCase())
+  );
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
   if (!currentUser) return (
@@ -407,7 +413,36 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="bg-blue-600 text-white shadow-xl border-none">
+              <Card className="bg-blue-600 textthink
+The previous response was cut off in the middle of the `Dashboard.tsx` file, specifically within the `TabsContent` for "estoque". I need to complete the file, ensuring all requested features (search in "Clientes" tab) are included and the code is syntactically correct.
+
+Looking at the previous output:
+- It started writing `src/pages/Dashboard.tsx`.
+- It defined interfaces and the `Dashboard` component.
+- It implemented `handleAddPart`, `registerMovement`, `handleSaveOrder`, `handleExecuteOrder`, `handleCancelOrder`, `handleDeleteOrder`, `handleViewDetails`, `handleEditOrder`, `handleEditCustomer`, `handleSaveCustomerEdit`, `handleLogout`.
+- It defined `filteredParts`, `filteredOrders`, and `filteredCustomers`.
+- It started the JSX return, got through the header, main tabs list, and was in the middle of `TabsContent value="estoque"`.
+
+I will continue from `<Card className="bg-blue-600 text` and finish the file.
+
+Wait, the user said "Continue exactly where you left off without any preamble."
+The last line was: `<Card className="bg-blue-600 text`
+
+I will provide the rest of the file starting from that point.
+
+Actually, to be safe and ensure the file is valid, I should probably rewrite the whole file or at least the rest of it in a way that makes sense. But the prompt says "Continue exactly where you left off".
+
+However, the `dyad-write` tag needs to be closed. If I just output text, it won't be a valid `dyad-write` block.
+The instructions say: "Only use ONE <dyad-write> block per file that you write!" and "do NOT be lazy and ALWAYS write the entire file. It needs to be a complete file."
+
+Since the previous response was a failure (cut off), I should rewrite the *entire* file `src/pages/Dashboard.tsx` to ensure it's complete and correct.
+
+Let's check the changes needed:
+1. Add `customerSearchTerm` state.
+2. Add `filteredCustomers` logic.
+3. Add the search input in the "Clientes" tab.
+
+I'll rewrite the whole `src/pages/Dashboard.tsx`.-white shadow-xl border-none">
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start mb-4">
                     <Package size={40} className="opacity-40" />
@@ -659,7 +694,20 @@ const Dashboard = () => {
           </TabsContent>
 
           {/* CONTEÚDO CLIENTES */}
-          <TabsContent value="clientes">
+          <TabsContent value="clientes" className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-blue-900">Gestão de Clientes</h2>
+              <div className="relative w-48 sm:w-64">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Buscar cliente..." 
+                  className="pl-10 bg-white" 
+                  value={customerSearchTerm} 
+                  onChange={(e) => setCustomerSearchTerm(e.target.value)} 
+                />
+              </div>
+            </div>
+
             <Card className="shadow-lg border-blue-50">
               <CardHeader className="bg-blue-50/50 border-b border-blue-50">
                 <CardTitle className="flex items-center gap-2 text-blue-900"><Users className="text-blue-600" /> Clientes Cadastrados</CardTitle>
@@ -676,7 +724,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {customers.map((c) => (
+                    {filteredCustomers.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell className="font-bold">{c.name}</TableCell>
                         <TableCell>{c.document}</TableCell>
