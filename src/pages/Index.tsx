@@ -6,16 +6,15 @@ import Footer from '@/components/Footer';
 import SocialFloatingBar from '@/components/SocialFloatingBar';
 import { 
   Truck, 
-  ShieldCheck, 
   Award, 
   ThermometerSnowflake, 
   CheckCircle2,
-  Clock,
-  MapPin,
   Phone,
   Mail,
+  MapPin,
   MessageSquare,
-  Snowflake
+  Snowflake,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,81 +37,72 @@ const Index = () => {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    showSuccess('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+    showSuccess('Mensagem enviada com sucesso!');
     (e.target as HTMLFormElement).reset();
   };
 
   const scrollToContact = () => {
-    const contactSection = document.getElementById('contato');
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0D2C6C]">
+    <div className="min-h-screen flex flex-col selection:bg-[#66D1FF] selection:text-[#0D2C6C]">
       <Navbar />
       <SocialFloatingBar />
       
-      {/* Hero Section - Design Premium com Glow e Degradê */}
-      <section className="relative py-20 md:py-32 overflow-hidden border-b-4 border-[#1E5BB8]/30">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0D2C6C] via-[#1a365d] to-[#0D2C6C]"></div>
+      {/* Hero Section - Com Reflexos e Profundidade */}
+      <section className="relative py-24 md:py-40 overflow-hidden">
+        {/* Luzes de Fundo (Reflexos) */}
+        <div className="light-reflection w-[800px] h-[800px] -top-40 -left-40 animate-pulse" />
+        <div className="light-reflection w-[600px] h-[600px] bottom-0 right-0 opacity-50" />
         
-        {/* Flocos de Neve com Glow */}
-        <div className="absolute inset-0 pointer-events-none opacity-30">
-          <Snowflake className="absolute top-10 left-10 text-[#66D1FF] w-8 h-8 animate-pulse" />
-          <Snowflake className="absolute top-40 left-1/4 text-white w-12 h-12 animate-bounce" />
-          <Snowflake className="absolute bottom-20 left-20 text-[#66D1FF] w-6 h-6" />
-          <Snowflake className="absolute top-20 right-1/3 text-white w-10 h-10 animate-pulse" />
-          <Snowflake className="absolute bottom-10 right-1/4 text-[#66D1FF] w-8 h-8" />
-          <Snowflake className="absolute top-1/2 right-10 text-white w-14 h-14 animate-spin-slow" />
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-20">
             
             <div className="text-center lg:text-left flex-1">
-              <div className="inline-block transform -skew-x-12">
-                <h1 className="text-7xl md:text-9xl font-black text-white italic leading-none tracking-tighter glow-text">
+              <div className="relative inline-block">
+                <div className="absolute -inset-4 bg-[#66D1FF]/20 blur-3xl rounded-full animate-pulse" />
+                <h1 className="text-7xl md:text-9xl font-black italic leading-none tracking-tighter ice-text relative">
                   LÍDER
                 </h1>
-                <h2 className="text-4xl md:text-6xl font-black text-[#66D1FF] italic leading-none tracking-tighter mt-2 drop-shadow-lg">
+                <h2 className="text-4xl md:text-6xl font-black text-[#66D1FF] italic leading-none tracking-tighter mt-2 drop-shadow-2xl">
                   REFRIGERAÇÃO
                 </h2>
               </div>
               
-              <div className="mt-10 bg-white/5 backdrop-blur-md inline-block px-8 py-3 rounded-full border border-[#66D1FF]/30 shadow-[0_0_15px_rgba(102,209,255,0.2)]">
-                <p className="text-white text-lg md:text-xl font-bold uppercase tracking-[0.2em]">
-                  Manutenção Preventiva e Corretiva
+              <div className="mt-12 glass-card inline-block px-8 py-4 rounded-2xl">
+                <p className="text-white text-sm md:text-lg font-bold uppercase tracking-[0.3em] flex items-center gap-3">
+                  <Sparkles size={20} className="text-[#66D1FF]" />
+                  Manutenção de Alta Performance
                 </p>
               </div>
             </div>
 
-            <div className="flex-1 space-y-8 w-full max-w-xl">
-              <div className="bg-[#1E5BB8]/20 backdrop-blur-sm p-8 rounded-3xl border-l-8 border-[#66D1FF] shadow-2xl">
-                <h3 className="text-2xl font-black uppercase mb-3 text-white">Reformas e Manutenção em Baús Frigoríficos</h3>
-                <p className="text-[#66D1FF] font-medium">Especialistas em Thermo King para baú de caminhão e carretas.</p>
-              </div>
-
-              <div className="space-y-6">
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-[#66D1FF]/80">Representante Autorizada:</p>
-                <div className="flex flex-wrap gap-6 items-center">
-                  <div className="bg-white px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transform hover:scale-105 transition-transform">
-                    <span className="text-[#0D2C6C] font-black italic text-2xl">Carrier</span>
+            <div className="flex-1 w-full max-w-xl">
+              <div className="glass-card p-10 rounded-[2.5rem] border-t-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-1 w-12 bg-[#66D1FF] rounded-full" />
+                  <span className="text-[#66D1FF] font-black uppercase tracking-widest text-xs">Especialistas</span>
+                </div>
+                <h3 className="text-3xl font-black uppercase mb-4 leading-tight">Reformas em Baús Frigoríficos</h3>
+                <p className="text-blue-100/80 font-medium mb-8">Atendimento especializado Thermo King, Carrier e Thermo Star para frotas e autônomos.</p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
+                    <span className="text-white font-black italic text-xl">Carrier</span>
+                    <span className="text-[10px] uppercase opacity-50">Autorizada</span>
                   </div>
-                  <div className="bg-white px-6 py-3 rounded-xl flex flex-col items-center justify-center leading-none shadow-[0_0_20px_rgba(255,255,255,0.2)] transform hover:scale-105 transition-transform">
-                    <span className="text-[#1E5BB8] text-[12px] font-black uppercase">Thermo Star</span>
-                    <div className="h-1.5 w-full bg-[#1E5BB8] mt-1 rounded-full"></div>
+                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
+                    <span className="text-[#66D1FF] font-black text-xl">Thermo Star</span>
+                    <div className="h-1 w-8 bg-[#66D1FF] mt-1" />
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-6">
                 <Button 
                   onClick={scrollToContact}
-                  className="btn-gradient w-full md:w-auto px-12 py-8 text-xl rounded-2xl uppercase tracking-wider"
+                  className="btn-reflective w-full py-8 text-xl rounded-2xl uppercase tracking-widest"
                 >
-                  SOLICITAR ORÇAMENTO AGORA
+                  Solicitar Orçamento
                 </Button>
               </div>
             </div>
@@ -121,75 +111,91 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Especialidades com Cards Escuros e Glow */}
-      <section id="servicos" className="py-24 bg-[#0D2C6C]">
+      {/* Especialidades - Cards com Efeito de Vidro Polido */}
+      <section id="servicos" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Nossas Especialidades</h2>
-            <div className="w-24 h-2 bg-gradient-to-r from-[#1E5BB8] to-[#66D1FF] mx-auto rounded-full shadow-[0_0_10px_rgba(102,209,255,0.5)]" />
+          <div className="flex flex-col items-center mb-24">
+            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter ice-text">Nossas Especialidades</h2>
+            <div className="w-32 h-1.5 bg-gradient-to-r from-transparent via-[#66D1FF] to-transparent rounded-full" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: Truck, title: "Baús Frigoríficos", desc: "Reformas completas e manutenção estrutural." },
-              { icon: Award, title: "Autorizada", desc: "Representante oficial Carrier e Thermo Star." },
-              { icon: ThermometerSnowflake, title: "Thermo King", desc: "Especialistas certificados em sistemas Thermo King." },
-              { icon: CheckCircle2, title: "Transporte", desc: "Soluções completas para transporte refrigerado." }
+              { icon: Truck, title: "Baús Frigoríficos", desc: "Reformas estruturais e isolamento térmico." },
+              { icon: Award, title: "Peças Originais", desc: "Componentes homologados com garantia de fábrica." },
+              { icon: ThermometerSnowflake, title: "Thermo King", desc: "Manutenção preventiva e corretiva especializada." },
+              { icon: CheckCircle2, title: "Certificação", desc: "Técnicos treinados pelas maiores fabricantes." }
             ].map((item, idx) => (
-              <div key={idx} className="bg-[#1E5BB8]/10 p-10 rounded-[2rem] border border-[#1E5BB8]/30 hover:border-[#66D1FF]/50 transition-all group hover:-translate-y-2 shadow-xl">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#1E5BB8] to-[#2FA4FF] rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:shadow-[#66D1FF]/40 transition-all">
+              <div key={idx} className="glass-card p-10 rounded-[2rem] group hover:-translate-y-3 transition-all duration-500">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#1E5BB8] to-[#66D1FF] rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform">
                   <item.icon className="text-white" size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
-                <p className="text-[#66D1FF]/80 leading-relaxed">{item.desc}</p>
+                <p className="text-blue-100/60 leading-relaxed text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Contato com Design de Alto Contraste */}
-      <section id="contato" className="py-24 bg-[#0D2C6C] relative">
-        <div className="absolute inset-0 bg-[#1E5BB8]/5 pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="bg-[#1E5BB8]/20 backdrop-blur-xl rounded-[3rem] shadow-2xl overflow-hidden border border-[#66D1FF]/20">
+      {/* Contato - Layout de Alto Impacto com Reflexos */}
+      <section id="contato" className="py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="glass-card rounded-[3.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.4)]">
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="p-12 lg:p-20 bg-gradient-to-br from-[#1E5BB8] to-[#0D2C6C] text-white">
-                <h2 className="text-4xl font-black mb-12 glow-text uppercase">Fale Conosco</h2>
-                <div className="space-y-10">
-                  <div className="flex items-center gap-6 group">
-                    <div className="bg-[#66D1FF]/20 p-4 rounded-2xl group-hover:bg-[#66D1FF]/40 transition-colors"><Phone size={28} className="text-[#66D1FF]" /></div>
+              <div className="p-12 lg:p-24 bg-gradient-to-br from-[#1E5BB8] to-[#0D2C6C] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+                <h2 className="text-5xl font-black mb-16 ice-text uppercase">Fale Conosco</h2>
+                
+                <div className="space-y-12">
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <Phone size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-widest mb-1">WhatsApp</p>
-                      <p className="text-2xl font-bold">{settings.whatsapp}</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">WhatsApp</p>
+                      <p className="text-3xl font-bold">{settings.whatsapp}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 group">
-                    <div className="bg-[#66D1FF]/20 p-4 rounded-2xl group-hover:bg-[#66D1FF]/40 transition-colors"><Mail size={28} className="text-[#66D1FF]" /></div>
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <Mail size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-widest mb-1">E-mail</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">E-mail</p>
                       <p className="text-2xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 group">
-                    <div className="bg-[#66D1FF]/20 p-4 rounded-2xl group-hover:bg-[#66D1FF]/40 transition-colors"><MapPin size={28} className="text-[#66D1FF]" /></div>
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <MapPin size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-widest mb-1">Endereço</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">Localização</p>
                       <p className="text-xl font-bold leading-tight">{settings.address}</p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="p-12 lg:p-20 bg-white/5">
-                <form onSubmit={handleContactSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input className="bg-white/10 border-[#66D1FF]/30 text-white placeholder:text-white/40 h-14 rounded-xl focus:ring-[#66D1FF]" placeholder="Nome" required />
-                    <Input className="bg-white/10 border-[#66D1FF]/30 text-white placeholder:text-white/40 h-14 rounded-xl focus:ring-[#66D1FF]" placeholder="Telefone" required />
+
+              <div className="p-12 lg:p-24 bg-white/5">
+                <form onSubmit={handleContactSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Nome</label>
+                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Seu nome" required />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Telefone</label>
+                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="(00) 00000-0000" required />
+                    </div>
                   </div>
-                  <Input className="bg-white/10 border-[#66D1FF]/30 text-white placeholder:text-white/40 h-14 rounded-xl focus:ring-[#66D1FF]" placeholder="Assunto" required />
-                  <Textarea className="bg-white/10 border-[#66D1FF]/30 text-white placeholder:text-white/40 min-h-[150px] rounded-xl focus:ring-[#66D1FF]" placeholder="Mensagem..." required />
-                  <Button type="submit" className="btn-gradient w-full py-8 text-xl rounded-2xl uppercase tracking-widest">
-                    <MessageSquare className="mr-3" /> Enviar Mensagem
+                  <div className="space-y-3">
+                    <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Mensagem</label>
+                    <Textarea className="bg-white/5 border-white/10 text-white min-h-[180px] rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Como podemos ajudar?" required />
+                  </div>
+                  <Button type="submit" className="btn-reflective w-full py-10 text-xl rounded-2xl uppercase tracking-[0.2em]">
+                    <MessageSquare className="mr-4" /> Enviar Mensagem
                   </Button>
                 </form>
               </div>
