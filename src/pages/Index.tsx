@@ -3,9 +3,30 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Truck, ShieldCheck, Award, ThermometerSnowflake, CheckCircle2 } from 'lucide-react';
+import { 
+  Truck, 
+  ShieldCheck, 
+  Award, 
+  ThermometerSnowflake, 
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  MessageSquare
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { showSuccess } from '@/utils/toast';
 
 const Index = () => {
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    showSuccess('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+    (e.target as HTMLFormElement).reset();
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -80,14 +101,104 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Marcas */}
-      <section className="py-12 bg-white border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">Trabalhamos com as melhores marcas</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all">
-            <span className="text-2xl font-black text-gray-800">THERMO KING</span>
-            <span className="text-2xl font-black text-gray-800">CARRIER</span>
-            <span className="text-2xl font-black text-gray-800">THERMO STAR</span>
+      {/* Sobre Nós */}
+      <section id="sobre" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=1000" 
+                alt="Oficina Lider" 
+                className="rounded-3xl shadow-2xl"
+              />
+              <div className="absolute -bottom-6 -right-6 bg-blue-600 text-white p-8 rounded-2xl hidden md:block">
+                <p className="text-4xl font-bold">15+</p>
+                <p className="text-sm opacity-80">Anos de Experiência</p>
+              </div>
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-blue-900 mb-6">Compromisso com a Qualidade e Agilidade</h2>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                A Lider Refrigeração nasceu da necessidade de oferecer um serviço técnico especializado e confiável para o setor de transportes. Sabemos que cada hora com o caminhão parado representa prejuízo, por isso focamos em diagnósticos precisos e reparos rápidos.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg"><Clock className="text-blue-600" size={20} /></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Atendimento Rápido</h4>
+                    <p className="text-sm text-gray-500">Equipe pronta para atender emergências e manutenções programadas.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg"><ShieldCheck className="text-blue-600" size={20} /></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Garantia de Serviço</h4>
+                    <p className="text-sm text-gray-500">Utilizamos apenas peças originais e homologadas pelas fabricantes.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contato */}
+      <section id="contato" className="py-20 bg-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              <div className="p-8 lg:p-12 bg-blue-600 text-white">
+                <h2 className="text-3xl font-bold mb-8">Fale Conosco</h2>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><Phone size={24} /></div>
+                    <div>
+                      <p className="text-blue-200 text-sm">Telefone / WhatsApp</p>
+                      <p className="text-xl font-bold">(11) 99999-9999</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><Mail size={24} /></div>
+                    <div>
+                      <p className="text-blue-200 text-sm">E-mail</p>
+                      <p className="text-xl font-bold">contato@liderefrigeracao.com.br</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><MapPin size={24} /></div>
+                    <div>
+                      <p className="text-blue-200 text-sm">Endereço</p>
+                      <p className="text-xl font-bold">Av. Industrial, 1000 - Setor de Transportes</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-8 lg:p-12">
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Nome</label>
+                      <Input placeholder="Seu nome completo" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Telefone</label>
+                      <Input placeholder="(00) 00000-0000" required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Assunto</label>
+                    <Input placeholder="Ex: Orçamento Manutenção" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Mensagem</label>
+                    <Textarea placeholder="Descreva sua necessidade..." className="min-h-[120px]" required />
+                  </div>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg font-bold">
+                    <MessageSquare className="mr-2" /> Enviar Mensagem
+                  </Button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </section>

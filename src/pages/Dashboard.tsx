@@ -10,7 +10,10 @@ import {
   PlusCircle, 
   Search,
   History,
-  Snowflake
+  Snowflake,
+  Trash2,
+  BarChart3,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +27,16 @@ import {
 } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { showError, showSuccess } from '@/utils/toast';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 
 interface Part {
   id: string;
@@ -39,7 +52,6 @@ const Dashboard = () => {
   const [newQty, setNewQty] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  // Carregar dados do localStorage
   React.useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
@@ -51,18 +63,17 @@ const Dashboard = () => {
     if (savedParts) {
       setParts(JSON.parse(savedParts));
     } else {
-      // Dados iniciais de exemplo
       const initial = [
         { id: '1', name: 'Compressor TM16', quantity: 5, lastMovement: new Date().toLocaleString() },
         { id: '2', name: 'Filtro Secador', quantity: 12, lastMovement: new Date().toLocaleString() },
-        { id: '3', name: 'Válvula Expansão', quantity: 8, lastMovement: new Date().toLocaleString() },
+        { id: '3', name: 'Válvula Expansão', quantity: 2, lastMovement: new Date().toLocaleString() },
+        { id: '4', name: 'Correia Thermo King', quantity: 15, lastMovement: new Date().toLocaleString() },
       ];
       setParts(initial);
       localStorage.setItem('lider_inventory', JSON.stringify(initial));
     }
   }, [navigate]);
 
-  // Salvar sempre que mudar
   const saveToStorage = (updatedParts: Part[]) => {
     setParts(updatedParts);
     localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
@@ -104,6 +115,14 @@ const Dashboard = () => {
     saveToStorage(updated);
   };
 
+  const deletePart = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta peça do estoque?')) {
+      const updated = parts.filter(p => p.id !== id);
+      saveToStorage(updated);
+      showSuccess('Peça removida com sucesso.');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     navigate('/');
@@ -113,9 +132,10 @@ const Dashboard = () => {
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const lowStockCount = parts.filter(p => p.quantity < 3).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Dashboard */}
       <header className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -133,8 +153,54 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        
+        {/* Resumo e Gráfico */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+          <Card className="lg:col-span-1 border-blue-100 shadow-sm bg-blue-600 text-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <Package size={32} className="opacity-50" />
+                <span className="text-xs font-bold uppercase tracking-widest opacity-70">Total de Itens</span>
+              </div>
+              <p className="text-4xl font-bold">{parts.length}</p>
+              <div className="mt-6 flex items-center gap-2 bg-blue-500/50 p-3 rounded-xl">
+                <AlertTriangle size={20} className={lowStockCount > 0 ? "text-yellow-300" : "text-blue-200"} />
+                <span className="text-sm">
+                  {lowStockCount > 0 
+                    ? `${lowStockCount} itens com estoque baixo!` 
+                    : "Estoque em níveis normais"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2 border-blue-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-500">
+                <BarChart3 size={16} /> Níveis de Estoque por Peça
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={parts.slice(0, 8)}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" fontSize={10} tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+                  <YAxis fontSize={10} tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="quantity" radius={[4, 4, 0, 0]}>
+                    {parts.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.quantity < 3 ? '#ef4444' : '#2563eb'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Formulário de Cadastro */}
           <Card className="lg:col-span-1 border-blue-100 shadow-sm h-fit">
             <CardHeader>
@@ -237,6 +303,15 @@ const Dashboard = () => {
                                 title="Saída"
                               >
                                 <Minus size={16} />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => deletePart(part.id)}
+                                title="Excluir"
+                              >
+                                <Trash2 size={16} />
                               </Button>
                             </div>
                           </TableCell>
