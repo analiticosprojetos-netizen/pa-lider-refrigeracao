@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jsPDF";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
@@ -61,16 +61,16 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
       doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 15, 30);
     }
     
-    // Info da Empresa no Topo Direito
+    // Info da Empresa no Topo Direito (Alinhado à Direita para não cortar)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
-    doc.text(`CNPJ: ${cnpj}`, 145, 20);
-    doc.text(email, 145, 25);
-    doc.text(phone, 145, 30);
+    doc.text(`CNPJ: ${cnpj}`, 195, 20, { align: 'right' });
+    doc.text(email, 195, 25, { align: 'right' });
+    doc.text(phone, 195, 30, { align: 'right' });
 
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(`ORÇAMENTO #${String(order.id).toUpperCase()}`, 145, 40);
+    doc.text(`ORÇAMENTO #${String(order.id).toUpperCase()}`, 195, 40, { align: 'right' });
 
     // --- DADOS DO CLIENTE ---
     doc.setTextColor(26, 54, 93);
