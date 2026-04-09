@@ -1,14 +1,13 @@
 "use client";
 
 import React from 'react';
-import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 export interface Permission {
   view: boolean;
@@ -27,7 +26,7 @@ export interface RolePermissions {
 export interface UserProfile {
   id: string;
   username: string;
-  role: 'ADMIN' | 'CEO' | 'DIRETOR' | 'GERENTE' | 'ANALISTA';
+  role: string;
   permissions: RolePermissions;
 }
 
@@ -49,24 +48,21 @@ const FULL_PERMISSIONS: RolePermissions = {
 
 const UserAdminSettings = () => {
   const [users, setUsers] = React.useState<UserProfile[]>([]);
-  const [newUser, setNewUser] = React.useState({ username: '', role: 'ANALISTA' as UserProfile['role'] });
-  const [editingUser, setEditingUser] = React.useState<UserProfile | null>(null);
+  const [roles, setRoles] = React.useState<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA']);
+  const [newRoleName, setNewRoleName] = React.useState('');
+  const [newUser, setNewUser] = React.useState({ username: '', role: 'ANALISTA' });
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('lider_users');
-    if (saved) {
-      setUsers(JSON.parse(saved));
-    } else {
-      // Usuário padrão inicial
-      const admin: UserProfile = {
-        id: '1',
-        username: 'admin',
-        role: 'ADMIN',
-        permissions: FULL_PERMISSIONS
-      };
+    const savedUsers = localStorage.getItem('lider_users');
+    if (savedUsers) setUsers(JSON.parse(savedUsers));
+    else {
+      const admin: UserProfile = { id: '1', username: 'admin', role: 'ADMIN', permissions: FULL_PERMISSIONS };
       setUsers([admin]);
       localStorage.setItem('lider_users', JSON.stringify([admin]));
     }
+
+    const savedRoles = localStorage.getItem('lider_roles');
+    if (savedRoles) setRoles(JSON.parse(savedRoles));
   }, []);
 
   const saveUsers = (updatedUsers: UserProfile[]) => {
@@ -74,19 +70,49 @@ const UserAdminSettings = () => {
     localStorage.setItem('lider_users', JSON.stringify(updatedUsers));
   };
 
+  const saveRoles = (updatedRoles: string[]) => {
+    setRoles(updatedRoles);
+    localStorage.setItem('lider_roles', JSON.stringify(updatedRoles));
+  };
+
+  const handleAddRole = () => {
+    if (!newRoleName) return;
+    const upperRole = newRoleName.toUpperCase();
+    if (roles.includes(upperRole)) {
+      showError('Este cargo já existe.');
+      return;
+    }
+    const updatedRoles = [...roles, upperRole];
+    saveRoles(updatedRoles);
+    setNewRoleName('');
+    showSuccess('Novo cargo criado!');
+  };
+
+  const handleDeleteRole = (roleToDelete: string) => {
+    if (roleToDelete === 'ADMIN') {
+      showError('O cargo ADMIN não pode ser excluído.');
+      return;
+    }
+    if (users.some(u => u.role === roleToDelete)) {
+      showError('Não é possível excluir um cargo que possui usuários vinculados.');
+      return;
+    }
+    const updatedRoles = roles.filter(r => r !== roleToDelete);
+    saveRoles(updatedRoles);
+    showSuccess('Cargo excluído.');
+  };
+
   const handleAddUser = () => {
     if (!newUser.username) return;
-    
     const user: UserProfile = {
       id: Math.random().toString(36).substr(2, 9),
       username: newUser.username,
       role: newUser.role,
       permissions: (newUser.role === 'ADMIN' || newUser.role === 'CEO') ? FULL_PERMISSIONS : DEFAULT_PERMISSIONS
     };
-
     saveUsers([...users, user]);
-    setNewUser({ username: '', role: 'ANALISTA' });
-    showSuccess('Usuário criado com sucesso!');
+    setNewUser({ username: '', role: roles[0] || 'ANALISTA' });
+    showSuccess('Usuário criado!');
   };
 
   const togglePermission = (userId: string, tab: keyof RolePermissions, action: keyof Permission) => {
@@ -108,11 +134,49 @@ const UserAdminSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* GESTÃO DE CARGOS */}
       <Card className="border-blue-100 shadow-md">
         <CardHeader className="bg-blue-50/50 border-b border-blue-50">
           <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
-            <UserPlus className="text-blue-600" /> Novo Usuário / Perfil
+            <Briefcase className="text-blue-600" /> Gestão de Cargos (Hierarquias)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Nome do Novo Cargo</label>
+              <Input 
+                placeholder="Ex: COORDENADOR" 
+                value={newRoleName} 
+                onChange={e => setNewRoleName(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleAddRole} className="bg-blue-600">
+              <Plus className="mr-2 h-4 w-4" /> Criar Cargo
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {roles.map(role => (
+              <div key={role} className="flex items-center gap-2 bg-white border border-blue-100 px-3 py-1.5 rounded-lg shadow-sm">
+                <span className="text-xs font-black text-blue-900">{role}</span>
+                {role !== 'ADMIN' && (
+                  <button onClick={() => handleDeleteRole(role)} className="text-red-400 hover:text-red-600">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* NOVO USUÁRIO */}
+      <Card className="border-blue-100 shadow-md">
+        <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+          <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
+            <UserPlus className="text-blue-600" /> Novo Usuário
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -127,27 +191,27 @@ const UserAdminSettings = () => {
             </div>
             <div className="w-full md:w-48 space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">Cargo / Hierarquia</label>
-              <Select value={newUser.role} onValueChange={(v: any) => setNewUser({...newUser, role: v})}>
+              <Select value={newUser.role} onValueChange={(v) => setNewUser({...newUser, role: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CEO">CEO</SelectItem>
-                  <SelectItem value="DIRETOR">Diretor</SelectItem>
-                  <SelectItem value="GERENTE">Gerente</SelectItem>
-                  <SelectItem value="ANALISTA">Analista</SelectItem>
+                  {roles.map(role => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAddUser} className="bg-blue-600 hover:bg-blue-700">
-              Criar Perfil
+            <Button onClick={handleAddUser} className="bg-blue-600">
+              Criar Usuário
             </Button>
           </div>
         </CardContent>
       </Card>
 
+      {/* TABELA DE PERMISSÕES */}
       <Card className="border-blue-100 shadow-md overflow-hidden">
         <CardHeader className="bg-blue-50/50 border-b border-blue-50">
           <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
-            <Shield className="text-blue-600" /> Controle de Acessos e Permissões
+            <Shield className="text-blue-600" /> Controle de Acessos
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -176,30 +240,28 @@ const UserAdminSettings = () => {
                     
                     {(['estoque', 'orcamentos', 'clientes', 'historico', 'config'] as const).map((tab) => (
                       <TableCell key={tab} className="text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="flex gap-2">
-                            <PermissionToggle 
-                              active={user.permissions[tab].view} 
-                              icon={<Eye size={12} />} 
-                              label="Ver"
-                              onClick={() => togglePermission(user.id, tab, 'view')}
-                              disabled={user.role === 'ADMIN'}
-                            />
-                            <PermissionToggle 
-                              active={user.permissions[tab].edit} 
-                              icon={<Edit2 size={12} />} 
-                              label="Edit"
-                              onClick={() => togglePermission(user.id, tab, 'edit')}
-                              disabled={user.role === 'ADMIN'}
-                            />
-                            <PermissionToggle 
-                              active={user.permissions[tab].delete} 
-                              icon={<Trash2 size={12} />} 
-                              label="Del"
-                              onClick={() => togglePermission(user.id, tab, 'delete')}
-                              disabled={user.role === 'ADMIN'}
-                            />
-                          </div>
+                        <div className="flex gap-1 justify-center">
+                          <PermissionToggle 
+                            active={user.permissions[tab].view} 
+                            icon={<Eye size={12} />} 
+                            label="Ver"
+                            onClick={() => togglePermission(user.id, tab, 'view')}
+                            disabled={user.role === 'ADMIN'}
+                          />
+                          <PermissionToggle 
+                            active={user.permissions[tab].edit} 
+                            icon={<Edit2 size={12} />} 
+                            label="Edit"
+                            onClick={() => togglePermission(user.id, tab, 'edit')}
+                            disabled={user.role === 'ADMIN'}
+                          />
+                          <PermissionToggle 
+                            active={user.permissions[tab].delete} 
+                            icon={<Trash2 size={12} />} 
+                            label="Del"
+                            onClick={() => togglePermission(user.id, tab, 'delete')}
+                            disabled={user.role === 'ADMIN'}
+                          />
                         </div>
                       </TableCell>
                     ))}
@@ -218,16 +280,6 @@ const UserAdminSettings = () => {
           </div>
         </CardContent>
       </Card>
-
-      <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex gap-3 items-start">
-        <AlertCircle className="text-amber-600 shrink-0" />
-        <div className="text-xs text-amber-800 space-y-1">
-          <p className="font-bold uppercase">Nota sobre Hierarquia:</p>
-          <p>• <b>ADMIN/CEO:</b> Possuem acesso total por padrão.</p>
-          <p>• <b>DIRETOR/GERENTE:</b> Podem ter permissões de edição e exclusão delegadas.</p>
-          <p>• <b>ANALISTA:</b> Geralmente possui apenas permissão de visualização.</p>
-        </div>
-      </div>
     </div>
   );
 };
