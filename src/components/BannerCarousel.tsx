@@ -26,11 +26,11 @@ const BannerCarousel = ({ banners, onContactClick, delay = 6 }: BannerCarouselPr
 
   return (
     <section className="relative overflow-hidden border-b-8 border-blue-800 h-[500px] md:h-[450px]">
-      <div className="embla h-full" ref={emblaRef}>
-        <div className="embla__container h-full">
+      <div className="embla h-full overflow-hidden" ref={emblaRef}>
+        <div className="embla__container h-full flex">
           
           {/* BANNER 1: OFICIAL (Fundo Azul Sólido) */}
-          <div className="embla__slide relative h-full flex-shrink-0 w-full bg-[#1a365d]">
+          <div className="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#1a365d]">
             <div className="absolute inset-0 pointer-events-none opacity-10">
               <Snowflake className="absolute top-10 left-10 text-white w-8 h-8" />
               <Snowflake className="absolute bottom-10 right-10 text-white w-14 h-14" />
@@ -44,7 +44,7 @@ const BannerCarousel = ({ banners, onContactClick, delay = 6 }: BannerCarouselPr
 
           {/* BANNERS DE IMAGEM (Upload do Usuário) */}
           {banners.map((banner) => (
-            <div key={banner.id} className="embla__slide relative h-full flex-shrink-0 w-full">
+            <div key={banner.id} className="embla__slide relative h-full flex-[0_0_100%] min-w-0">
               <div className="absolute inset-0 overflow-hidden">
                 <img 
                   src={banner.url} 
@@ -87,7 +87,6 @@ const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void 
     }
   }, []);
 
-  // No Banner, usamos estritamente Latitude e Longitude para abrir o mapa no ponto exato
   const mapsUrl = (settings.latitude && settings.longitude)
     ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
