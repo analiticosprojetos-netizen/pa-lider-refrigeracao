@@ -19,30 +19,29 @@ interface BannerCarouselProps {
 }
 
 const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
-  const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
-
-  // Se não houver banners, mostra o design padrão azul
-  if (banners.length === 0) {
-    return (
-      <section className="relative bg-[#1a365d] py-16 md:py-24 overflow-hidden border-b-8 border-blue-800">
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <Snowflake className="absolute top-10 left-10 text-white w-8 h-8" />
-          <Snowflake className="absolute top-1/2 right-10 text-white w-14 h-14" />
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <BannerContent onContactClick={onContactClick} />
-        </div>
-      </section>
-    );
-  }
+  const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
 
   return (
-    <section className="relative overflow-hidden border-b-8 border-blue-800 h-[500px] md:h-[600px]">
+    <section className="relative overflow-hidden border-b-8 border-blue-800 h-[500px] md:h-[450px]">
       <div className="embla h-full" ref={emblaRef}>
         <div className="embla__container h-full">
+          
+          {/* BANNER 1: OFICIAL (Fundo Azul Sólido) */}
+          <div className="embla__slide relative h-full flex-shrink-0 w-full bg-[#1a365d]">
+            <div className="absolute inset-0 pointer-events-none opacity-10">
+              <Snowflake className="absolute top-10 left-10 text-white w-8 h-8" />
+              <Snowflake className="absolute bottom-10 right-10 text-white w-14 h-14" />
+            </div>
+            <div className="relative z-10 h-full flex items-center">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <OfficialBannerContent onContactClick={onContactClick} />
+              </div>
+            </div>
+          </div>
+
+          {/* BANNERS DE IMAGEM (Upload do Usuário) */}
           {banners.map((banner) => (
             <div key={banner.id} className="embla__slide relative h-full flex-shrink-0 w-full">
-              {/* Imagem de Fundo com Ajustes */}
               <div className="absolute inset-0 overflow-hidden">
                 <img 
                   src={banner.url} 
@@ -50,14 +49,13 @@ const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
                   className="w-full h-full object-cover transition-transform duration-500"
                   style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }}
                 />
-                {/* Overlay para garantir leitura do texto */}
-                <div className="absolute inset-0 bg-blue-900/60 backdrop-blur-[2px]" />
+                {/* Overlay gradiente para leitura sem esconder a foto */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
               </div>
               
-              {/* Conteúdo sobreposto */}
               <div className="relative z-10 h-full flex items-center">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <BannerContent onContactClick={onContactClick} />
+                  <OfficialBannerContent onContactClick={onContactClick} />
                 </div>
               </div>
             </div>
@@ -68,37 +66,42 @@ const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
   );
 };
 
-const BannerContent = ({ onContactClick }: { onContactClick: () => void }) => (
-  <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void }) => (
+  <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+    {/* Lado Esquerdo: Título e Subtítulo */}
     <div className="text-center lg:text-left flex-1">
-      <div className="inline-block transform -skew-x-12">
-        <h1 className="text-6xl md:text-8xl font-black text-white italic leading-none tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">
+      <div className="space-y-0">
+        <h1 className="text-6xl md:text-8xl font-black text-white italic leading-none tracking-tighter drop-shadow-lg">
           LÍDER
         </h1>
-        <h2 className="text-4xl md:text-6xl font-black text-white italic leading-none tracking-tighter mt-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">
+        <h2 className="text-4xl md:text-6xl font-black text-white italic leading-none tracking-tighter drop-shadow-lg">
           REFRIGERAÇÃO
         </h2>
       </div>
-      <div className="mt-8 bg-white/10 backdrop-blur-sm inline-block px-6 py-2 rounded-full border border-white/20">
-        <p className="text-white text-lg md:text-xl font-bold uppercase tracking-widest">
+      <div className="mt-6 inline-block border-2 border-white/30 bg-blue-900/20 backdrop-blur-sm px-6 py-2 rounded-full">
+        <p className="text-white text-sm md:text-base font-bold uppercase tracking-[0.2em]">
           Manutenção Preventivas e Corretivas
         </p>
       </div>
     </div>
 
-    <div className="flex-1 text-white space-y-8">
-      <div className="bg-blue-900/40 p-6 rounded-2xl border-l-4 border-blue-400">
-        <h3 className="text-xl font-bold uppercase mb-2">Reformas e Manutenção em Baús Frigoríficos</h3>
-        <p className="text-blue-200 text-sm">Especialistas em Thermo King para baú de caminhão e carretas.</p>
+    {/* Lado Direito: Box de Destaque e Botão */}
+    <div className="flex-1 flex flex-col items-center lg:items-end gap-6">
+      <div className="bg-blue-800/40 backdrop-blur-md p-6 rounded-2xl border-l-4 border-blue-400 max-w-md text-center lg:text-left">
+        <h3 className="text-lg md:text-xl font-bold text-white uppercase mb-2 leading-tight">
+          Reformas e Manutenção em Baús Frigoríficos
+        </h3>
+        <p className="text-blue-100 text-xs md:text-sm">
+          Especialistas em Thermo King para baú de caminhão e carretas.
+        </p>
       </div>
-      <div className="pt-4">
-        <Button 
-          onClick={onContactClick}
-          className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all w-full md:w-auto"
-        >
-          SOLICITAR ORÇAMENTO AGORA
-        </Button>
-      </div>
+      
+      <Button 
+        onClick={onContactClick}
+        className="bg-blue-500 hover:bg-blue-400 text-white font-black px-10 py-7 text-lg rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] transform hover:scale-105 transition-all uppercase tracking-wider"
+      >
+        Solicitar Orçamento Agora
+      </Button>
     </div>
   </div>
 );
