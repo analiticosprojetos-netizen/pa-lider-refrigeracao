@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,7 +52,7 @@ const ServiceOrderForm = ({
 }: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
-    plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
+    plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
     serviceType: 'Corretiva', problem: '', diagnosis: '',
     travelValue: 0,
     warranty: '90 dias', technician: technicianName, observations: ''
@@ -61,7 +61,6 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
-  // Carrega dados iniciais se estiver em modo de edição
   React.useEffect(() => {
     if (initialData) {
       setFormData({
@@ -71,7 +70,6 @@ const ServiceOrderForm = ({
         email: initialData.email || '',
         plate: initialData.plate || '',
         vehicleModel: initialData.vehicleModel || '',
-        boxType: initialData.boxType || '',
         equipBrand: initialData.equipBrand || '',
         equipModel: initialData.equipModel || '',
         serviceType: initialData.serviceType || 'Corretiva',
@@ -93,14 +91,12 @@ const ServiceOrderForm = ({
     const upperPlate = plate.toUpperCase();
     setFormData(prev => ({ ...prev, plate: upperPlate }));
     
-    // Só busca histórico se não estiver editando um orçamento já existente
     if (!initialData && upperPlate.length >= 7) {
       const pastOrder = previousOrders.find(o => o.plate.toUpperCase() === upperPlate);
       if (pastOrder) {
         setFormData(prev => ({
           ...prev,
           vehicleModel: pastOrder.vehicleModel,
-          boxType: pastOrder.boxType,
           equipBrand: pastOrder.equipBrand,
           equipModel: pastOrder.equipModel,
           clientName: pastOrder.clientName,
@@ -195,7 +191,7 @@ const ServiceOrderForm = ({
       setParts([]);
       setFormData({
         clientName: '', document: '', phone: '', email: '',
-        plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
+        plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
         serviceType: 'Corretiva', problem: '', diagnosis: '',
         travelValue: 0,
         warranty: '90 dias', technician: technicianName, observations: ''
@@ -365,10 +361,14 @@ const ServiceOrderForm = ({
             <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-70">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold opacity-50 uppercase">Deslocamento</label>
                 <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.travelValue} onChange={e => setFormData({...formData, travelValue: Number(e.target.value)})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold opacity-50 uppercase flex items-center gap-1"><ShieldCheck size={10}/> Garantia</label>
+                <Input className="bg-blue-800 border-blue-700 text-white" value={formData.warranty} onChange={e => setFormData({...formData, warranty: e.target.value})} placeholder="Ex: 90 dias" />
               </div>
             </div>
             <div className="pt-4 border-t border-blue-800 space-y-2">

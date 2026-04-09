@@ -17,7 +17,6 @@ interface ServiceOrderDetailsProps {
 const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }: ServiceOrderDetailsProps) => {
   if (!order) return null;
 
-  // Soma o valor fixo de mão de obra com o total da lista de serviços
   const totalLabor = (order.laborValue || 0) + (order.servicesValue || 0);
 
   return (
@@ -64,7 +63,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
               </h3>
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-1">
                 <p className="text-sm font-bold">{order.plate} - {order.vehicleModel}</p>
-                <p className="text-xs text-gray-500">Baú: {order.boxType || 'N/A'}</p>
                 <p className="text-xs text-gray-500">Equip: {order.equipBrand} {order.equipModel}</p>
                 <p className="text-xs text-gray-500">Serviço: {order.serviceType}</p>
               </div>
