@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList
 } from 'recharts';
 import { 
   CheckCircle2, Clock, Ban, Users, FileText, Download, Calendar, Filter
@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { exportToExcel } from '@/utils/exportUtils';
-import { format, startOfDay, startOfWeek, startOfMonth, startOfYear, isSameDay, isSameWeek, isSameMonth, isSameYear, subDays, subMonths } from 'date-fns';
+import { format, startOfDay, startOfWeek, startOfMonth, startOfYear, isSameDay, isSameWeek, isSameMonth, isSameYear, subDays, subMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface AnalyticsTabProps {
@@ -39,7 +39,14 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
       // Últimos 7 dias
       return Array.from({ length: 7 }).map((_, i) => {
         const date = subDays(now, 6 - i);
-        const count = executedOrders.filter(o => isSameDay(new Date(o.executedAt), date)).length;
+        const count = executedOrders.filter(o => {
+          try {
+            const execDate = parseISO(o.executedAt);
+            return isSameDay(execDate, date);
+          } catch (e) {
+            return false;
+          }
+        }).length;
         return { name: format(date, 'dd/MM'), value: count };
       });
     }
@@ -48,7 +55,14 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
       // Últimas 4 semanas
       return Array.from({ length: 4 }).map((_, i) => {
         const date = subDays(now, (3 - i) * 7);
-        const count = executedOrders.filter(o => isSameWeek(new Date(o.executedAt), date, { weekStartsOn: 0 })).length;
+        const count = executedOrders.filter(o => {
+          try {
+            const execDate = parseISO(o.executedAt);
+            return isSameWeek(execDate, date, { weekStartsOn: 0 });
+          } catch (e) {
+            return false;
+          }
+        }).length;
         return { name: `Sem ${4-i}`, value: count };
       });
     }
@@ -57,7 +71,14 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
       // Últimos 6 meses
       return Array.from({ length: 6 }).map((_, i) => {
         const date = subMonths(now, 5 - i);
-        const count = executedOrders.filter(o => isSameMonth(new Date(o.executedAt), date)).length;
+        const count = executedOrders.filter(o => {
+          try {
+            const execDate = parseISO(o.executedAt);
+            return isSameMonth(execDate, date);
+          } catch (e) {
+            return false;
+          }
+        }).length;
         return { name: format(date, 'MMM', { locale: ptBR }), value: count };
       });
     }
@@ -66,7 +87,14 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
       // Últimos 3 anos
       const currentYear = now.getFullYear();
       return [currentYear - 2, currentYear - 1, currentYear].map(year => {
-        const count = executedOrders.filter(o => new Date(o.executedAt).getFullYear() === year).length;
+        const count = executedOrders.filter(o => {
+          try {
+            const execDate = parseISO(o.executedAt);
+            return execDate.getFullYear() === year;
+          } catch (e) {
+            return false;
+          }
+        }).length;
         return { name: year.toString(), value: count };
       });
     }
@@ -147,15 +175,16 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
         <CardContent className="pt-6">
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
                 <XAxis dataKey="name" fontSize={12} tick={{fill: '#64748b'}} axisLine={false} />
-                <YAxis fontSize={12} tick={{fill: '#64748b'}} axisLine={false} />
+                <YAxis fontSize={12} tick={{fill: '#64748b'}} axisLine={false} allowDecimals={false} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff' }}
                   cursor={{ fill: '#f8fafc', opacity: 0.1 }}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                  <LabelList dataKey="value" position="top" style={{ fill: '#64748b', fontSize: '12px', fontWeight: 'bold' }} />
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.value > 0 ? '#3b82f6' : '#e2e8f0'} />
                   ))}
@@ -197,7 +226,7 @@ const AnalyticsTab = ({ orders, usersCount }: AnalyticsTabProps) => {
                     <TableCell className="text-sm dark:text-gray-300">{o.clientName}</TableCell>
                     <TableCell className="text-xs text-gray-500 dark:text-gray-400">{o.date}</TableCell>
                     <TableCell className="text-xs text-gray-500 dark:text-gray-400">
-                      {o.executedAt || o.cancelledAt || '-'}
+                      {o.executedAt ? format(parseISO(o.executedAt), 'dd/MM/yy HH:mm') : (o.cancelledAt ? format(parseISO(o.cancelledAt), 'dd/MM/yy HH:mm') : '-')}
                     </TableCell>
                     <TableCell className="text-sm font-medium dark:text-gray-300">{o.technician}</TableCell>
                     <TableCell>

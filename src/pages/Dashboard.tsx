@@ -370,7 +370,7 @@ const Dashboard = () => {
     });
 
     const updatedOrders = orders.map(o => 
-      o.id === orderId ? { ...o, status: 'Executado', executedAt: new Date().toLocaleString() } : o
+      o.id === orderId ? { ...o, status: 'Executado', executedAt: new Date().toISOString() } : o
     );
 
     setParts(updatedParts);
@@ -433,7 +433,7 @@ const Dashboard = () => {
   const handleCancelOrder = (orderId: string) => {
     if (!hasPermission('orcamentos', 'edit')) return;
     const updatedOrders = orders.map(o => 
-      o.id === orderId ? { ...o, status: 'Cancelado', cancelledAt: new Date().toLocaleString() } : o
+      o.id === orderId ? { ...o, status: 'Cancelado', cancelledAt: new Date().toISOString() } : o
     );
     setOrders(updatedOrders);
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
