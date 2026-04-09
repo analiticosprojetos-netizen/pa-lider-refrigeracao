@@ -400,6 +400,11 @@ const Dashboard = () => {
   
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
+  // Cálculos de métricas detalhadas
+  const totalStockQuantity = parts.reduce((acc, p) => acc + p.quantity, 0);
+  const totalEntradas = movements.filter(m => m.type === 'entrada').reduce((acc, m) => acc + m.quantity, 0);
+  const totalSaidas = movements.filter(m => m.type === 'saida').reduce((acc, m) => acc + m.quantity, 0);
+
   if (!currentUser) return (
     <div className="min-h-screen flex items-center justify-center bg-blue-50">
       <div className="text-center space-y-4">
@@ -443,18 +448,37 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="bg-blue-600 text-white shadow-xl border-none">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <Package size={40} className="opacity-40" />
+              <Card className="bg-blue-600 text-white shadow-xl border-none overflow-hidden">
+                <CardContent className="pt-6 relative">
+                  <div className="flex justify-between items-start mb-6">
+                    <Package size={48} className="opacity-20" />
                     <div className="text-right">
-                      <p className="text-xs font-bold uppercase opacity-70">Total de Itens</p>
-                      <p className="text-4xl font-black">{parts.length}</p>
+                      <p className="text-[10px] font-black uppercase opacity-70 tracking-widest">Total de Peças em Estoque</p>
+                      <p className="text-5xl font-black">{totalStockQuantity}</p>
+                      <p className="text-[10px] opacity-50 mt-1">{parts.length} tipos de itens cadastrados</p>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 text-green-300 mb-1">
+                        <ArrowUpCircle size={14} />
+                        <span className="text-[10px] font-black uppercase">Entradas</span>
+                      </div>
+                      <p className="text-xl font-bold">{totalEntradas}</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 text-red-300 mb-1">
+                        <ArrowDownCircle size={14} />
+                        <span className="text-[10px] font-black uppercase">Saídas</span>
+                      </div>
+                      <p className="text-xl font-bold">{totalSaidas}</p>
+                    </div>
+                  </div>
+
                   {lowStockCount > 0 && (
-                    <div className="mt-4 flex items-center gap-2 bg-red-500/30 p-3 rounded-xl border border-red-400/30">
-                      <AlertTriangle size={18} className="text-yellow-300" />
+                    <div className="flex items-center gap-3 bg-red-500/40 p-4 rounded-2xl border border-red-400/30 animate-pulse">
+                      <AlertTriangle size={20} className="text-yellow-300 shrink-0" />
                       <span className="text-sm font-bold">{lowStockCount} itens com estoque baixo!</span>
                     </div>
                   )}
