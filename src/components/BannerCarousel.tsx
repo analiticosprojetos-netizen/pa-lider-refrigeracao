@@ -72,20 +72,25 @@ const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void 
   const [settings, setSettings] = React.useState({
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     latitude: '',
-    longitude: '',
-    googleMapsUrl: ''
+    longitude: ''
   });
 
   React.useEffect(() => {
     const saved = localStorage.getItem('lider_site_settings');
     if (saved) {
-      setSettings(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setSettings({
+        address: parsed.address || 'Av. Industrial, 1000 - Setor de Transportes',
+        latitude: parsed.latitude || '',
+        longitude: parsed.longitude || ''
+      });
     }
   }, []);
 
-  const mapsUrl = settings.googleMapsUrl || (settings.latitude && settings.longitude 
+  // No Banner, usamos estritamente Latitude e Longitude para abrir o mapa no ponto exato
+  const mapsUrl = (settings.latitude && settings.longitude)
     ? `https://www.google.com/maps/search/?api=1&query=${settings.latitude},${settings.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`);
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
