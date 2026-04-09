@@ -86,6 +86,8 @@ interface ServiceOrderFormProps {
   previousOrders: any[];
   initialData?: any;
   onCancelEdit?: () => void;
+  maxDiscountWarning?: number;
+  maxDiscountDanger?: number;
 }
 
 const ServiceOrderForm = ({ 
@@ -95,7 +97,9 @@ const ServiceOrderForm = ({
   customers, 
   previousOrders,
   initialData,
-  onCancelEdit
+  onCancelEdit,
+  maxDiscountWarning = 10,
+  maxDiscountDanger = 15
 }: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
@@ -564,16 +568,16 @@ const ServiceOrderForm = ({
                   </div>
                 </div>
 
-                {/* INDICADOR DE MARGEM / ALERTA */}
+                {/* INDICADOR DE MARGEM / ALERTA DINÂMICO */}
                 {formData.discountPercent > 0 && (
                   <div className={`p-3 rounded-lg text-[10px] font-bold flex items-center gap-2 ${
-                    formData.discountPercent > 15 ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 
-                    formData.discountPercent > 10 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 
+                    formData.discountPercent >= maxDiscountDanger ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 
+                    formData.discountPercent >= maxDiscountWarning ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 
                     'bg-green-500/20 text-green-300 border border-green-500/30'
                   }`}>
                     <AlertCircle size={14} />
-                    {formData.discountPercent > 15 ? 'ALERTA: Desconto muito alto! Verifique sua margem de lucro.' : 
-                     formData.discountPercent > 10 ? 'CUIDADO: Desconto acima da média. Avalie a lucratividade.' : 
+                    {formData.discountPercent >= maxDiscountDanger ? `ALERTA CRÍTICO: Desconto de ${formData.discountPercent.toFixed(1)}% atinge o limite máximo configurado!` : 
+                     formData.discountPercent >= maxDiscountWarning ? `ATENÇÃO: Desconto de ${formData.discountPercent.toFixed(1)}% acima do limite de segurança.` : 
                      'Desconto dentro da margem aceitável.'}
                   </div>
                 )}

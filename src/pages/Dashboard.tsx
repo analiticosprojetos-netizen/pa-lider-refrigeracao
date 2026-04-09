@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,7 +111,9 @@ const Dashboard = () => {
     aboutYears: '15+',
     aboutTitle: 'Excelência em Refrigeração de Transportes',
     aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
-    aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
+    aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
+    maxDiscountWarning: 10,
+    maxDiscountDanger: 15
   });
 
   const formatPhone = (value: string) => {
@@ -147,7 +149,15 @@ const Dashboard = () => {
     if (savedMovements) setMovements(JSON.parse(savedMovements));
 
     const savedSettings = localStorage.getItem('lider_site_settings');
-    if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
+    if (savedSettings) {
+      const parsed = JSON.parse(savedSettings);
+      setSiteSettings({
+        ...siteSettings,
+        ...parsed,
+        maxDiscountWarning: parsed.maxDiscountWarning ?? 10,
+        maxDiscountDanger: parsed.maxDiscountDanger ?? 15
+      });
+    }
 
     const savedOrders = localStorage.getItem('lider_orders');
     if (savedOrders) setOrders(JSON.parse(savedOrders));
@@ -705,7 +715,7 @@ const Dashboard = () => {
                                   {hasPermission('estoque', 'edit') && (
                                     <>
                                       <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/30 dark:text-green-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                                      <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
+                                      <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
                                       <Button size="sm" variant="ghost" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditPart(part)}><Edit2 size={16} /></Button>
                                     </>
                                   )}
@@ -919,6 +929,8 @@ const Dashboard = () => {
                     setOrderToEdit(null);
                     setActiveOrcamentoTab('lista');
                   }}
+                  maxDiscountWarning={siteSettings.maxDiscountWarning}
+                  maxDiscountDanger={siteSettings.maxDiscountDanger}
                 />
               </TabsContent>
             </Tabs>
@@ -1001,6 +1013,7 @@ const Dashboard = () => {
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6">
                 <TabsTrigger value="site">Site e Institucional</TabsTrigger>
                 <TabsTrigger value="banners">Banners</TabsTrigger>
+                <TabsTrigger value="regras">Regras de Negócio</TabsTrigger>
                 <TabsTrigger value="usuarios">Gestão de Usuários e Permissões</TabsTrigger>
               </TabsList>
 
@@ -1169,6 +1182,63 @@ const Dashboard = () => {
                       ))}
                     </div>
                     <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="regras">
+                <Card className="border-blue-100 dark:border-slate-800 shadow-lg max-w-2xl dark:bg-slate-900">
+                  <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><TrendingDown className="text-blue-600" /> Regras de Negócio e Financeiro</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Percent size={18} className="text-blue-600" />
+                        <h3 className="text-sm font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Limites de Alerta de Desconto</h3>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Defina os percentuais que disparam avisos visuais no formulário de orçamento para proteger sua margem.</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
+                            Alerta de Atenção (Amarelo)
+                            <span className="text-blue-600">{siteSettings.maxDiscountWarning}%</span>
+                          </label>
+                          <Slider 
+                            value={[siteSettings.maxDiscountWarning]} 
+                            min={1} 
+                            max={50} 
+                            step={1}
+                            onValueChange={([v]) => setSiteSettings({...siteSettings, maxDiscountWarning: v})} 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
+                            Alerta Crítico (Vermelho)
+                            <span className="text-red-600">{siteSettings.maxDiscountDanger}%</span>
+                          </label>
+                          <Slider 
+                            value={[siteSettings.maxDiscountDanger]} 
+                            min={1} 
+                            max={50} 
+                            step={1}
+                            onValueChange={([v]) => setSiteSettings({...siteSettings, maxDiscountDanger: v})} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
+                      <Info size={20} className="text-blue-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Esses valores são usados apenas para fins de **alerta visual** durante a criação do orçamento. Eles não impedem a finalização da venda, mas servem como um guia para o técnico ou vendedor.
+                      </p>
+                    </div>
+
+                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Regras de negócio atualizadas!');}} className="w-full bg-blue-600">
+                      <Save className="mr-2 h-4 w-4" /> Salvar Regras
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
