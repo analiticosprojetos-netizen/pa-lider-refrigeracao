@@ -74,6 +74,10 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const ITEMS_PER_PAGE = 7;
 
+  // Paginação Histórico
+  const [currentMovementPage, setCurrentMovementPage] = React.useState(1);
+  const MOVEMENTS_PER_PAGE = 10;
+
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -432,11 +436,18 @@ const Dashboard = () => {
 
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   
-  // Lógica de Paginação
+  // Lógica de Paginação Estoque
   const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
   const paginatedParts = filteredParts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
+  );
+
+  // Lógica de Paginação Histórico
+  const totalMovementPages = Math.ceil(movements.length / MOVEMENTS_PER_PAGE);
+  const paginatedMovements = movements.slice(
+    (currentMovementPage - 1) * MOVEMENTS_PER_PAGE,
+    currentMovementPage * MOVEMENTS_PER_PAGE
   );
 
   const filteredOrders = orders.filter(o => 
@@ -690,7 +701,7 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {movements.map((m) => (
+                        {paginatedMovements.map((m) => (
                           <TableRow key={m.id}>
                             <TableCell className="text-xs text-gray-500 dark:text-gray-400">{m.date}</TableCell>
                             <TableCell className="font-medium dark:text-gray-300">{m.partName}</TableCell>
@@ -710,6 +721,35 @@ const Dashboard = () => {
                         ))}
                       </TableBody>
                     </Table>
+
+                    {/* Controles de Paginação Histórico */}
+                    {totalMovementPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Página {currentMovementPage} de {totalMovementPages}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setCurrentMovementPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentMovementPage === 1}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronLeft size={16} />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setCurrentMovementPage(prev => Math.min(prev + 1, totalMovementPages))}
+                            disabled={currentMovementPage === totalMovementPages}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronRight size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
