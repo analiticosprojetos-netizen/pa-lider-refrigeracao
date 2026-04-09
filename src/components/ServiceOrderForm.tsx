@@ -363,11 +363,11 @@ const ServiceOrderForm = ({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold opacity-50 uppercase">Deslocamento</label>
+                <label className="text-[10px] font-bold opacity-50 uppercase h-4 flex items-center">Deslocamento</label>
                 <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.travelValue} onChange={e => setFormData({...formData, travelValue: Number(e.target.value)})} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold opacity-50 uppercase flex items-center gap-1"><ShieldCheck size={10}/> Garantia</label>
+                <label className="text-[10px] font-bold opacity-50 uppercase h-4 flex items-center gap-1"><ShieldCheck size={10}/> Garantia</label>
                 <Input className="bg-blue-800 border-blue-700 text-white" value={formData.warranty} onChange={e => setFormData({...formData, warranty: e.target.value})} placeholder="Ex: 90 dias" />
               </div>
             </div>
