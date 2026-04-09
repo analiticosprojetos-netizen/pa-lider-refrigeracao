@@ -6,15 +6,16 @@ import Footer from '@/components/Footer';
 import SocialFloatingBar from '@/components/SocialFloatingBar';
 import { 
   Truck, 
+  ShieldCheck, 
   Award, 
   ThermometerSnowflake, 
   CheckCircle2,
+  Clock,
+  MapPin,
   Phone,
   Mail,
-  MapPin,
   MessageSquare,
-  Snowflake,
-  Sparkles
+  Snowflake
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,165 +38,164 @@ const Index = () => {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    showSuccess('Mensagem enviada com sucesso!');
+    showSuccess('Mensagem enviada com sucesso! Entraremos em contato em breve.');
     (e.target as HTMLFormElement).reset();
   };
 
   const scrollToContact = () => {
-    document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
+    const contactSection = document.getElementById('contato');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-[#66D1FF] selection:text-[#0D2C6C]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
       <SocialFloatingBar />
       
-      {/* Hero Section - Com Reflexos e Profundidade */}
-      <section className="relative py-24 md:py-40 overflow-hidden">
-        {/* Luzes de Fundo (Reflexos) */}
-        <div className="light-reflection w-[800px] h-[800px] -top-40 -left-40 animate-pulse" />
-        <div className="light-reflection w-[600px] h-[600px] bottom-0 right-0 opacity-50" />
-        
+      {/* Hero Section */}
+      <section className="relative bg-[#1a365d] py-16 md:py-24 overflow-hidden border-b-8 border-blue-800">
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <Snowflake className="absolute top-10 left-10 text-white w-8 h-8" />
+          <Snowflake className="absolute top-40 left-1/4 text-white w-12 h-12" />
+          <Snowflake className="absolute bottom-20 left-20 text-white w-6 h-6" />
+          <Snowflake className="absolute top-20 right-1/3 text-white w-10 h-10" />
+          <Snowflake className="absolute bottom-10 right-1/4 text-white w-8 h-8" />
+          <Snowflake className="absolute top-1/2 right-10 text-white w-14 h-14" />
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-20">
-            
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             <div className="text-center lg:text-left flex-1">
-              <div className="relative inline-block">
-                <div className="absolute -inset-4 bg-[#66D1FF]/20 blur-3xl rounded-full animate-pulse" />
-                <h1 className="text-7xl md:text-9xl font-black italic leading-none tracking-tighter ice-text relative">
+              <div className="inline-block transform -skew-x-12">
+                <h1 className="text-6xl md:text-8xl font-black text-white italic leading-none tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">
                   LÍDER
                 </h1>
-                <h2 className="text-4xl md:text-6xl font-black text-[#66D1FF] italic leading-none tracking-tighter mt-2 drop-shadow-2xl">
+                <h2 className="text-4xl md:text-6xl font-black text-white italic leading-none tracking-tighter mt-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">
                   REFRIGERAÇÃO
                 </h2>
               </div>
-              
-              <div className="mt-12 glass-card inline-block px-8 py-4 rounded-2xl">
-                <p className="text-white text-sm md:text-lg font-bold uppercase tracking-[0.3em] flex items-center gap-3">
-                  <Sparkles size={20} className="text-[#66D1FF]" />
-                  Manutenção de Alta Performance
+              <div className="mt-8 bg-white/10 backdrop-blur-sm inline-block px-6 py-2 rounded-full border border-white/20">
+                <p className="text-white text-lg md:text-xl font-bold uppercase tracking-widest">
+                  Manutenção Preventivas e Corretivas
                 </p>
               </div>
             </div>
 
-            <div className="flex-1 w-full max-w-xl">
-              <div className="glass-card p-10 rounded-[2.5rem] border-t-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="h-1 w-12 bg-[#66D1FF] rounded-full" />
-                  <span className="text-[#66D1FF] font-black uppercase tracking-widest text-xs">Especialistas</span>
-                </div>
-                <h3 className="text-3xl font-black uppercase mb-4 leading-tight">Reformas em Baús Frigoríficos</h3>
-                <p className="text-blue-100/80 font-medium mb-8">Atendimento especializado Thermo King, Carrier e Thermo Star para frotas e autônomos.</p>
-                
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
-                    <span className="text-white font-black italic text-xl">Carrier</span>
-                    <span className="text-[10px] uppercase opacity-50">Autorizada</span>
-                  </div>
-                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
-                    <span className="text-[#66D1FF] font-black text-xl">Thermo Star</span>
-                    <div className="h-1 w-8 bg-[#66D1FF] mt-1" />
-                  </div>
-                </div>
+            <div className="flex-1 text-white space-y-8">
+              <div className="bg-blue-900/40 p-6 rounded-2xl border-l-4 border-blue-400">
+                <h3 className="text-xl font-bold uppercase mb-2">Reformas e Manutenção em Baús Frigoríficos</h3>
+                <p className="text-blue-200 text-sm">Especialistas em Thermo King para baú de caminhão e carretas.</p>
+              </div>
 
+              <div className="space-y-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-blue-300">Representante Autorizada:</p>
+                <div className="flex flex-wrap gap-6 items-center">
+                  <div className="bg-white px-4 py-2 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-900 font-black italic text-xl">Carrier</span>
+                  </div>
+                  <div className="bg-white px-4 py-2 rounded-lg flex flex-col items-center justify-center leading-none">
+                    <span className="text-blue-500 text-[10px] font-bold uppercase">Thermo Star</span>
+                    <div className="h-1 w-full bg-blue-500 my-1"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-10 h-10 bg-blue-800 rounded flex items-center justify-center border border-blue-400">
+                      <span className="text-white font-bold text-xs italic">FK</span>
+                    </div>
+                    <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
+                      <Snowflake className="text-blue-600 w-6 h-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4">
                 <Button 
                   onClick={scrollToContact}
-                  className="btn-reflective w-full py-8 text-xl rounded-2xl uppercase tracking-widest"
+                  className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all w-full md:w-auto"
                 >
-                  Solicitar Orçamento
+                  SOLICITAR ORÇAMENTO AGORA
                 </Button>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* Especialidades - Cards com Efeito de Vidro Polido */}
-      <section id="servicos" className="py-32 relative">
+      {/* Especialidades */}
+      <section id="servicos" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center mb-24">
-            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter ice-text">Nossas Especialidades</h2>
-            <div className="w-32 h-1.5 bg-gradient-to-r from-transparent via-[#66D1FF] to-transparent rounded-full" />
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-blue-900 mb-4">Nossas Especialidades</h2>
+            <div className="w-20 h-1 bg-blue-600 mx-auto rounded-full" />
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Truck, title: "Baús Frigoríficos", desc: "Reformas estruturais e isolamento térmico." },
-              { icon: Award, title: "Peças Originais", desc: "Componentes homologados com garantia de fábrica." },
-              { icon: ThermometerSnowflake, title: "Thermo King", desc: "Manutenção preventiva e corretiva especializada." },
-              { icon: CheckCircle2, title: "Certificação", desc: "Técnicos treinados pelas maiores fabricantes." }
-            ].map((item, idx) => (
-              <div key={idx} className="glass-card p-10 rounded-[2rem] group hover:-translate-y-3 transition-all duration-500">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#1E5BB8] to-[#66D1FF] rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform">
-                  <item.icon className="text-white" size={32} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
-                <p className="text-blue-100/60 leading-relaxed text-sm">{item.desc}</p>
-              </div>
-            ))}
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-blue-50">
+              <Truck className="text-blue-600 mb-6" size={48} />
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Baús Frigoríficos</h3>
+              <p className="text-gray-600 text-sm">Reformas completas e manutenção estrutural.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-blue-50">
+              <Award className="text-blue-600 mb-6" size={48} />
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Autorizada</h3>
+              <p className="text-gray-600 text-sm">Representante oficial Carrier e Thermo Star.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-blue-50">
+              <ThermometerSnowflake className="text-blue-600 mb-6" size={48} />
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Thermo King</h3>
+              <p className="text-gray-600 text-sm">Especialistas certificados em sistemas Thermo King.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-blue-50">
+              <CheckCircle2 className="text-blue-600 mb-6" size={48} />
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Transporte</h3>
+              <p className="text-gray-600 text-sm">Soluções completas para transporte refrigerado.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Contato - Layout de Alto Impacto com Reflexos */}
-      <section id="contato" className="py-32 relative">
+      {/* Contato */}
+      <section id="contato" className="py-20 bg-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-card rounded-[3.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.4)]">
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="p-12 lg:p-24 bg-gradient-to-br from-[#1E5BB8] to-[#0D2C6C] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-                <h2 className="text-5xl font-black mb-16 ice-text uppercase">Fale Conosco</h2>
-                
-                <div className="space-y-12">
-                  <div className="flex items-center gap-8 group">
-                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
-                      <Phone size={32} className="text-[#66D1FF]" />
-                    </div>
+              <div className="p-8 lg:p-12 bg-blue-600 text-white">
+                <h2 className="text-3xl font-bold mb-8">Fale Conosco</h2>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><Phone size={24} /></div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">WhatsApp</p>
-                      <p className="text-3xl font-bold">{settings.whatsapp}</p>
+                      <p className="text-blue-200 text-sm">Telefone / WhatsApp</p>
+                      <p className="text-xl font-bold">{settings.whatsapp}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8 group">
-                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
-                      <Mail size={32} className="text-[#66D1FF]" />
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><Mail size={24} /></div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">E-mail</p>
-                      <p className="text-2xl font-bold">{settings.email}</p>
+                      <p className="text-blue-200 text-sm">E-mail</p>
+                      <p className="text-xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8 group">
-                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
-                      <MapPin size={32} className="text-[#66D1FF]" />
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-500 p-3 rounded-xl"><MapPin size={24} /></div>
                     <div>
-                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">Localização</p>
-                      <p className="text-xl font-bold leading-tight">{settings.address}</p>
+                      <p className="text-blue-200 text-sm">Endereço</p>
+                      <p className="text-xl font-bold">{settings.address}</p>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div className="p-12 lg:p-24 bg-white/5">
-                <form onSubmit={handleContactSubmit} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Nome</label>
-                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Seu nome" required />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Telefone</label>
-                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="(00) 00000-0000" required />
-                    </div>
+              <div className="p-8 lg:p-12">
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input placeholder="Nome" required />
+                    <Input placeholder="Telefone" required />
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Mensagem</label>
-                    <Textarea className="bg-white/5 border-white/10 text-white min-h-[180px] rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Como podemos ajudar?" required />
-                  </div>
-                  <Button type="submit" className="btn-reflective w-full py-10 text-xl rounded-2xl uppercase tracking-[0.2em]">
-                    <MessageSquare className="mr-4" /> Enviar Mensagem
+                  <Input placeholder="Assunto" required />
+                  <Textarea placeholder="Mensagem..." className="min-h-[120px]" required />
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg font-bold">
+                    <MessageSquare className="mr-2" /> Enviar Mensagem
                   </Button>
                 </form>
               </div>
