@@ -16,9 +16,9 @@ export const exportToExcel = (data: any[], fileName: string) => {
 export const generateServiceOrderPDF = (order: any, settings?: any) => {
   if (!order) return;
 
-  // Se não vier settings, tenta pegar do localStorage ou usa padrão
   const companyInfo = settings || JSON.parse(localStorage.getItem('lider_site_settings') || '{}');
   const companyName = companyInfo.companyName || "LIDER REFRIGERAÇÃO";
+  const logo = companyInfo.logo || "";
   const cnpj = companyInfo.cnpj || "00.000.000/0001-00";
   const email = companyInfo.email || "contato@liderefrigeracao.com.br";
   const phone = companyInfo.whatsapp || "(11) 99999-9999";
@@ -31,18 +31,38 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.setFillColor(26, 54, 93);
     doc.rect(0, 0, 210, 45, "F");
     
-    // Nome da Empresa Dinâmico
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text(companyName.toUpperCase(), 15, 22);
-    
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 15, 30);
-    doc.text("ESPECIALISTAS EM THERMO KING | CARRIER | THERMO STAR", 15, 35);
+    // Logo ou Nome da Empresa
+    if (logo) {
+      try {
+        doc.addImage(logo, 'PNG', 15, 8, 30, 30); // Logo no topo esquerdo
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text(companyName.toUpperCase(), 50, 22);
+        
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 50, 30);
+      } catch (e) {
+        // Fallback se a imagem falhar
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont("helvetica", "bold");
+        doc.text(companyName.toUpperCase(), 15, 22);
+      }
+    } else {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text(companyName.toUpperCase(), 15, 22);
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 15, 30);
+    }
     
     // Info da Empresa no Topo Direito
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
     doc.text(`CNPJ: ${cnpj}`, 145, 20);
     doc.text(email, 145, 25);

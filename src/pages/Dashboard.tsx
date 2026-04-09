@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,6 +87,7 @@ const Dashboard = () => {
   
   const [siteSettings, setSiteSettings] = React.useState({
     companyName: 'LIDER REFRIGERAÇÃO',
+    logo: '',
     whatsapp: '11999999999',
     instagram: 'https://instagram.com/liderefrigeracao',
     facebook: 'https://facebook.com/liderefrigeracao',
@@ -356,6 +357,17 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     navigate('/');
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSiteSettings({ ...siteSettings, logo: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -737,10 +749,36 @@ const Dashboard = () => {
               <TabsContent value="site">
                 <Card className="border-blue-100 shadow-lg max-w-2xl">
                   <CardHeader className="bg-blue-50 border-b border-blue-100">
-                    <CardTitle className="flex items-center gap-2 text-blue-900"><Globe className="text-blue-600" /> Contatos e Redes</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900"><Globe className="text-blue-600" /> Contatos e Identidade</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
-                    <form className="space-y-4">
+                    <form className="space-y-6">
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <label className="text-xs font-bold text-blue-900 uppercase tracking-wider">Logo da Empresa (Para o PDF)</label>
+                        <div className="flex items-center gap-6">
+                          <div className="w-24 h-24 bg-white border-2 border-dashed border-blue-200 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                            {siteSettings.logo ? (
+                              <img src={siteSettings.logo} alt="Logo" className="w-full h-full object-contain" />
+                            ) : (
+                              <ImageIcon className="text-blue-200 w-8 h-8" />
+                            )}
+                            <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                              <Upload size={20} />
+                              <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                            </label>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-bold text-gray-700">Upload da Logo</p>
+                            <p className="text-xs text-gray-500">Recomendado: PNG ou JPG com fundo branco ou transparente.</p>
+                            {siteSettings.logo && (
+                              <Button variant="ghost" size="sm" className="text-red-500 h-8 px-2" onClick={() => setSiteSettings({...siteSettings, logo: ''})}>
+                                <Trash2 size={14} className="mr-1" /> Remover Logo
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="space-y-1">
                         <label className="text-xs font-bold">Nome da Empresa (PDF)</label>
                         <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} />
@@ -753,7 +791,7 @@ const Dashboard = () => {
                       <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
                       <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
                       <div className="space-y-1"><label className="text-xs font-bold">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} /></div>
-                      <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
+                      <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Configurações salvas!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
                     </form>
                   </CardContent>
                 </Card>
