@@ -62,8 +62,9 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
                 <Truck size={16} /> Veículo e Equipamento
               </h3>
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-1">
-                <p className="text-sm font-bold">{order.plate} - {order.vehicleModel}</p>
-                <p className="text-xs text-gray-500">Equip: {order.equipBrand} {order.equipModel}</p>
+                <p className="text-sm font-bold">{order.plate}</p>
+                <p className="text-sm font-bold text-blue-900">{order.vehicleModel}</p>
+                <p className="text-xs text-gray-500 mt-2">Equip: {order.equipBrand} {order.equipModel}</p>
                 <p className="text-xs text-gray-500">Serviço: {order.serviceType}</p>
               </div>
             </div>
