@@ -24,6 +24,7 @@ import {
 import ServiceOrderForm from '@/components/ServiceOrderForm';
 import ServiceOrderDetails from '@/components/ServiceOrderDetails';
 import UserAdminSettings, { UserProfile } from '@/components/UserAdminSettings';
+import AnalyticsTab from '@/components/AnalyticsTab';
 import { generateServiceOrderPDF, exportToExcel } from '@/utils/exportUtils';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -65,6 +66,7 @@ const Dashboard = () => {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
+  const [usersCount, setUsersCount] = React.useState(0);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -149,6 +151,9 @@ const Dashboard = () => {
 
     const savedOrders = localStorage.getItem('lider_orders');
     if (savedOrders) setOrders(JSON.parse(savedOrders));
+
+    const savedUsers = localStorage.getItem('lider_users');
+    if (savedUsers) setUsersCount(JSON.parse(savedUsers).length);
   }, [navigate]);
 
   // Resetar página ao buscar
@@ -355,7 +360,7 @@ const Dashboard = () => {
     });
 
     const updatedOrders = orders.map(o => 
-      o.id === orderId ? { ...o, status: 'Executado' } : o
+      o.id === orderId ? { ...o, status: 'Executado', executedAt: new Date().toLocaleString() } : o
     );
 
     setParts(updatedParts);
@@ -401,7 +406,7 @@ const Dashboard = () => {
     });
 
     const updatedOrders = orders.map(o => 
-      o.id === orderId ? { ...o, status: 'Pendente' } : o
+      o.id === orderId ? { ...o, status: 'Pendente', executedAt: null } : o
     );
 
     setParts(updatedParts);
@@ -418,7 +423,7 @@ const Dashboard = () => {
   const handleCancelOrder = (orderId: string) => {
     if (!hasPermission('orcamentos', 'edit')) return;
     const updatedOrders = orders.map(o => 
-      o.id === orderId ? { ...o, status: 'Cancelado' } : o
+      o.id === orderId ? { ...o, status: 'Cancelado', cancelledAt: new Date().toLocaleString() } : o
     );
     setOrders(updatedOrders);
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
@@ -565,6 +570,7 @@ const Dashboard = () => {
             {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>}
             {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>}
+            {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-6">Analytics</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>}
           </TabsList>
 
@@ -982,6 +988,11 @@ const Dashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* CONTEÚDO ANALYTICS */}
+          <TabsContent value="analytics">
+            <AnalyticsTab orders={orders} usersCount={usersCount} />
           </TabsContent>
 
           {/* CONTEÚDO CONFIGURAÇÕES */}
