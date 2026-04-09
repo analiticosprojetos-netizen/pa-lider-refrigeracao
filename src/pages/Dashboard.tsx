@@ -55,6 +55,14 @@ interface Banner {
   rotate: number;
 }
 
+const FULL_PERMISSIONS = {
+  estoque: { view: true, edit: true, delete: true },
+  orcamentos: { view: true, edit: true, delete: true },
+  clientes: { view: true, edit: true, delete: true },
+  historico: { view: true, edit: true, delete: true },
+  config: { view: true, edit: true, delete: true },
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [parts, setParts] = React.useState<Part[]>([]);
@@ -68,7 +76,6 @@ const Dashboard = () => {
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
   
-  // Estados para edição
   const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
   const [isEditCustomerOpen, setIsEditCustomerOpen] = React.useState(false);
   const [orderToEdit, setOrderToEdit] = React.useState<any>(null);
@@ -91,14 +98,27 @@ const Dashboard = () => {
       return;
     }
 
-    // Carregar usuário logado e suas permissões
+    // Carregar ou inicializar usuários
+    let users = [];
     const savedUsers = localStorage.getItem('lider_users');
+    
     if (savedUsers) {
-      const users = JSON.parse(savedUsers);
-      // Por enquanto simulamos que o 'admin' é quem está logado se não houver sessão específica
-      const loggedUser = users.find((u: any) => u.username === 'admin');
-      setCurrentUser(loggedUser);
+      users = JSON.parse(savedUsers);
+    } else {
+      // Criar admin padrão se não existir
+      const defaultAdmin: UserProfile = {
+        id: '1',
+        username: 'admin',
+        role: 'ADMIN',
+        permissions: FULL_PERMISSIONS
+      };
+      users = [defaultAdmin];
+      localStorage.setItem('lider_users', JSON.stringify(users));
     }
+
+    // Definir usuário logado (simulado como admin para este exemplo)
+    const loggedUser = users.find((u: any) => u.username === 'admin');
+    setCurrentUser(loggedUser || users[0]);
 
     const savedParts = localStorage.getItem('lider_inventory');
     if (savedParts) setParts(JSON.parse(savedParts));
@@ -338,7 +358,14 @@ const Dashboard = () => {
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
-  if (!currentUser) return <div className="p-20 text-center">Carregando perfil...</div>;
+  if (!currentUser) return (
+    <div className="min-h-screen flex items-center justify-center bg-blue-50">
+      <div className="text-center space-y-4">
+        <Snowflake className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+        <p className="text-blue-900 font-bold">Carregando perfil de acesso...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
