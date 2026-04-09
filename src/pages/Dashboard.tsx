@@ -391,12 +391,15 @@ const Dashboard = () => {
             {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>}
             {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>}
-            {currentUser.permissions.historico.view && <TabsTrigger value="historico" className="px-6">Histórico Estoque</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>}
           </TabsList>
 
-          {/* CONTEÚDO ESTOQUE */}
+          {/* CONTEÚDO ESTOQUE (UNIFICADO) */}
           <TabsContent value="estoque" className="space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-blue-900">Gestão de Estoque</h2>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <Card className="bg-blue-600 text-white shadow-xl border-none">
                 <CardContent className="pt-6">
@@ -443,69 +446,115 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {hasPermission('estoque', 'edit') && (
-                <Card className="h-fit shadow-lg border-blue-50">
+            <Tabs defaultValue="lista" className="w-full">
+              <TabsList className="bg-white border border-blue-100 mb-6">
+                <TabsTrigger value="lista">Lista de Peças</TabsTrigger>
+                {currentUser.permissions.historico.view && <TabsTrigger value="historico">Histórico de Movimentações</TabsTrigger>}
+              </TabsList>
+
+              <TabsContent value="lista" className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {hasPermission('estoque', 'edit') && (
+                    <Card className="h-fit shadow-lg border-blue-50">
+                      <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+                        <CardTitle className="text-lg flex items-center gap-2 text-blue-900"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <form onSubmit={handleAddPart} className="space-y-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
+                            <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
+                            <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required />
+                          </div>
+                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50`}>
+                    <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 border-b border-blue-50">
+                      <CardTitle className="text-lg text-blue-900">Controle de Peças</CardTitle>
+                      <div className="relative w-48 sm:w-64">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                        <Input placeholder="Buscar peça..." className="pl-10 bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50">
+                            <TableHead className="font-bold text-blue-900">Peça</TableHead>
+                            <TableHead className="text-center font-bold text-blue-900">Qtd Atual</TableHead>
+                            {hasPermission('estoque', 'edit') && <TableHead className="text-right font-bold text-blue-900">Movimentar</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredParts.map((part) => (
+                            <TableRow key={part.id} className="hover:bg-blue-50/30 transition-colors">
+                              <TableCell className="font-medium text-gray-700">{part.name}</TableCell>
+                              <TableCell className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                                  {part.quantity}
+                                </span>
+                              </TableCell>
+                              {hasPermission('estoque', 'edit') && (
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
+                                    <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
+                                  </div>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="historico">
+                <Card className="shadow-lg border-blue-50">
                   <CardHeader className="bg-blue-50/50 border-b border-blue-50">
-                    <CardTitle className="text-lg flex items-center gap-2 text-blue-900"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900"><History className="text-blue-600" /> Histórico de Movimentações</CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-6">
-                    <form onSubmit={handleAddPart} className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
-                        <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
-                        <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required />
-                      </div>
-                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
-                    </form>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50/50">
+                          <TableHead className="font-bold">Data/Hora</TableHead>
+                          <TableHead className="font-bold">Peça</TableHead>
+                          <TableHead className="font-bold">Tipo</TableHead>
+                          <TableHead className="text-center font-bold">Qtd</TableHead>
+                          <TableHead className="font-bold">Operador</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {movements.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell className="text-xs text-gray-500">{m.date}</TableCell>
+                            <TableCell className="font-medium">{m.partName}</TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${m.type === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : <ArrowDownCircle size={12} />}
+                                {m.type}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center font-bold">{m.quantity}</TableCell>
+                            <TableCell className="text-sm text-blue-600 font-bold">{m.user}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </CardContent>
                 </Card>
-              )}
-
-              <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50`}>
-                <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 border-b border-blue-50">
-                  <CardTitle className="text-lg text-blue-900">Controle de Peças</CardTitle>
-                  <div className="relative w-48 sm:w-64">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Buscar peça..." className="pl-10 bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50/50">
-                        <TableHead className="font-bold text-blue-900">Peça</TableHead>
-                        <TableHead className="text-center font-bold text-blue-900">Qtd Atual</TableHead>
-                        {hasPermission('estoque', 'edit') && <TableHead className="text-right font-bold text-blue-900">Movimentar</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredParts.map((part) => (
-                        <TableRow key={part.id} className="hover:bg-blue-50/30 transition-colors">
-                          <TableCell className="font-medium text-gray-700">{part.name}</TableCell>
-                          <TableCell className="text-center">
-                            <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-                              {part.quantity}
-                            </span>
-                          </TableCell>
-                          {hasPermission('estoque', 'edit') && (
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                                <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* CONTEÚDO ORÇAMENTOS */}
@@ -630,44 +679,6 @@ const Dashboard = () => {
                             )}
                           </div>
                         </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* CONTEÚDO HISTÓRICO */}
-          <TabsContent value="historico">
-            <Card className="shadow-lg border-blue-50">
-              <CardHeader className="bg-blue-50/50 border-b border-blue-50">
-                <CardTitle className="flex items-center gap-2 text-blue-900"><History className="text-blue-600" /> Histórico de Movimentações</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50/50">
-                      <TableHead className="font-bold">Data/Hora</TableHead>
-                      <TableHead className="font-bold">Peça</TableHead>
-                      <TableHead className="font-bold">Tipo</TableHead>
-                      <TableHead className="text-center font-bold">Qtd</TableHead>
-                      <TableHead className="font-bold">Operador</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {movements.map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell className="text-xs text-gray-500">{m.date}</TableCell>
-                        <TableCell className="font-medium">{m.partName}</TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${m.type === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : <ArrowDownCircle size={12} />}
-                            {m.type}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center font-bold">{m.quantity}</TableCell>
-                        <TableCell className="text-sm text-blue-600 font-bold">{m.user}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
