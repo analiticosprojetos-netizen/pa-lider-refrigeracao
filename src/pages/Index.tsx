@@ -13,7 +13,8 @@ import {
   Mail,
   MapPin,
   MessageSquare,
-  Snowflake
+  Snowflake,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,45 +46,61 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0D2C6C]">
+    <div className="min-h-screen flex flex-col selection:bg-[#66D1FF] selection:text-[#0D2C6C]">
       <Navbar />
       <SocialFloatingBar />
       
-      {/* Hero Section - Limpo e Impactante */}
-      <section className="relative py-20 md:py-32 border-b-8 border-[#1E5BB8]">
+      {/* Hero Section - Com Reflexos e Profundidade */}
+      <section className="relative py-24 md:py-40 overflow-hidden">
+        {/* Luzes de Fundo (Reflexos) */}
+        <div className="light-reflection w-[800px] h-[800px] -top-40 -left-40 animate-pulse" />
+        <div className="light-reflection w-[600px] h-[600px] bottom-0 right-0 opacity-50" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-20">
             
             <div className="text-center lg:text-left flex-1">
-              <h1 className="text-6xl md:text-8xl font-black text-white italic leading-none tracking-tighter">
-                LÍDER
-              </h1>
-              <h2 className="text-4xl md:text-6xl font-black text-[#66D1FF] italic leading-none tracking-tighter mt-2">
-                REFRIGERAÇÃO
-              </h2>
-              <div className="mt-8 inline-block bg-[#1E5BB8] px-6 py-2 rounded-md">
-                <p className="text-white text-sm md:text-lg font-bold uppercase tracking-widest">
-                  Manutenção Preventiva e Corretiva
+              <div className="relative inline-block">
+                <div className="absolute -inset-4 bg-[#66D1FF]/20 blur-3xl rounded-full animate-pulse" />
+                <h1 className="text-7xl md:text-9xl font-black italic leading-none tracking-tighter ice-text relative">
+                  LÍDER
+                </h1>
+                <h2 className="text-4xl md:text-6xl font-black text-[#66D1FF] italic leading-none tracking-tighter mt-2 drop-shadow-2xl">
+                  REFRIGERAÇÃO
+                </h2>
+              </div>
+              
+              <div className="mt-12 glass-card inline-block px-8 py-4 rounded-2xl">
+                <p className="text-white text-sm md:text-lg font-bold uppercase tracking-[0.3em] flex items-center gap-3">
+                  <Sparkles size={20} className="text-[#66D1FF]" />
+                  Manutenção de Alta Performance
                 </p>
               </div>
             </div>
 
             <div className="flex-1 w-full max-w-xl">
-              <div className="bg-white/10 p-8 rounded-2xl border-l-8 border-[#66D1FF] shadow-2xl">
-                <h3 className="text-2xl font-bold uppercase mb-4 text-white">Reformas em Baús Frigoríficos</h3>
-                <p className="text-blue-100 mb-8">Atendimento especializado Thermo King, Carrier e Thermo Star para frotas e autônomos.</p>
+              <div className="glass-card p-10 rounded-[2.5rem] border-t-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-1 w-12 bg-[#66D1FF] rounded-full" />
+                  <span className="text-[#66D1FF] font-black uppercase tracking-widest text-xs">Especialistas</span>
+                </div>
+                <h3 className="text-3xl font-black uppercase mb-4 leading-tight">Reformas em Baús Frigoríficos</h3>
+                <p className="text-blue-100/80 font-medium mb-8">Atendimento especializado Thermo King, Carrier e Thermo Star para frotas e autônomos.</p>
                 
-                <div className="flex gap-4 mb-8">
-                  <div className="bg-white px-4 py-2 rounded font-black italic text-[#0D2C6C]">Carrier</div>
-                  <div className="bg-white px-4 py-2 rounded flex flex-col items-center leading-none">
-                    <span className="text-[#1E5BB8] text-[10px] font-bold uppercase">Thermo Star</span>
-                    <div className="h-1 w-full bg-[#1E5BB8] mt-1" />
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
+                    <span className="text-white font-black italic text-xl">Carrier</span>
+                    <span className="text-[10px] uppercase opacity-50">Autorizada</span>
+                  </div>
+                  <div className="bg-white/10 p-4 rounded-xl border border-white/5 flex flex-col items-center">
+                    <span className="text-[#66D1FF] font-black text-xl">Thermo Star</span>
+                    <div className="h-1 w-8 bg-[#66D1FF] mt-1" />
                   </div>
                 </div>
 
                 <Button 
                   onClick={scrollToContact}
-                  className="btn-primary w-full py-8 text-xl rounded-xl"
+                  className="btn-reflective w-full py-8 text-xl rounded-2xl uppercase tracking-widest"
                 >
                   Solicitar Orçamento
                 </Button>
@@ -94,75 +111,91 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Especialidades */}
-      <section id="servicos" className="py-24">
+      {/* Especialidades - Cards com Efeito de Vidro Polido */}
+      <section id="servicos" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4 uppercase">Nossas Especialidades</h2>
-            <div className="w-24 h-1.5 bg-[#66D1FF] mx-auto rounded-full" />
+          <div className="flex flex-col items-center mb-24">
+            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter ice-text">Nossas Especialidades</h2>
+            <div className="w-32 h-1.5 bg-gradient-to-r from-transparent via-[#66D1FF] to-transparent rounded-full" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { icon: Truck, title: "Baús Frigoríficos", desc: "Reformas estruturais e isolamento térmico." },
-              { icon: Award, title: "Peças Originais", desc: "Componentes homologados com garantia." },
-              { icon: ThermometerSnowflake, title: "Thermo King", desc: "Manutenção especializada certificada." },
-              { icon: CheckCircle2, title: "Certificação", desc: "Técnicos treinados pelas fabricantes." }
+              { icon: Award, title: "Peças Originais", desc: "Componentes homologados com garantia de fábrica." },
+              { icon: ThermometerSnowflake, title: "Thermo King", desc: "Manutenção preventiva e corretiva especializada." },
+              { icon: CheckCircle2, title: "Certificação", desc: "Técnicos treinados pelas maiores fabricantes." }
             ].map((item, idx) => (
-              <div key={idx} className="section-card hover:bg-white/10 transition-colors">
-                <div className="w-12 h-12 bg-[#1E5BB8] rounded-lg flex items-center justify-center mb-6">
-                  <item.icon className="text-white" size={24} />
+              <div key={idx} className="glass-card p-10 rounded-[2rem] group hover:-translate-y-3 transition-all duration-500">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#1E5BB8] to-[#66D1FF] rounded-2xl flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform">
+                  <item.icon className="text-white" size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-blue-100 text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
+                <p className="text-blue-100/60 leading-relaxed text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Contato */}
-      <section id="contato" className="py-24 bg-white/5">
+      {/* Contato - Layout de Alto Impacto com Reflexos */}
+      <section id="contato" className="py-32 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#0D2C6C] border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+          <div className="glass-card rounded-[3.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.4)]">
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="p-12 bg-[#1E5BB8] text-white">
-                <h2 className="text-3xl font-bold mb-12 uppercase">Fale Conosco</h2>
-                <div className="space-y-8">
-                  <div className="flex items-center gap-4">
-                    <Phone className="text-[#66D1FF]" size={24} />
+              <div className="p-12 lg:p-24 bg-gradient-to-br from-[#1E5BB8] to-[#0D2C6C] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+                <h2 className="text-5xl font-black mb-16 ice-text uppercase">Fale Conosco</h2>
+                
+                <div className="space-y-12">
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <Phone size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-xs uppercase opacity-70">WhatsApp</p>
-                      <p className="text-xl font-bold">{settings.whatsapp}</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">WhatsApp</p>
+                      <p className="text-3xl font-bold">{settings.whatsapp}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Mail className="text-[#66D1FF]" size={24} />
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <Mail size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-xs uppercase opacity-70">E-mail</p>
-                      <p className="text-xl font-bold">{settings.email}</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">E-mail</p>
+                      <p className="text-2xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <MapPin className="text-[#66D1FF]" size={24} />
+                  <div className="flex items-center gap-8 group">
+                    <div className="bg-white/10 p-5 rounded-2xl group-hover:bg-[#66D1FF]/20 transition-colors border border-white/10">
+                      <MapPin size={32} className="text-[#66D1FF]" />
+                    </div>
                     <div>
-                      <p className="text-xs uppercase opacity-70">Endereço</p>
-                      <p className="text-lg font-bold">{settings.address}</p>
+                      <p className="text-[#66D1FF] text-xs font-black uppercase tracking-[0.3em] mb-2">Localização</p>
+                      <p className="text-xl font-bold leading-tight">{settings.address}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-12">
-                <form onSubmit={handleContactSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input className="bg-white/5 border-white/20 text-white h-14" placeholder="Nome" required />
-                    <Input className="bg-white/5 border-white/20 text-white h-14" placeholder="Telefone" required />
+              <div className="p-12 lg:p-24 bg-white/5">
+                <form onSubmit={handleContactSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Nome</label>
+                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Seu nome" required />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Telefone</label>
+                      <Input className="bg-white/5 border-white/10 text-white h-16 rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="(00) 00000-0000" required />
+                    </div>
                   </div>
-                  <Input className="bg-white/5 border-white/20 text-white h-14" placeholder="Assunto" required />
-                  <Textarea className="bg-white/5 border-white/20 text-white min-h-[120px]" placeholder="Mensagem..." required />
-                  <Button type="submit" className="btn-primary w-full py-8 text-lg">
-                    <MessageSquare className="mr-2" /> Enviar Mensagem
+                  <div className="space-y-3">
+                    <label className="text-xs font-black uppercase tracking-widest text-[#66D1FF]">Mensagem</label>
+                    <Textarea className="bg-white/5 border-white/10 text-white min-h-[180px] rounded-2xl focus:ring-[#66D1FF] focus:bg-white/10 transition-all" placeholder="Como podemos ajudar?" required />
+                  </div>
+                  <Button type="submit" className="btn-reflective w-full py-10 text-xl rounded-2xl uppercase tracking-[0.2em]">
+                    <MessageSquare className="mr-4" /> Enviar Mensagem
                   </Button>
                 </form>
               </div>
