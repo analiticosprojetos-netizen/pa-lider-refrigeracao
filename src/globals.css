@@ -111,3 +111,14 @@
     -moz-appearance: textfield;
   }
 }
+
+@layer utilities {
+  /* Esconde a barra de rolagem mas mantém a funcionalidade */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
