@@ -29,7 +29,11 @@ const Index = () => {
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     banners: [],
-    carouselDelay: 6
+    carouselDelay: 6,
+    aboutYears: '15+',
+    aboutTitle: 'Excelência em Refrigeração de Transportes',
+    aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
+    aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
   });
 
   React.useEffect(() => {
@@ -71,13 +75,13 @@ const Index = () => {
             <div className="relative">
               <div className="aspect-square rounded-3xl overflow-hidden bg-blue-100 border-8 border-blue-50 shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80" 
+                  src={settings.aboutImage} 
                   alt="Oficina Lider" 
                   className="w-full h-full object-cover opacity-80 mix-blend-multiply"
                 />
               </div>
               <div className="absolute -bottom-6 -right-6 bg-blue-600 text-white p-8 rounded-2xl shadow-xl hidden md:block">
-                <p className="text-4xl font-black mb-1">15+</p>
+                <p className="text-4xl font-black mb-1">{settings.aboutYears}</p>
                 <p className="text-xs font-bold uppercase tracking-widest">Anos de Experiência</p>
               </div>
             </div>
@@ -86,10 +90,10 @@ const Index = () => {
                 Nossa História
               </div>
               <h2 className="text-4xl font-black text-blue-900 leading-tight">
-                Excelência em Refrigeração de Transportes
+                {settings.aboutTitle}
               </h2>
-              <p className="text-gray-600 leading-relaxed">
-                A <strong>Lider Refrigeração</strong> nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {settings.aboutDescription}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 <div className="flex gap-4">

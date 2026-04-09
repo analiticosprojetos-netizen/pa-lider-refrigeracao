@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from '@/components/ui/table';
@@ -95,7 +96,11 @@ const Dashboard = () => {
     address: 'Av. Industrial, 1000 - Setor de Transportes',
     cnpj: '00.000.000/0001-00',
     banners: [] as Banner[],
-    carouselDelay: 6
+    carouselDelay: 6,
+    aboutYears: '15+',
+    aboutTitle: 'Excelência em Refrigeração de Transportes',
+    aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
+    aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
   });
 
   React.useEffect(() => {
@@ -365,6 +370,17 @@ const Dashboard = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setSiteSettings({ ...siteSettings, logo: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAboutImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSiteSettings({ ...siteSettings, aboutImage: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -742,6 +758,7 @@ const Dashboard = () => {
             <Tabs defaultValue="site" className="w-full">
               <TabsList className="bg-white border border-blue-100 mb-6">
                 <TabsTrigger value="site">Site e Contatos</TabsTrigger>
+                <TabsTrigger value="sobre">Sobre Nós</TabsTrigger>
                 <TabsTrigger value="banners">Banners</TabsTrigger>
                 <TabsTrigger value="usuarios">Gestão de Usuários e Permissões</TabsTrigger>
               </TabsList>
@@ -793,6 +810,54 @@ const Dashboard = () => {
                       <div className="space-y-1"><label className="text-xs font-bold">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} /></div>
                       <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Configurações salvas!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
                     </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="sobre">
+                <Card className="border-blue-100 shadow-lg max-w-2xl">
+                  <CardHeader className="bg-blue-50 border-b border-blue-100">
+                    <CardTitle className="flex items-center gap-2 text-blue-900"><Info className="text-blue-600" /> Conteúdo Institucional</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <label className="text-xs font-bold text-blue-900 uppercase tracking-wider">Imagem da Seção Sobre</label>
+                      <div className="flex items-center gap-6">
+                        <div className="w-32 h-32 bg-white border-2 border-dashed border-blue-200 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                          <img src={siteSettings.aboutImage} alt="Sobre" className="w-full h-full object-cover" />
+                          <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                            <Upload size={20} />
+                            <input type="file" className="hidden" accept="image/*" onChange={handleAboutImageUpload} />
+                          </label>
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-bold text-gray-700">Alterar Foto</p>
+                          <p className="text-xs text-gray-500">Esta imagem aparece ao lado do texto institucional na página inicial.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Anos de Experiência</label>
+                        <Input value={siteSettings.aboutYears} onChange={(e) => setSiteSettings({...siteSettings, aboutYears: e.target.value})} placeholder="Ex: 15+" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Título da Seção</label>
+                        <Input value={siteSettings.aboutTitle} onChange={(e) => setSiteSettings({...siteSettings, aboutTitle: e.target.value})} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold">Descrição / História</label>
+                      <Textarea 
+                        className="min-h-[150px]" 
+                        value={siteSettings.aboutDescription} 
+                        onChange={(e) => setSiteSettings({...siteSettings, aboutDescription: e.target.value})} 
+                      />
+                    </div>
+
+                    <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Conteúdo institucional salvo!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Alterações</Button>
                   </CardContent>
                 </Card>
               </TabsContent>
