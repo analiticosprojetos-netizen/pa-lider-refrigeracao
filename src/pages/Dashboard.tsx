@@ -240,6 +240,15 @@ const Dashboard = () => {
     showSuccess('Orçamento finalizado como cancelado.');
   };
 
+  const handleDeleteOrder = (orderId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este orçamento permanentemente?')) {
+      const updatedOrders = orders.filter(o => o.id !== orderId);
+      setOrders(updatedOrders);
+      localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+      showSuccess('Orçamento excluído com sucesso.');
+    }
+  };
+
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
@@ -439,12 +448,13 @@ const Dashboard = () => {
                               <div className="flex justify-end gap-2">
                                 {order.status === 'Pendente' && (
                                   <>
-                                    <Button size="sm" variant="outline" className="border-green-200 text-green-600" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
-                                    <Button size="sm" variant="outline" className="border-red-200 text-red-600" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
+                                    <Button title="Executar (Baixa Estoque)" size="sm" variant="outline" className="border-green-200 text-green-600" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
+                                    <Button title="Cancelar" size="sm" variant="outline" className="border-red-200 text-red-600" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
                                   </>
                                 )}
-                                <Button size="sm" variant="ghost" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
-                                <Button size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)}><Download size={16}/></Button>
+                                <Button title="Visualizar" size="sm" variant="ghost" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
+                                <Button title="Baixar PDF" size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)}><Download size={16}/></Button>
+                                <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
                               </div>
                             </TableCell>
                           </TableRow>
