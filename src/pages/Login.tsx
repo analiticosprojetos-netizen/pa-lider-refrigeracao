@@ -10,7 +10,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { UserProfile } from '@/components/UserAdminSettings';
 
 const Login = () => {
-  const [identifier, setIdentifier] = React.useState(''); // Pode ser username ou email
+  const [identifier, setIdentifier] = React.useState('');
   const [password, setPassword] = React.useState('');
   const navigate = useNavigate();
 
@@ -18,9 +18,28 @@ const Login = () => {
     e.preventDefault();
     
     const savedUsers = localStorage.getItem('lider_users');
-    const users: UserProfile[] = savedUsers ? JSON.parse(savedUsers) : [];
+    let users: UserProfile[] = savedUsers ? JSON.parse(savedUsers) : [];
     
-    // Verifica se existe usuário com esse username OU email e a senha correta
+    // Se não houver usuários, cria o admin padrão para permitir o primeiro acesso
+    if (users.length === 0) {
+      const defaultAdmin: UserProfile = {
+        id: '1',
+        username: 'admin',
+        email: 'admin@lider.com',
+        password: '1234',
+        role: 'ADMIN',
+        permissions: {
+          estoque: { view: true, edit: true, delete: true },
+          orcamentos: { view: true, edit: true, delete: true },
+          clientes: { view: true, edit: true, delete: true },
+          historico: { view: true, edit: true, delete: true },
+          config: { view: true, edit: true, delete: true },
+        }
+      };
+      users = [defaultAdmin];
+      localStorage.setItem('lider_users', JSON.stringify(users));
+    }
+    
     const user = users.find(u => 
       (u.username === identifier || u.email === identifier) && u.password === password
     );
