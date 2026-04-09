@@ -248,9 +248,27 @@ const ServiceOrderForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    let newId = initialData?.id;
+    if (!newId) {
+      const now = new Date();
+      const datePrefix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+      
+      // Filtra orçamentos do dia atual para encontrar o próximo número sequencial
+      const todayOrders = previousOrders.filter(o => o.id.startsWith(datePrefix));
+      let nextNum = 1;
+      if (todayOrders.length > 0) {
+        const nums = todayOrders.map(o => {
+          const parts = o.id.split(' - ');
+          return parts.length > 1 ? parseInt(parts[1]) : 0;
+        }).filter(n => !isNaN(n));
+        nextNum = Math.max(0, ...nums) + 1;
+      }
+      newId = `${datePrefix} - ${nextNum}`;
+    }
+
     const order = {
       ...formData,
-      id: initialData ? initialData.id : Math.random().toString(36).substr(2, 5).toUpperCase(),
+      id: newId,
       date: initialData ? initialData.date : new Date().toLocaleString(),
       status: initialData ? initialData.status : 'Pendente',
       services,
