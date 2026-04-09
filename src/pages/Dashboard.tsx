@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ interface Customer {
   document: string;
   phone: string;
   email: string;
+  createdAt?: string;
 }
 
 interface Movement {
@@ -109,7 +110,6 @@ const Dashboard = () => {
       return;
     }
 
-    // Carrega o usuário que realmente fez o login
     const user = JSON.parse(savedUser);
     setCurrentUser(user);
 
@@ -277,7 +277,7 @@ const Dashboard = () => {
     if (customerData) {
       const exists = customers.some(c => c.document === customerData.document);
       if (!exists && customerData.document) {
-        const updatedCustomers = [...customers, customerData];
+        const updatedCustomers = [...customers, { ...customerData, createdAt: new Date().toLocaleDateString() }];
         setCustomers(updatedCustomers);
         localStorage.setItem('lider_customers', JSON.stringify(updatedCustomers));
       }
@@ -790,6 +790,7 @@ const Dashboard = () => {
                       <TableHead className="font-bold dark:text-blue-400">CPF / CNPJ</TableHead>
                       <TableHead className="font-bold dark:text-blue-400">Telefone</TableHead>
                       <TableHead className="font-bold dark:text-blue-400">E-mail</TableHead>
+                      <TableHead className="font-bold dark:text-blue-400">Data de Cadastro</TableHead>
                       <TableHead className="text-right font-bold dark:text-blue-400">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -800,6 +801,12 @@ const Dashboard = () => {
                         <TableCell className="dark:text-gray-400">{c.document}</TableCell>
                         <TableCell className="dark:text-gray-400">{c.phone}</TableCell>
                         <TableCell className="dark:text-gray-400">{c.email}</TableCell>
+                        <TableCell className="dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-blue-400" />
+                            {c.createdAt || 'N/A'}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>}
