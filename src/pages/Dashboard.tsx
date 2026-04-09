@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -65,6 +66,10 @@ const Dashboard = () => {
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
+  
+  // Estados para edição de cliente
+  const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
+  const [isEditCustomerOpen, setIsEditCustomerOpen] = React.useState(false);
   
   const [siteSettings, setSiteSettings] = React.useState({
     whatsapp: '11999999999',
@@ -252,6 +257,24 @@ const Dashboard = () => {
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer({ ...customer });
+    setIsEditCustomerOpen(true);
+  };
+
+  const handleSaveCustomerEdit = () => {
+    if (!editingCustomer) return;
+    
+    const updatedCustomers = customers.map(c => 
+      c.id === editingCustomer.id ? editingCustomer : c
+    );
+    
+    setCustomers(updatedCustomers);
+    localStorage.setItem('lider_customers', JSON.stringify(updatedCustomers));
+    setIsEditCustomerOpen(false);
+    showSuccess('Dados do cliente atualizados!');
   };
 
   const handleLogout = () => {
@@ -501,11 +524,16 @@ const Dashboard = () => {
                         <TableCell>{c.phone}</TableCell>
                         <TableCell>{c.email}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => {
-                            const updated = customers.filter(cust => cust.id !== c.id);
-                            setCustomers(updated);
-                            localStorage.setItem('lider_customers', JSON.stringify(updated));
-                          }}><Trash2 size={16}/></Button>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>
+                            <Button variant="ghost" size="sm" className="text-red-500" onClick={() => {
+                              if (window.confirm('Excluir este cliente?')) {
+                                const updated = customers.filter(cust => cust.id !== c.id);
+                                setCustomers(updated);
+                                localStorage.setItem('lider_customers', JSON.stringify(updated));
+                              }
+                            }}><Trash2 size={16}/></Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -627,6 +655,51 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Diálogo de Edição de Cliente */}
+      <Dialog open={isEditCustomerOpen} onOpenChange={setIsEditCustomerOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-blue-900">Editar Cliente</DialogTitle>
+          </DialogHeader>
+          {editingCustomer && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Nome / Empresa</label>
+                <Input 
+                  value={editingCustomer.name} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} 
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">CPF / CNPJ</label>
+                <Input 
+                  value={editingCustomer.document} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, document: e.target.value})} 
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Telefone</label>
+                <Input 
+                  value={editingCustomer.phone} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})} 
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">E-mail</label>
+                <Input 
+                  value={editingCustomer.email} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})} 
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditCustomerOpen(false)}>Cancelar</Button>
+            <Button className="bg-blue-600" onClick={handleSaveCustomerEdit}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ServiceOrderDetails 
         order={selectedOrder} 
