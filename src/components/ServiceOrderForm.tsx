@@ -1,13 +1,21 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, User, Truck, AlertCircle, Package } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from '@/utils/toast';
+
+interface Customer {
+  id: string;
+  name: string;
+  document: string;
+  phone: string;
+  email: string;
+}
 
 interface InventoryPart {
   id: string;
@@ -24,12 +32,13 @@ interface Item {
 }
 
 interface ServiceOrderFormProps {
-  onSave: (order: any) => void;
+  onSave: (order: any, customerData?: Customer) => void;
   technicianName: string;
   inventoryParts: InventoryPart[];
+  customers: Customer[];
 }
 
-const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrderFormProps) => {
+const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
@@ -41,10 +50,22 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrd
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
-  // Atualiza o técnico se o nome do operador mudar no dashboard
   React.useEffect(() => {
     setFormData(prev => ({ ...prev, technician: technicianName }));
   }, [technicianName]);
+
+  const handleSelectCustomer = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setFormData(prev => ({
+        ...prev,
+        clientName: customer.name,
+        document: customer.document,
+        phone: customer.phone,
+        email: customer.email
+      }));
+    }
+  };
 
   const addItem = (type: 'service' | 'part') => {
     const newItem = { id: Math.random().toString(36).substr(2, 9), description: '', qty: 1, value: 0 };
@@ -81,19 +102,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrd
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar estoque antes de salvar (apenas aviso, a baixa ocorre na execução)
-    const insufficientStock = parts.some(p => {
-      if (p.inventoryPartId) {
-        const invPart = inventoryParts.find(ip => ip.id === p.inventoryPartId);
-        return invPart && invPart.quantity < p.qty;
-      }
-      return false;
-    });
-
-    if (insufficientStock) {
-      showError('Atenção: Algumas peças selecionadas não possuem estoque suficiente!');
-    }
-
     const order = {
       ...formData,
       id: Math.random().toString(36).substr(2, 5).toUpperCase(),
@@ -104,10 +112,19 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrd
       partsValue: partsTotal,
       total
     };
-    onSave(order);
+
+    // Dados para possível novo cadastro de cliente
+    const customerData: Customer = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.clientName,
+      document: formData.document,
+      phone: formData.phone,
+      email: formData.email
+    };
+
+    onSave(order, customerData);
     showSuccess('Orçamento gerado com sucesso!');
     
-    // Resetar formulário
     setServices([]);
     setParts([]);
     setFormData({
@@ -124,8 +141,20 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrd
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Dados do Cliente */}
         <Card className="border-blue-100 shadow-sm">
-          <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+          <CardHeader className="bg-blue-50/50 border-b border-blue-50 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><User size={16}/> DADOS DO CLIENTE</CardTitle>
+            {customers.length > 0 && (
+              <Select onValueChange={handleSelectCustomer}>
+                <SelectTrigger className="w-[200px] h-8 text-xs bg-white">
+                  <SelectValue placeholder="Selecionar Cliente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </CardHeader>
           <CardContent className="pt-6 grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">

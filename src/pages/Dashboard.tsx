@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,14 @@ interface Part {
   quantity: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  document: string;
+  phone: string;
+  email: string;
+}
+
 interface Movement {
   id: string;
   partName: string;
@@ -47,6 +55,7 @@ interface Banner {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [parts, setParts] = React.useState<Part[]>([]);
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
   const [currentUser, setCurrentUser] = React.useState('Administrador');
@@ -73,6 +82,9 @@ const Dashboard = () => {
 
     const savedParts = localStorage.getItem('lider_inventory');
     if (savedParts) setParts(JSON.parse(savedParts));
+
+    const savedCustomers = localStorage.getItem('lider_customers');
+    if (savedCustomers) setCustomers(JSON.parse(savedCustomers));
 
     const savedMovements = localStorage.getItem('lider_movements');
     if (savedMovements) setMovements(JSON.parse(savedMovements));
@@ -147,22 +159,32 @@ const Dashboard = () => {
     showSuccess(`${type === 'entrada' ? 'Entrada' : 'Saída'} registrada!`);
   };
 
-  const handleSaveOrder = (order: any) => {
+  const handleSaveOrder = (order: any, customerData?: Customer) => {
+    // Salvar orçamento
     const updatedOrders = [order, ...orders];
     setOrders(updatedOrders);
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+
+    // Verificar se o cliente já existe, se não, cadastrar
+    if (customerData) {
+      const exists = customers.some(c => c.document === customerData.document);
+      if (!exists && customerData.document) {
+        const updatedCustomers = [...customers, customerData];
+        setCustomers(updatedCustomers);
+        localStorage.setItem('lider_customers', JSON.stringify(updatedCustomers));
+      }
+    }
   };
 
   const handleExecuteOrder = (orderId: string) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    if (order.status === 'Executado') {
-      showError('Este orçamento já foi executado!');
+    if (order.status !== 'Pendente') {
+      showError('Este orçamento já foi processado!');
       return;
     }
 
-    // Verificar se há estoque para todas as peças vinculadas
     const partsToDeduct = order.parts.filter((p: any) => p.inventoryPartId);
     let canExecute = true;
     
@@ -176,7 +198,6 @@ const Dashboard = () => {
 
     if (!canExecute) return;
 
-    // Dar baixa no estoque
     let updatedParts = [...parts];
     let newMovements = [...movements];
 
@@ -198,7 +219,6 @@ const Dashboard = () => {
       });
     });
 
-    // Atualizar status do orçamento
     const updatedOrders = orders.map(o => 
       o.id === orderId ? { ...o, status: 'Executado' } : o
     );
@@ -212,6 +232,15 @@ const Dashboard = () => {
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
 
     showSuccess('Orçamento executado e estoque atualizado!');
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    const updatedOrders = orders.map(o => 
+      o.id === orderId ? { ...o, status: 'Cancelado' } : o
+    );
+    setOrders(updatedOrders);
+    localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+    showSuccess('Orçamento finalizado como cancelado (sem baixa de estoque).');
   };
 
   const handleSendEmail = (order: any) => {
@@ -255,6 +284,7 @@ const Dashboard = () => {
           <TabsList className="bg-white border border-blue-100 p-1 h-12 overflow-x-auto flex-nowrap">
             <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>
             <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>
+            <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>
             <TabsTrigger value="historico" className="px-6">Histórico Estoque</TabsTrigger>
             <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>
           </TabsList>
@@ -403,22 +433,37 @@ const Dashboard = () => {
                             <TableCell>{order.plate} - {order.vehicleModel}</TableCell>
                             <TableCell className="font-bold">R$ {order.total.toFixed(2)}</TableCell>
                             <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700' : 
+                                order.status === 'Executado' ? 'bg-green-100 text-green-700' : 
+                                'bg-red-100 text-red-700'
+                              }`}>
                                 {order.status}
                               </span>
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
                                 {order.status === 'Pendente' && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="border-green-200 text-green-600 hover:bg-green-50"
-                                    onClick={() => handleExecuteOrder(order.id)}
-                                    title="Executar e dar baixa no estoque"
-                                  >
-                                    <Play size={16} className="mr-1" /> Executar
-                                  </Button>
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="border-green-200 text-green-600 hover:bg-green-50"
+                                      onClick={() => handleExecuteOrder(order.id)}
+                                      title="Executar e dar baixa no estoque"
+                                    >
+                                      <Play size={16} className="mr-1" /> Executar
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="border-red-200 text-red-600 hover:bg-red-50"
+                                      onClick={() => handleCancelOrder(order.id)}
+                                      title="Finalizar sem executar"
+                                    >
+                                      <Ban size={16} className="mr-1" /> Cancelar
+                                    </Button>
+                                  </>
                                 )}
                                 <Button size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)} title="Baixar PDF"><Download size={16}/></Button>
                                 <Button size="sm" variant="ghost" onClick={() => handleSendEmail(order)} title="Enviar por Email"><Mail size={16}/></Button>
@@ -440,9 +485,51 @@ const Dashboard = () => {
                   onSave={handleSaveOrder} 
                   technicianName={currentUser} 
                   inventoryParts={parts}
+                  customers={customers}
                 />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="clientes">
+            <Card className="shadow-lg border-blue-50">
+              <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+                <CardTitle className="flex items-center gap-2 text-blue-900"><Users className="text-blue-600" /> Clientes Cadastrados</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50/50">
+                      <TableHead className="font-bold">Nome / Empresa</TableHead>
+                      <TableHead className="font-bold">CPF / CNPJ</TableHead>
+                      <TableHead className="font-bold">Telefone</TableHead>
+                      <TableHead className="font-bold">E-mail</TableHead>
+                      <TableHead className="text-right font-bold">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-bold">{c.name}</TableCell>
+                        <TableCell>{c.document}</TableCell>
+                        <TableCell>{c.phone}</TableCell>
+                        <TableCell>{c.email}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => {
+                            const updated = customers.filter(cust => cust.id !== c.id);
+                            setCustomers(updated);
+                            localStorage.setItem('lider_customers', JSON.stringify(updated));
+                          }}><Trash2 size={16}/></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {customers.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center py-12 text-gray-400 italic">Nenhum cliente cadastrado.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="historico">
