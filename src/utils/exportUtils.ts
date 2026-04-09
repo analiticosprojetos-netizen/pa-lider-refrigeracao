@@ -80,9 +80,11 @@ export const generateServiceOrderPDF = (order: any) => {
 
   const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-  // Totais
+  // Totais - Soma o valor fixo com o total da lista de serviços
+  const totalLabor = (order.laborValue || 0) + (order.servicesValue || 0);
+
   doc.setFont("helvetica", "bold");
-  doc.text(`Mão de Obra: R$ ${order.laborValue.toFixed(2)}`, 140, finalY);
+  doc.text(`Mão de Obra: R$ ${totalLabor.toFixed(2)}`, 140, finalY);
   doc.text(`Peças: R$ ${order.partsValue.toFixed(2)}`, 140, finalY + 7);
   doc.text(`Deslocamento: R$ ${order.travelValue.toFixed(2)}`, 140, finalY + 14);
   

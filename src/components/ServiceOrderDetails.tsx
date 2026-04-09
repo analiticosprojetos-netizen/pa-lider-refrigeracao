@@ -17,6 +17,9 @@ interface ServiceOrderDetailsProps {
 const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }: ServiceOrderDetailsProps) => {
   if (!order) return null;
 
+  // Soma o valor fixo de mão de obra com o total da lista de serviços
+  const totalLabor = (order.laborValue || 0) + (order.servicesValue || 0);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -43,7 +46,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
 
         <div className="space-y-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Cliente */}
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
                 <User size={16} /> Dados do Cliente
@@ -56,7 +58,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
               </div>
             </div>
 
-            {/* Veículo */}
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
                 <Truck size={16} /> Veículo e Equipamento
@@ -70,7 +71,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
           </div>
 
-          {/* Diagnóstico */}
           <div className="space-y-2">
             <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
               <AlertCircle size={16} /> Diagnóstico Técnico
@@ -87,7 +87,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
           </div>
 
-          {/* Itens */}
           <div className="space-y-2">
             <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
               <Package size={16} /> Itens do Orçamento
@@ -127,7 +126,6 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
           </div>
 
-          {/* Resumo e Rodapé */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -148,7 +146,7 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             <div className="bg-blue-900 text-white p-6 rounded-2xl space-y-2">
               <div className="flex justify-between text-sm opacity-70">
                 <span>Mão de Obra:</span>
-                <span>R$ {order.laborValue.toFixed(2)}</span>
+                <span>R$ {totalLabor.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm opacity-70">
                 <span>Deslocamento:</span>

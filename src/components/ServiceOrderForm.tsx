@@ -55,7 +55,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
     setFormData(prev => ({ ...prev, technician: technicianName }));
   }, [technicianName]);
 
-  // Busca inteligente por placa
   const handlePlateChange = (plate: string) => {
     const upperPlate = plate.toUpperCase();
     setFormData(prev => ({ ...prev, plate: upperPlate }));
@@ -79,7 +78,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
     }
   };
 
-  // Busca inteligente por cliente (Nome ou Documento)
   const handleCustomerSearch = (val: string) => {
     setFormData(prev => ({ ...prev, clientName: val }));
     const customer = customers.find(c => 
@@ -140,6 +138,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
       services,
       parts,
       partsValue: partsTotal,
+      servicesValue: servicesTotal, // Salvando o total da lista de serviços separadamente
       total
     };
 
@@ -168,7 +167,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Dados do Cliente */}
         <Card className="border-blue-100 shadow-sm">
           <CardHeader className="bg-blue-50/50 border-b border-blue-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><User size={16}/> DADOS DO CLIENTE</CardTitle>
@@ -193,7 +191,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
           </CardContent>
         </Card>
 
-        {/* Dados do Veículo */}
         <Card className="border-blue-100 shadow-sm">
           <CardHeader className="bg-blue-50/50 border-b border-blue-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><Truck size={16}/> VEÍCULO E EQUIPAMENTO</CardTitle>
@@ -231,7 +228,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
         </Card>
       </div>
 
-      {/* Diagnóstico */}
       <Card className="border-blue-100 shadow-sm">
         <CardHeader className="bg-blue-50/50 border-b border-blue-50">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><AlertCircle size={16}/> DIAGNÓSTICO TÉCNICO</CardTitle>
@@ -248,7 +244,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
         </CardContent>
       </Card>
 
-      {/* Itens e Valores */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-blue-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 border-b border-blue-50">
