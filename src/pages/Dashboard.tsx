@@ -57,14 +57,6 @@ interface Banner {
   rotate: number;
 }
 
-const FULL_PERMISSIONS = {
-  estoque: { view: true, edit: true, delete: true },
-  orcamentos: { view: true, edit: true, delete: true },
-  clientes: { view: true, edit: true, delete: true },
-  historico: { view: true, edit: true, delete: true },
-  config: { view: true, edit: true, delete: true },
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [parts, setParts] = React.useState<Part[]>([]);
@@ -110,29 +102,16 @@ const Dashboard = () => {
 
   React.useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
+    const savedUser = localStorage.getItem('currentUser');
+
+    if (!isLoggedIn || !savedUser) {
       navigate('/login');
       return;
     }
 
-    let users = [];
-    const savedUsers = localStorage.getItem('lider_users');
-    
-    if (savedUsers) {
-      users = JSON.parse(savedUsers);
-    } else {
-      const defaultAdmin: UserProfile = {
-        id: '1',
-        username: 'admin',
-        role: 'ADMIN',
-        permissions: FULL_PERMISSIONS
-      };
-      users = [defaultAdmin];
-      localStorage.setItem('lider_users', JSON.stringify(users));
-    }
-
-    const loggedUser = users.find((u: any) => u.username === 'admin');
-    setCurrentUser(loggedUser || users[0]);
+    // Carrega o usuário que realmente fez o login
+    const user = JSON.parse(savedUser);
+    setCurrentUser(user);
 
     const savedParts = localStorage.getItem('lider_inventory');
     if (savedParts) setParts(JSON.parse(savedParts));
@@ -414,6 +393,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
     navigate('/');
   };
 
