@@ -16,7 +16,8 @@ import {
   MessageSquare,
   ShieldCheck,
   Clock,
-  Users
+  Users,
+  Navigation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,7 +178,7 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2">
               <div className="p-8 lg:p-12 bg-blue-600 text-white">
                 <h2 className="text-3xl font-bold mb-8">Fale Conosco</h2>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div className="flex items-center gap-4">
                     <div className="bg-blue-500 p-3 rounded-xl"><Phone size={24} /></div>
                     <div>
@@ -192,25 +193,38 @@ const Index = () => {
                       <p className="text-xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <a 
-                        href={mapsUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="flex items-center gap-4 group cursor-pointer"
-                      >
-                        <div className="bg-blue-500 p-3 rounded-xl group-hover:bg-blue-400 transition-colors"><MapPin size={24} /></div>
-                        <div>
-                          <p className="text-blue-200 text-sm">Endereço (Ver no Mapa)</p>
-                          <p className="text-xl font-bold group-hover:underline">{settings.address}</p>
-                        </div>
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-blue-900 text-white border-blue-800">
-                      <p className="font-bold">Como chegar? Clique aqui</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  
+                  <div className="space-y-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a 
+                          href={mapsUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-center gap-4 group cursor-pointer"
+                        >
+                          <div className="bg-blue-500 p-3 rounded-xl group-hover:bg-blue-400 transition-colors"><MapPin size={24} /></div>
+                          <div>
+                            <p className="text-blue-200 text-sm">Endereço</p>
+                            <p className="text-xl font-bold group-hover:underline leading-tight">{settings.address}</p>
+                          </div>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-blue-900 text-white border-blue-800">
+                        <p className="font-bold">Como chegar? Clique aqui</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <a 
+                      href={mapsUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl font-black uppercase tracking-wider hover:bg-blue-50 transition-all shadow-lg hover:scale-105"
+                    >
+                      <Navigation size={20} />
+                      Como Chegar
+                    </a>
+                  </div>
                 </div>
               </div>
               <div className="p-8 lg:p-12">
