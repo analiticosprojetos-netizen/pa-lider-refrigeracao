@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Snowflake, Lock, User, ArrowLeft } from 'lucide-react';
+import { Snowflake, Lock, User, ArrowLeft, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -54,6 +54,10 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    showSuccess('Por favor, entre em contato com o administrador do sistema para redefinir sua senha.');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-50 dark:bg-slate-950 p-4 transition-colors">
       <div className="absolute top-8 left-8">
@@ -97,6 +101,16 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+              </div>
+              <div className="flex justify-end">
+                <button 
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  <HelpCircle size={12} />
+                  Esqueceu a senha?
+                </button>
               </div>
             </div>
           </CardContent>
