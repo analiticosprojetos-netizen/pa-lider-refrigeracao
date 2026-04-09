@@ -11,7 +11,16 @@ import { showSuccess, showError } from '@/utils/toast';
 
 // Base de dados de equipamentos comuns no mercado brasileiro
 const EQUIPMENT_DATABASE: Record<string, string[]> = {
-  "Thermo King": ["T-600", "T-800", "T-1000", "V-300", "V-500", "MD-200", "RD-II", "C-450", "T-1200R"],
+  "Thermo King": [
+    "SLXi 100", "SLXi 200", "SLXi 300", "SLXi 400", "SLXi Spectrum", 
+    "SLX 100", "SLX 200", "SLX 300", "SL 200", "SL 400", 
+    "T-600R", "T-800R", "T-1000R", "T-1200R",
+    "MD 200", "MD 300", "MD 400", 
+    "RD-II 30", "RD-II 50", "RD-II 100", "RD-II 110",
+    "V-200", "V-300", "V-500", "B-100", "B-200",
+    "SB 190", "SB 210", "SB 230", "SB 250", "SB 310", "SB Spectrum",
+    "Advancer Spectrum", "Advancer A-400", "Advancer A-500", "Advancer A-600", "Advancer A-Vector"
+  ],
   "Carrier": ["Supra 750", "Supra 850", "Supra 950", "Vector 1550", "Vector 1950", "Xarios 350", "Xarios 600", "Maxima 1300"],
   "Thermo Star": ["TSE-44", "TSE-60", "TSE-70", "TSF-22", "TSF-33", "TSF-44", "TSE-30"],
   "Frigo King": ["Apollo 2500", "Apollo 3500", "Titan 500", "Titan 700", "Titan 900", "SA-210"],
