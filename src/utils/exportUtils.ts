@@ -142,12 +142,26 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
 
     // --- TOTAIS ---
     doc.setFillColor(245, 245, 245);
-    doc.rect(130, finalY, 65, 25, "F");
+    doc.rect(130, finalY, 65, 35, "F");
+    doc.setTextColor(26, 54, 93);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    
+    const subtotal = order.subtotal || order.total + (order.discountValue || 0);
+    doc.text(`Subtotal:`, 135, finalY + 10);
+    doc.text(`R$ ${subtotal.toFixed(2)}`, 190, finalY + 10, { align: 'right' });
+    
+    if (order.discountValue > 0) {
+      doc.setTextColor(200, 0, 0);
+      doc.text(`Desconto (${order.discountPercent.toFixed(1)}%):`, 135, finalY + 18);
+      doc.text(`- R$ ${order.discountValue.toFixed(2)}`, 190, finalY + 18, { align: 'right' });
+    }
+
     doc.setTextColor(26, 54, 93);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text(`TOTAL GERAL:`, 135, finalY + 15);
-    doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 15, { align: 'right' });
+    doc.text(`TOTAL GERAL:`, 135, finalY + 28);
+    doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 28, { align: 'right' });
 
     // --- RODAPÉ / GARANTIA ---
     doc.setTextColor(100, 100, 100);

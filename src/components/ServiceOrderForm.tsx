@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X, ShieldCheck } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X, ShieldCheck, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -102,6 +102,8 @@ const ServiceOrderForm = ({
     plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
     serviceType: 'Corretiva', problem: '', diagnosis: '',
     travelValue: 0,
+    discountPercent: 0,
+    discountValue: 0,
     warranty: '90 dias', technician: technicianName, observations: ''
   });
 
@@ -134,6 +136,8 @@ const ServiceOrderForm = ({
       plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
       serviceType: 'Corretiva', problem: '', diagnosis: '',
       travelValue: 0,
+      discountPercent: 0,
+      discountValue: 0,
       warranty: '90 dias', technician: technicianName, observations: ''
     });
     setServices([]);
@@ -155,6 +159,8 @@ const ServiceOrderForm = ({
         problem: initialData.problem || '',
         diagnosis: initialData.diagnosis || '',
         travelValue: initialData.travelValue || 0,
+        discountPercent: initialData.discountPercent || 0,
+        discountValue: initialData.discountValue || 0,
         warranty: initialData.warranty || '90 dias',
         technician: initialData.technician || technicianName,
         observations: initialData.observations || ''
@@ -243,7 +249,20 @@ const ServiceOrderForm = ({
 
   const partsTotal = parts.reduce((acc, p) => acc + (p.qty * p.value), 0);
   const servicesTotal = services.reduce((acc, s) => acc + s.value, 0);
-  const total = partsTotal + servicesTotal + Number(formData.travelValue);
+  const subtotal = partsTotal + servicesTotal + Number(formData.travelValue);
+  
+  // Lógica de Desconto
+  const handleDiscountPercentChange = (percent: number) => {
+    const value = (subtotal * percent) / 100;
+    setFormData({ ...formData, discountPercent: percent, discountValue: value });
+  };
+
+  const handleDiscountValueChange = (value: number) => {
+    const percent = subtotal > 0 ? (value / subtotal) * 100 : 0;
+    setFormData({ ...formData, discountValue: value, discountPercent: percent });
+  };
+
+  const total = subtotal - formData.discountValue;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,6 +294,7 @@ const ServiceOrderForm = ({
       parts,
       partsValue: partsTotal,
       servicesValue: servicesTotal,
+      subtotal,
       total
     };
 
@@ -521,11 +541,50 @@ const ServiceOrderForm = ({
                   <Input className="bg-blue-800 border-blue-700 text-white" value={formData.warranty} onChange={e => setFormData({...formData, warranty: e.target.value})} placeholder="Ex: 90 dias" />
                 </div>
               </div>
-              <div className="pt-4 border-t border-blue-800 space-y-2">
-                <div className="flex justify-between text-sm opacity-70"><span>Total Peças:</span><span>R$ {partsTotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm opacity-70"><span>Total Serviços:</span><span>R$ {servicesTotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-2xl font-black pt-2"><span>TOTAL:</span><span>R$ {total.toFixed(2)}</span></div>
+
+              <div className="pt-4 border-t border-blue-800 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold opacity-50 uppercase flex items-center gap-1"><Percent size={10}/> Desconto (%)</label>
+                    <Input 
+                      type="number" 
+                      className="bg-blue-800 border-blue-700 text-white" 
+                      value={formData.discountPercent} 
+                      onChange={e => handleDiscountPercentChange(Number(e.target.value))} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold opacity-50 uppercase flex items-center gap-1">Desconto (R$)</label>
+                    <Input 
+                      type="number" 
+                      className="bg-blue-800 border-blue-700 text-white" 
+                      value={formData.discountValue} 
+                      onChange={e => handleDiscountValueChange(Number(e.target.value))} 
+                    />
+                  </div>
+                </div>
+
+                {/* INDICADOR DE MARGEM / ALERTA */}
+                {formData.discountPercent > 0 && (
+                  <div className={`p-3 rounded-lg text-[10px] font-bold flex items-center gap-2 ${
+                    formData.discountPercent > 15 ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 
+                    formData.discountPercent > 10 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 
+                    'bg-green-500/20 text-green-300 border border-green-500/30'
+                  }`}>
+                    <AlertCircle size={14} />
+                    {formData.discountPercent > 15 ? 'ALERTA: Desconto muito alto! Verifique sua margem de lucro.' : 
+                     formData.discountPercent > 10 ? 'CUIDADO: Desconto acima da média. Avalie a lucratividade.' : 
+                     'Desconto dentro da margem aceitável.'}
+                  </div>
+                )}
               </div>
+
+              <div className="pt-4 border-t border-blue-800 space-y-2">
+                <div className="flex justify-between text-sm opacity-70"><span>Subtotal:</span><span>R$ {subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm text-red-400"><span>Desconto:</span><span>- R$ {formData.discountValue.toFixed(2)}</span></div>
+                <div className="flex justify-between text-2xl font-black pt-2 border-t border-blue-800"><span>TOTAL:</span><span>R$ {total.toFixed(2)}</span></div>
+              </div>
+
               <div className="pt-4 space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold opacity-50 uppercase">Técnico Responsável</label>

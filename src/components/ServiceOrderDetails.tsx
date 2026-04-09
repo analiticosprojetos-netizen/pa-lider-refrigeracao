@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck } from 'lucide-react';
+import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,6 +18,7 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
   if (!order) return null;
 
   const totalLabor = (order.laborValue || 0) + (order.servicesValue || 0);
+  const subtotal = order.subtotal || order.total + (order.discountValue || 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -144,17 +145,15 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
             <div className="bg-blue-900 text-white p-6 rounded-2xl space-y-2">
               <div className="flex justify-between text-sm opacity-70">
-                <span>Mão de Obra:</span>
-                <span>R$ {totalLabor.toFixed(2)}</span>
+                <span>Subtotal:</span>
+                <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm opacity-70">
-                <span>Deslocamento:</span>
-                <span>R$ {order.travelValue.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm opacity-70">
-                <span>Total Peças:</span>
-                <span>R$ {order.partsValue.toFixed(2)}</span>
-              </div>
+              {order.discountValue > 0 && (
+                <div className="flex justify-between text-sm text-red-300">
+                  <span className="flex items-center gap-1"><Percent size={12}/> Desconto ({order.discountPercent.toFixed(1)}%):</span>
+                  <span>- R$ {order.discountValue.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-2xl font-black pt-2 border-t border-blue-800">
                 <span>TOTAL:</span>
                 <span>R$ {order.total.toFixed(2)}</span>
