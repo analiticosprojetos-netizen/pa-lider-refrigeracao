@@ -13,7 +13,10 @@ import {
   Phone,
   Mail,
   MapPin,
-  MessageSquare
+  MessageSquare,
+  ShieldCheck,
+  Clock,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +63,68 @@ const Index = () => {
         onContactClick={scrollToContact} 
         delay={settings.carouselDelay}
       />
+
+      {/* Sobre Nós */}
+      <section id="sobre" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="relative">
+              <div className="aspect-square rounded-3xl overflow-hidden bg-blue-100 border-8 border-blue-50 shadow-2xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80" 
+                  alt="Oficina Lider" 
+                  className="w-full h-full object-cover opacity-80 mix-blend-multiply"
+                />
+              </div>
+              <div className="absolute -bottom-6 -right-6 bg-blue-600 text-white p-8 rounded-2xl shadow-xl hidden md:block">
+                <p className="text-4xl font-black mb-1">15+</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Anos de Experiência</p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="inline-block bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
+                Nossa História
+              </div>
+              <h2 className="text-4xl font-black text-blue-900 leading-tight">
+                Excelência em Refrigeração de Transportes
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                A <strong>Lider Refrigeração</strong> nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="flex gap-4">
+                  <div className="bg-blue-100 p-3 rounded-xl h-fit text-blue-600"><ShieldCheck size={24}/></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Qualidade Garantida</h4>
+                    <p className="text-sm text-gray-500">Peças originais e técnicos certificados.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="bg-blue-100 p-3 rounded-xl h-fit text-blue-600"><Clock size={24}/></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Agilidade</h4>
+                    <p className="text-sm text-gray-500">Atendimento rápido para não parar sua carga.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="bg-blue-100 p-3 rounded-xl h-fit text-blue-600"><Users size={24}/></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Equipe Especializada</h4>
+                    <p className="text-sm text-gray-500">Treinados nas maiores marcas do mercado.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="bg-blue-100 p-3 rounded-xl h-fit text-blue-600"><Award size={24}/></div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Referência</h4>
+                    <p className="text-sm text-gray-500">Líder no setor de manutenção de baús.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Especialidades */}
       <section id="servicos" className="py-20 bg-gray-50">

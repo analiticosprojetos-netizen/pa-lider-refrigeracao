@@ -61,7 +61,18 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
-  // Efeito para carregar dados quando initialData mudar (Edição)
+  const resetForm = () => {
+    setFormData({
+      clientName: '', document: '', phone: '', email: '',
+      plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
+      serviceType: 'Corretiva', problem: '', diagnosis: '',
+      travelValue: 0,
+      warranty: '90 dias', technician: technicianName, observations: ''
+    });
+    setServices([]);
+    setParts([]);
+  };
+
   React.useEffect(() => {
     if (initialData) {
       setFormData({
@@ -84,16 +95,7 @@ const ServiceOrderForm = ({
       setServices(initialData.services || []);
       setParts(initialData.parts || []);
     } else {
-      // Resetar formulário para "Novo Orçamento"
-      setFormData({
-        clientName: '', document: '', phone: '', email: '',
-        plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
-        serviceType: 'Corretiva', problem: '', diagnosis: '',
-        travelValue: 0,
-        warranty: '90 dias', technician: technicianName, observations: ''
-      });
-      setServices([]);
-      setParts([]);
+      resetForm();
     }
   }, [initialData, technicianName]);
 
@@ -195,6 +197,10 @@ const ServiceOrderForm = ({
 
     onSave(order, customerData);
     showSuccess(initialData ? 'Orçamento atualizado!' : 'Orçamento gerado com sucesso!');
+    
+    if (!initialData) {
+      resetForm();
+    }
   };
 
   return (
