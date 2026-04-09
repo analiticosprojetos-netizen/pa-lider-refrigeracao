@@ -44,7 +44,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
     serviceType: 'Corretiva', problem: '', diagnosis: '',
-    laborValue: 0, travelValue: 0,
+    travelValue: 0,
     warranty: '90 dias', technician: technicianName, observations: ''
   });
 
@@ -125,7 +125,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
 
   const partsTotal = parts.reduce((acc, p) => acc + (p.qty * p.value), 0);
   const servicesTotal = services.reduce((acc, s) => acc + s.value, 0);
-  const total = partsTotal + servicesTotal + Number(formData.laborValue) + Number(formData.travelValue);
+  const total = partsTotal + servicesTotal + Number(formData.travelValue);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +138,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
       services,
       parts,
       partsValue: partsTotal,
-      servicesValue: servicesTotal, // Salvando o total da lista de serviços separadamente
+      servicesValue: servicesTotal,
       total
     };
 
@@ -159,7 +159,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
       clientName: '', document: '', phone: '', email: '',
       plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
       serviceType: 'Corretiva', problem: '', diagnosis: '',
-      laborValue: 0, travelValue: 0,
+      travelValue: 0,
       warranty: '90 dias', technician: technicianName, observations: ''
     });
   };
@@ -311,11 +311,7 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, p
             <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-70">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold opacity-50 uppercase">Mão de Obra Geral</label>
-                <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.laborValue} onChange={e => setFormData({...formData, laborValue: Number(e.target.value)})} />
-              </div>
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold opacity-50 uppercase">Deslocamento</label>
                 <Input type="number" className="bg-blue-800 border-blue-700 text-white" value={formData.travelValue} onChange={e => setFormData({...formData, travelValue: Number(e.target.value)})} />
