@@ -71,6 +71,7 @@ const Dashboard = () => {
   const [orders, setOrders] = React.useState<any[]>([]);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -356,6 +357,11 @@ const Dashboard = () => {
   };
 
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredOrders = orders.filter(o => 
+    o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
+    o.clientName.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
+    o.plate.toLowerCase().includes(orderSearchTerm.toLowerCase())
+  );
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
   if (!currentUser) return (
@@ -561,7 +567,18 @@ const Dashboard = () => {
           <TabsContent value="orcamentos" className="space-y-8">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-900">Gestão de Orçamentos</h2>
-              <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos_lider')}><TableIcon className="mr-2 h-4 w-4" /> Exportar Excel</Button>
+              <div className="flex gap-2">
+                <div className="relative w-48 sm:w-64">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Buscar orçamento..." 
+                    className="pl-10 bg-white" 
+                    value={orderSearchTerm} 
+                    onChange={(e) => setOrderSearchTerm(e.target.value)} 
+                  />
+                </div>
+                <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos_lider')}><TableIcon className="mr-2 h-4 w-4" /> Exportar Excel</Button>
+              </div>
             </div>
 
             <Tabs value={activeOrcamentoTab} onValueChange={setActiveOrcamentoTab} className="w-full">
@@ -585,7 +602,7 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map((order) => (
+                        {filteredOrders.map((order) => (
                           <TableRow key={order.id} className="cursor-pointer hover:bg-blue-50/30" onClick={() => handleViewDetails(order)}>
                             <TableCell className="font-bold text-blue-600">#{order.id}</TableCell>
                             <TableCell>{order.clientName}</TableCell>
