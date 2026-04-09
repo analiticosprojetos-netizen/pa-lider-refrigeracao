@@ -43,7 +43,7 @@ interface Customer {
 interface Movement {
   id: string;
   partName: string;
-  type: 'entrada' | 'saida';
+  type: 'entrada' | 'saida' | 'correcao';
   quantity: number;
   user: string;
   date: string;
@@ -83,6 +83,10 @@ const Dashboard = () => {
   
   const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
   const [isEditCustomerOpen, setIsEditCustomerOpen] = React.useState(false);
+  
+  const [editingPart, setEditingPart] = React.useState<Part | null>(null);
+  const [isEditPartOpen, setIsEditPartOpen] = React.useState(false);
+
   const [orderToEdit, setOrderToEdit] = React.useState<any>(null);
   const [activeOrcamentoTab, setActiveOrcamentoTab] = React.useState('lista');
   
@@ -184,6 +188,55 @@ const Dashboard = () => {
     setNewName('');
     setNewQty('');
     showSuccess('Peça cadastrada com sucesso!');
+  };
+
+  const handleEditPart = (part: Part) => {
+    if (!hasPermission('estoque', 'edit')) return;
+    setEditingPart({ ...part });
+    setIsEditPartOpen(true);
+  };
+
+  const handleSavePartEdit = () => {
+    if (!editingPart) return;
+    
+    const oldPart = parts.find(p => p.id === editingPart.id);
+    if (!oldPart) return;
+
+    const updatedParts = parts.map(p => p.id === editingPart.id ? editingPart : p);
+    
+    // Registrar correção no histórico se a quantidade mudou
+    if (oldPart.quantity !== editingPart.quantity) {
+      const diff = editingPart.quantity - oldPart.quantity;
+      const newMovement: Movement = {
+        id: Math.random().toString(36).substr(2, 9),
+        partName: editingPart.name,
+        type: 'correcao',
+        quantity: Math.abs(diff),
+        user: currentUser?.username || 'Sistema',
+        date: new Date().toLocaleString()
+      };
+      const updatedMovements = [newMovement, ...movements];
+      setMovements(updatedMovements);
+      localStorage.setItem('lider_movements', JSON.stringify(updatedMovements));
+    }
+
+    setParts(updatedParts);
+    localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
+    setIsEditPartOpen(false);
+    showSuccess('Peça atualizada com sucesso!');
+  };
+
+  const handleDeletePart = (id: string) => {
+    if (!hasPermission('estoque', 'delete')) {
+      showError('Sem permissão para excluir.');
+      return;
+    }
+    if (window.confirm('Tem certeza que deseja excluir esta peça permanentemente do estoque?')) {
+      const updatedParts = parts.filter(p => p.id !== id);
+      setParts(updatedParts);
+      localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
+      showSuccess('Peça removida do estoque.');
+    }
   };
 
   const registerMovement = (partId: string, type: 'entrada' | 'saida', amount: number) => {
@@ -555,7 +608,7 @@ const Dashboard = () => {
                           <TableRow className="bg-gray-50/50">
                             <TableHead className="font-bold text-blue-900">Peça</TableHead>
                             <TableHead className="text-center font-bold text-blue-900">Qtd Atual</TableHead>
-                            {hasPermission('estoque', 'edit') && <TableHead className="text-right font-bold text-blue-900">Movimentar</TableHead>}
+                            <TableHead className="text-right font-bold text-blue-900">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -567,14 +620,20 @@ const Dashboard = () => {
                                   {part.quantity}
                                 </span>
                               </TableCell>
-                              {hasPermission('estoque', 'edit') && (
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                                    <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
-                                  </div>
-                                </TableCell>
-                              )}
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  {hasPermission('estoque', 'edit') && (
+                                    <>
+                                      <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
+                                      <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
+                                      <Button size="sm" variant="ghost" className="text-blue-600" onClick={() => handleEditPart(part)}><Edit2 size={16} /></Button>
+                                    </>
+                                  )}
+                                  {hasPermission('estoque', 'delete') && (
+                                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDeletePart(part.id)}><Trash2 size={16} /></Button>
+                                  )}
+                                </div>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -606,8 +665,12 @@ const Dashboard = () => {
                             <TableCell className="text-xs text-gray-500">{m.date}</TableCell>
                             <TableCell className="font-medium">{m.partName}</TableCell>
                             <TableCell>
-                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${m.type === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : <ArrowDownCircle size={12} />}
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${
+                                m.type === 'entrada' ? 'bg-green-100 text-green-700' : 
+                                m.type === 'saida' ? 'bg-red-100 text-red-700' : 
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : m.type === 'saida' ? <ArrowDownCircle size={12} /> : <Settings size={12} />}
                                 {m.type}
                               </span>
                             </TableCell>
@@ -987,6 +1050,39 @@ const Dashboard = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditCustomerOpen(false)}>Cancelar</Button>
             <Button className="bg-blue-600" onClick={handleSaveCustomerEdit}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Edição de Peça (Estoque) */}
+      <Dialog open={isEditPartOpen} onOpenChange={setIsEditPartOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-blue-900">Corrigir Peça no Estoque</DialogTitle>
+          </DialogHeader>
+          {editingPart && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Nome da Peça</label>
+                <Input 
+                  value={editingPart.name} 
+                  onChange={(e) => setEditingPart({...editingPart, name: e.target.value})} 
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">Quantidade Atual</label>
+                <Input 
+                  type="number"
+                  value={editingPart.quantity} 
+                  onChange={(e) => setEditingPart({...editingPart, quantity: Number(e.target.value)})} 
+                />
+                <p className="text-[10px] text-gray-500 italic">* Alterar a quantidade aqui registrará uma "correção" no histórico.</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditPartOpen(false)}>Cancelar</Button>
+            <Button className="bg-blue-600" onClick={handleSavePartEdit}>Salvar Correção</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
