@@ -9,6 +9,17 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from '@/utils/toast';
 
+// Base de dados de equipamentos comuns no mercado brasileiro
+const EQUIPMENT_DATABASE: Record<string, string[]> = {
+  "Thermo King": ["T-600", "T-800", "T-1000", "V-300", "V-500", "MD-200", "RD-II", "C-450", "T-1200R"],
+  "Carrier": ["Supra 750", "Supra 850", "Supra 950", "Vector 1550", "Vector 1950", "Xarios 350", "Xarios 600", "Maxima 1300"],
+  "Thermo Star": ["TSE-44", "TSE-60", "TSE-70", "TSF-22", "TSF-33", "TSF-44", "TSE-30"],
+  "Frigo King": ["Apollo 2500", "Apollo 3500", "Titan 500", "Titan 700", "Titan 900", "SA-210"],
+  "Rodofrio": ["RF-10", "RF-20", "RF-30", "RF-40", "RF-50"],
+  "Macc": ["M-10", "M-20", "M-30"],
+  "Eurofrigo": ["EF-200", "EF-300", "EF-400"]
+};
+
 interface Customer {
   id: string;
   name: string;
@@ -203,6 +214,9 @@ const ServiceOrderForm = ({
     }
   };
 
+  // Sugestões de modelos baseadas na marca selecionada
+  const modelSuggestions = formData.equipBrand ? (EQUIPMENT_DATABASE[formData.equipBrand] || []) : [];
+
   return (
     <div className="space-y-8">
       {initialData && (
@@ -259,14 +273,37 @@ const ServiceOrderForm = ({
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Modelo Veículo</label>
                 <Input value={formData.vehicleModel} onChange={e => setFormData({...formData, vehicleModel: e.target.value})} />
               </div>
+              
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Marca Equipamento</label>
-                <Input value={formData.equipBrand} onChange={e => setFormData({...formData, equipBrand: e.target.value})} placeholder="Ex: Thermo King" />
+                <Input 
+                  list="brands-list"
+                  value={formData.equipBrand} 
+                  onChange={e => setFormData({...formData, equipBrand: e.target.value, equipModel: ''})} 
+                  placeholder="Ex: Thermo King" 
+                />
+                <datalist id="brands-list">
+                  {Object.keys(EQUIPMENT_DATABASE).map(brand => (
+                    <option key={brand} value={brand} />
+                  ))}
+                </datalist>
               </div>
+
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Modelo Equipamento</label>
-                <Input value={formData.equipModel} onChange={e => setFormData({...formData, equipModel: e.target.value})} />
+                <Input 
+                  list="models-list"
+                  value={formData.equipModel} 
+                  onChange={e => setFormData({...formData, equipModel: e.target.value})} 
+                  placeholder="Selecione ou digite..."
+                />
+                <datalist id="models-list">
+                  {modelSuggestions.map(model => (
+                    <option key={model} value={model} />
+                  ))}
+                </datalist>
               </div>
+
               <div className="col-span-2 space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Tipo de Serviço</label>
                 <Select value={formData.serviceType} onValueChange={v => setFormData({...formData, serviceType: v})}>
@@ -391,7 +428,7 @@ const ServiceOrderForm = ({
                   />
                 </div>
                 <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 py-6 text-lg font-bold">
-                  <Save className="mr-2"/> {initialData ? 'SALVAR ALTERAÇÕES' : 'GERAR ORÇAMENTO'}
+                  <Plus className="mr-2"/> {initialData ? 'SALVAR ALTERAÇÕES' : 'GERAR ORÇAMENTO'}
                 </Button>
               </div>
             </CardContent>
