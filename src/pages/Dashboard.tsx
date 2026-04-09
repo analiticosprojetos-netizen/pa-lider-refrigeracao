@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import ServiceOrderForm from '@/components/ServiceOrderForm';
 import ServiceOrderDetails from '@/components/ServiceOrderDetails';
+import UserAdminSettings, { UserProfile } from '@/components/UserAdminSettings';
 import { generateServiceOrderPDF, exportToExcel } from '@/utils/exportUtils';
 
 interface Part {
@@ -60,7 +61,7 @@ const Dashboard = () => {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
-  const [currentUser, setCurrentUser] = React.useState('Administrador');
+  const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [newName, setNewName] = React.useState('');
   const [newQty, setNewQty] = React.useState('');
@@ -90,6 +91,15 @@ const Dashboard = () => {
       return;
     }
 
+    // Carregar usuário logado e suas permissões
+    const savedUsers = localStorage.getItem('lider_users');
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      // Por enquanto simulamos que o 'admin' é quem está logado se não houver sessão específica
+      const loggedUser = users.find((u: any) => u.username === 'admin');
+      setCurrentUser(loggedUser);
+    }
+
     const savedParts = localStorage.getItem('lider_inventory');
     if (savedParts) setParts(JSON.parse(savedParts));
 
@@ -106,8 +116,17 @@ const Dashboard = () => {
     if (savedOrders) setOrders(JSON.parse(savedOrders));
   }, [navigate]);
 
+  const hasPermission = (tab: keyof UserProfile['permissions'], action: 'view' | 'edit' | 'delete') => {
+    if (!currentUser) return false;
+    return currentUser.permissions[tab][action];
+  };
+
   const handleAddPart = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasPermission('estoque', 'edit')) {
+      showError('Você não tem permissão para adicionar itens.');
+      return;
+    }
     if (!newName || !newQty) return;
     const qty = parseInt(newQty);
     const newPart: Part = {
@@ -121,7 +140,7 @@ const Dashboard = () => {
       partName: newName,
       type: 'entrada',
       quantity: qty,
-      user: currentUser,
+      user: currentUser?.username || 'Sistema',
       date: new Date().toLocaleString()
     };
 
@@ -139,6 +158,10 @@ const Dashboard = () => {
   };
 
   const registerMovement = (partId: string, type: 'entrada' | 'saida', amount: number) => {
+    if (!hasPermission('estoque', 'edit')) {
+      showError('Sem permissão para movimentar estoque.');
+      return;
+    }
     const updatedParts = parts.map(part => {
       if (part.id === partId) {
         const newTotal = type === 'entrada' ? part.quantity + amount : part.quantity - amount;
@@ -152,7 +175,7 @@ const Dashboard = () => {
           partName: part.name,
           type,
           quantity: amount,
-          user: currentUser,
+          user: currentUser?.username || 'Sistema',
           date: new Date().toLocaleString()
         };
 
@@ -171,6 +194,10 @@ const Dashboard = () => {
   };
 
   const handleSaveOrder = (order: any, customerData?: Customer) => {
+    if (!hasPermission('orcamentos', 'edit')) {
+      showError('Sem permissão para salvar orçamentos.');
+      return;
+    }
     let updatedOrders;
     const existingIndex = orders.findIndex(o => o.id === order.id);
     
@@ -197,6 +224,7 @@ const Dashboard = () => {
   };
 
   const handleExecuteOrder = (orderId: string) => {
+    if (!hasPermission('orcamentos', 'edit')) return;
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
@@ -224,7 +252,7 @@ const Dashboard = () => {
             partName: ip.name,
             type: 'saida',
             quantity: p.qty,
-            user: currentUser,
+            user: currentUser?.username || 'Sistema',
             date: new Date().toLocaleString()
           };
           newMovements = [newMovement, ...newMovements];
@@ -250,6 +278,7 @@ const Dashboard = () => {
   };
 
   const handleCancelOrder = (orderId: string) => {
+    if (!hasPermission('orcamentos', 'edit')) return;
     const updatedOrders = orders.map(o => 
       o.id === orderId ? { ...o, status: 'Cancelado' } : o
     );
@@ -259,6 +288,10 @@ const Dashboard = () => {
   };
 
   const handleDeleteOrder = (orderId: string) => {
+    if (!hasPermission('orcamentos', 'delete')) {
+      showError('Sem permissão para excluir.');
+      return;
+    }
     if (window.confirm('Tem certeza que deseja excluir este orçamento permanentemente?')) {
       const updatedOrders = orders.filter(o => o.id !== orderId);
       setOrders(updatedOrders);
@@ -273,11 +306,13 @@ const Dashboard = () => {
   };
 
   const handleEditOrder = (order: any) => {
+    if (!hasPermission('orcamentos', 'edit')) return;
     setOrderToEdit(order);
     setActiveOrcamentoTab('novo');
   };
 
   const handleEditCustomer = (customer: Customer) => {
+    if (!hasPermission('clientes', 'edit')) return;
     setEditingCustomer({ ...customer });
     setIsEditCustomerOpen(true);
   };
@@ -303,6 +338,8 @@ const Dashboard = () => {
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
 
+  if (!currentUser) return <div className="p-20 text-center">Carregando perfil...</div>;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
@@ -311,12 +348,8 @@ const Dashboard = () => {
             <div className="bg-blue-600 p-2 rounded-lg"><Snowflake className="h-5 w-5 text-white" /></div>
             <h1 className="text-xl font-bold text-blue-900 hidden md:block">Gestão Lider</h1>
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
-              <User size={14} className="text-blue-600" />
-              <input 
-                className="bg-transparent text-xs font-bold text-blue-900 outline-none w-32"
-                value={currentUser}
-                onChange={(e) => setCurrentUser(e.target.value)}
-              />
+              <ShieldCheck size={14} className="text-blue-600" />
+              <span className="text-xs font-black text-blue-900 uppercase">{currentUser.username} ({currentUser.role})</span>
             </div>
           </div>
           <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-100">
@@ -328,13 +361,14 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="estoque" className="space-y-8">
           <TabsList className="bg-white border border-blue-100 p-1 h-12 overflow-x-auto flex-nowrap">
-            <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>
-            <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>
-            <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>
-            <TabsTrigger value="historico" className="px-6">Histórico Estoque</TabsTrigger>
-            <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>
+            {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6">Estoque</TabsTrigger>}
+            {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6">Orçamentos / OS</TabsTrigger>}
+            {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6">Clientes</TabsTrigger>}
+            {currentUser.permissions.historico.view && <TabsTrigger value="historico" className="px-6">Histórico Estoque</TabsTrigger>}
+            {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6">Configurações</TabsTrigger>}
           </TabsList>
 
+          {/* CONTEÚDO ESTOQUE */}
           <TabsContent value="estoque" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <Card className="bg-blue-600 text-white shadow-xl border-none">
@@ -383,26 +417,28 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="h-fit shadow-lg border-blue-50">
-                <CardHeader className="bg-blue-50/50 border-b border-blue-50">
-                  <CardTitle className="text-lg flex items-center gap-2 text-blue-900"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <form onSubmit={handleAddPart} className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
-                      <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
-                      <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required />
-                    </div>
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
-                  </form>
-                </CardContent>
-              </Card>
+              {hasPermission('estoque', 'edit') && (
+                <Card className="h-fit shadow-lg border-blue-50">
+                  <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+                    <CardTitle className="text-lg flex items-center gap-2 text-blue-900"><PlusCircle className="text-blue-600" /> Nova Peça</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <form onSubmit={handleAddPart} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
+                        <Input placeholder="Ex: Compressor TM16" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
+                        <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required />
+                      </div>
+                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="lg:col-span-2 shadow-lg border-blue-50">
+              <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50`}>
                 <CardHeader className="flex flex-row items-center justify-between bg-blue-50/50 border-b border-blue-50">
                   <CardTitle className="text-lg text-blue-900">Controle de Peças</CardTitle>
                   <div className="relative w-48 sm:w-64">
@@ -416,7 +452,7 @@ const Dashboard = () => {
                       <TableRow className="bg-gray-50/50">
                         <TableHead className="font-bold text-blue-900">Peça</TableHead>
                         <TableHead className="text-center font-bold text-blue-900">Qtd Atual</TableHead>
-                        <TableHead className="text-right font-bold text-blue-900">Movimentar</TableHead>
+                        {hasPermission('estoque', 'edit') && <TableHead className="text-right font-bold text-blue-900">Movimentar</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -428,12 +464,14 @@ const Dashboard = () => {
                               {part.quantity}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                              <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
-                            </div>
-                          </TableCell>
+                          {hasPermission('estoque', 'edit') && (
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
+                                <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
+                              </div>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -443,6 +481,7 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
+          {/* CONTEÚDO ORÇAMENTOS */}
           <TabsContent value="orcamentos" className="space-y-8">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-900">Gestão de Orçamentos</h2>
@@ -452,7 +491,7 @@ const Dashboard = () => {
             <Tabs value={activeOrcamentoTab} onValueChange={setActiveOrcamentoTab} className="w-full">
               <TabsList className="bg-white border border-blue-100 mb-6">
                 <TabsTrigger value="lista">Histórico de Orçamentos</TabsTrigger>
-                <TabsTrigger value="novo">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>
+                {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
@@ -487,7 +526,7 @@ const Dashboard = () => {
                             </TableCell>
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                               <div className="flex justify-end gap-2">
-                                {order.status === 'Pendente' && (
+                                {order.status === 'Pendente' && hasPermission('orcamentos', 'edit') && (
                                   <>
                                     <Button title="Executar (Baixa Estoque)" size="sm" variant="outline" className="border-green-200 text-green-600" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
                                     <Button title="Cancelar" size="sm" variant="outline" className="border-red-200 text-red-600" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
@@ -496,7 +535,9 @@ const Dashboard = () => {
                                 )}
                                 <Button title="Visualizar" size="sm" variant="ghost" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
                                 <Button title="Baixar PDF" size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)}><Download size={16}/></Button>
-                                <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
+                                {hasPermission('orcamentos', 'delete') && (
+                                  <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -510,7 +551,7 @@ const Dashboard = () => {
               <TabsContent value="novo">
                 <ServiceOrderForm 
                   onSave={handleSaveOrder} 
-                  technicianName={currentUser} 
+                  technicianName={currentUser.username} 
                   inventoryParts={parts}
                   customers={customers}
                   previousOrders={orders}
@@ -524,6 +565,7 @@ const Dashboard = () => {
             </Tabs>
           </TabsContent>
 
+          {/* CONTEÚDO CLIENTES */}
           <TabsContent value="clientes">
             <Card className="shadow-lg border-blue-50">
               <CardHeader className="bg-blue-50/50 border-b border-blue-50">
@@ -549,14 +591,16 @@ const Dashboard = () => {
                         <TableCell>{c.email}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>
-                            <Button variant="ghost" size="sm" className="text-red-500" onClick={() => {
-                              if (window.confirm('Excluir este cliente?')) {
-                                const updated = customers.filter(cust => cust.id !== c.id);
-                                setCustomers(updated);
-                                localStorage.setItem('lider_customers', JSON.stringify(updated));
-                              }
-                            }}><Trash2 size={16}/></Button>
+                            {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>}
+                            {hasPermission('clientes', 'delete') && (
+                              <Button variant="ghost" size="sm" className="text-red-500" onClick={() => {
+                                if (window.confirm('Excluir este cliente?')) {
+                                  const updated = customers.filter(cust => cust.id !== c.id);
+                                  setCustomers(updated);
+                                  localStorage.setItem('lider_customers', JSON.stringify(updated));
+                                }
+                              }}><Trash2 size={16}/></Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -567,6 +611,7 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* CONTEÚDO HISTÓRICO */}
           <TabsContent value="historico">
             <Card className="shadow-lg border-blue-50">
               <CardHeader className="bg-blue-50/50 border-b border-blue-50">
@@ -604,78 +649,87 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="config">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="border-blue-100 shadow-lg">
-                <CardHeader className="bg-blue-50 border-b border-blue-100">
-                  <CardTitle className="flex items-center gap-2 text-blue-900"><Globe className="text-blue-600" /> Contatos e Redes</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <form className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1"><label className="text-xs font-bold">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
-                      <div className="space-y-1"><label className="text-xs font-bold">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
-                    </div>
-                    <div className="space-y-1"><label className="text-xs font-bold">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
-                    <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
-                    <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
-                    <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
-                  </form>
-                </CardContent>
-              </Card>
+          {/* CONTEÚDO CONFIGURAÇÕES */}
+          <TabsContent value="config" className="space-y-8">
+            <Tabs defaultValue="site" className="w-full">
+              <TabsList className="bg-white border border-blue-100 mb-6">
+                <TabsTrigger value="site">Site e Contatos</TabsTrigger>
+                <TabsTrigger value="banners">Banners</TabsTrigger>
+                <TabsTrigger value="usuarios">Gestão de Usuários e Permissões</TabsTrigger>
+              </TabsList>
 
-              <Card className="border-blue-100 shadow-lg">
-                <CardHeader className="bg-blue-50 border-b border-blue-100">
-                  <CardTitle className="flex items-center gap-2 text-blue-900"><ImageIcon className="text-blue-600" /> Banners do Carrossel</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-200 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <PlusCircle className="w-8 h-8 text-blue-400 mb-2" />
-                        <p className="text-sm text-blue-500 font-medium">Subir nova foto</p>
+              <TabsContent value="site">
+                <Card className="border-blue-100 shadow-lg max-w-2xl">
+                  <CardHeader className="bg-blue-50 border-b border-blue-100">
+                    <CardTitle className="flex items-center gap-2 text-blue-900"><Globe className="text-blue-600" /> Contatos e Redes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <form className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1"><label className="text-xs font-bold">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
+                        <div className="space-y-1"><label className="text-xs font-bold">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
                       </div>
-                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const newBanner: Banner = { id: Math.random().toString(36).substr(2, 9), url: reader.result as string, zoom: 100, rotate: 0 };
-                            setSiteSettings({...siteSettings, banners: [...siteSettings.banners, newBanner]});
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }} />
-                    </label>
-                  </div>
-                  <div className="space-y-6">
-                    {siteSettings.banners.map((banner) => (
-                      <div key={banner.id} className="space-y-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
+                      <div className="space-y-1"><label className="text-xs font-bold">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
+                      <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
+                      <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
+                      <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="banners">
+                <Card className="border-blue-100 shadow-lg max-w-2xl">
+                  <CardHeader className="bg-blue-50 border-b border-blue-100">
+                    <CardTitle className="flex items-center gap-2 text-blue-900"><ImageIcon className="text-blue-600" /> Banners do Carrossel</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-200 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <PlusCircle className="w-8 h-8 text-blue-400 mb-2" />
+                          <p className="text-sm text-blue-500 font-medium">Subir nova foto</p>
                         </div>
-                        <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100">
-                          <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
-                          <div className="absolute inset-0 flex items-center px-4">
-                            <div className="scale-[0.3] origin-left">
-                              <h1 className="text-6xl font-black text-white italic leading-none">LÍDER</h1>
-                              <h2 className="text-4xl font-black text-white italic leading-none">REFRIGERAÇÃO</h2>
-                            </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const newBanner: Banner = { id: Math.random().toString(36).substr(2, 9), url: reader.result as string, zoom: 100, rotate: 0 };
+                              setSiteSettings({...siteSettings, banners: [...siteSettings.banners, newBanner]});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }} />
+                      </label>
+                    </div>
+                    <div className="space-y-6">
+                      {siteSettings.banners.map((banner) => (
+                        <div key={banner.id} className="space-y-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
+                          </div>
+                          <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100">
+                            <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label><Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} /></div>
+                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label><Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} /></div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 pt-2">
-                          <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label><Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} /></div>
-                          <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label><Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} /></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
-                </CardContent>
-              </Card>
-            </div>
+                      ))}
+                    </div>
+                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="usuarios">
+                <UserAdminSettings />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
