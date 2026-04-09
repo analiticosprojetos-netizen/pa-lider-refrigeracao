@@ -71,7 +71,6 @@ const Dashboard = () => {
   const [orders, setOrders] = React.useState<any[]>([]);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   
-  // Estados de busca
   const [searchTerm, setSearchTerm] = React.useState('');
   const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
   const [customerSearchTerm, setCustomerSearchTerm] = React.useState('');
@@ -92,6 +91,7 @@ const Dashboard = () => {
     facebook: 'https://facebook.com/liderefrigeracao',
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
+    cnpj: '00.000.000/0001-00',
     banners: [] as Banner[],
     carouselDelay: 6
   });
@@ -357,7 +357,6 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  // Filtros
   const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const filteredOrders = orders.filter(o => 
     o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
@@ -748,6 +747,7 @@ const Dashboard = () => {
                       <div className="space-y-1"><label className="text-xs font-bold">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
                       <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
                       <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
+                      <div className="space-y-1"><label className="text-xs font-bold">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} /></div>
                       <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
                     </form>
                   </CardContent>
