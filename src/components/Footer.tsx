@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, Phone, Mail, MapPin } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Footer = () => {
   const [settings, setSettings] = React.useState({
@@ -40,14 +41,21 @@ const Footer = () => {
             <div className="space-y-2 text-sm text-blue-200">
               <div className="flex items-center gap-2"><Phone size={16} /> {settings.whatsapp}</div>
               <div className="flex items-center gap-2"><Mail size={16} /> {settings.email}</div>
-              <a 
-                href={mapsUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 hover:text-white transition-colors"
-              >
-                <MapPin size={16} /> {settings.address}
-              </a>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a 
+                    href={mapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <MapPin size={16} /> {settings.address}
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent className="bg-white text-blue-900 border-blue-100">
+                  <p className="font-bold">Clique para chegar</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <div className="flex flex-col items-start md:items-end">

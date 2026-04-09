@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { showSuccess } from '@/utils/toast';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Index = () => {
   const [settings, setSettings] = React.useState({
@@ -191,18 +192,25 @@ const Index = () => {
                       <p className="text-xl font-bold">{settings.email}</p>
                     </div>
                   </div>
-                  <a 
-                    href={mapsUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-4 group"
-                  >
-                    <div className="bg-blue-500 p-3 rounded-xl group-hover:bg-blue-400 transition-colors"><MapPin size={24} /></div>
-                    <div>
-                      <p className="text-blue-200 text-sm">Endereço (Ver no Mapa)</p>
-                      <p className="text-xl font-bold group-hover:underline">{settings.address}</p>
-                    </div>
-                  </a>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a 
+                        href={mapsUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center gap-4 group cursor-pointer"
+                      >
+                        <div className="bg-blue-500 p-3 rounded-xl group-hover:bg-blue-400 transition-colors"><MapPin size={24} /></div>
+                        <div>
+                          <p className="text-blue-200 text-sm">Endereço (Ver no Mapa)</p>
+                          <p className="text-xl font-bold group-hover:underline">{settings.address}</p>
+                        </div>
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-blue-900 text-white border-blue-800">
+                      <p className="font-bold">Como chegar? Clique aqui</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
               <div className="p-8 lg:p-12">
