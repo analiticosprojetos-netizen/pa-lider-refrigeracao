@@ -25,7 +25,8 @@ const Index = () => {
     whatsapp: '11999999999',
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
-    banners: []
+    banners: [],
+    carouselDelay: 6
   });
 
   React.useEffect(() => {
@@ -54,7 +55,11 @@ const Index = () => {
       <SocialFloatingBar />
       
       {/* Hero Section com Carrossel Dinâmico */}
-      <BannerCarousel banners={settings.banners} onContactClick={scrollToContact} />
+      <BannerCarousel 
+        banners={settings.banners} 
+        onContactClick={scrollToContact} 
+        delay={settings.carouselDelay}
+      />
 
       {/* Especialidades */}
       <section id="servicos" className="py-20 bg-gray-50">

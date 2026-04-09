@@ -16,10 +16,13 @@ interface Banner {
 interface BannerCarouselProps {
   banners: Banner[];
   onContactClick: () => void;
+  delay?: number;
 }
 
-const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
-  const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
+const BannerCarousel = ({ banners, onContactClick, delay = 6 }: BannerCarouselProps) => {
+  const [emblaRef] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: delay * 1000, stopOnInteraction: false })
+  ]);
 
   return (
     <section className="relative overflow-hidden border-b-8 border-blue-800 h-[500px] md:h-[450px]">
@@ -49,7 +52,6 @@ const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
                   className="w-full h-full object-cover transition-transform duration-500"
                   style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }}
                 />
-                {/* Overlay gradiente para leitura sem esconder a foto */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
               </div>
               
@@ -68,7 +70,6 @@ const BannerCarousel = ({ banners, onContactClick }: BannerCarouselProps) => {
 
 const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void }) => (
   <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-    {/* Lado Esquerdo: Título e Subtítulo */}
     <div className="text-center lg:text-left flex-1">
       <div className="space-y-0">
         <h1 className="text-6xl md:text-8xl font-black text-white italic leading-none tracking-tighter drop-shadow-lg">
@@ -85,7 +86,6 @@ const OfficialBannerContent = ({ onContactClick }: { onContactClick: () => void 
       </div>
     </div>
 
-    {/* Lado Direito: Box de Destaque e Botão */}
     <div className="flex-1 flex flex-col items-center lg:items-end gap-6">
       <div className="bg-blue-800/40 backdrop-blur-md p-6 rounded-2xl border-l-4 border-blue-400 max-w-md text-center lg:text-left">
         <h3 className="text-lg md:text-xl font-bold text-white uppercase mb-2 leading-tight">

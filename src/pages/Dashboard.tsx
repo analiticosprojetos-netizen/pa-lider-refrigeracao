@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { showError, showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
@@ -57,7 +57,8 @@ const Dashboard = () => {
     facebook: 'https://facebook.com/liderefrigeracao',
     email: 'contato@liderefrigeracao.com.br',
     address: 'Av. Industrial, 1000 - Setor de Transportes',
-    banners: [] as Banner[]
+    banners: [] as Banner[],
+    carouselDelay: 6 // segundos
   });
 
   React.useEffect(() => {
@@ -359,7 +360,6 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="config">
-            {/* ... (Mantendo a gestão de banners e contatos que já fizemos) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="border-blue-100 shadow-lg">
                 <CardHeader className="bg-blue-50 border-b border-blue-100">
@@ -374,7 +374,28 @@ const Dashboard = () => {
                     <div className="space-y-1"><label className="text-xs font-bold">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
                     <div className="space-y-1"><label className="text-xs font-bold">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} /></div>
                     <div className="space-y-1"><label className="text-xs font-bold">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
-                    <Button type="submit" className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Contatos</Button>
+                    
+                    <div className="pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock size={16} className="text-blue-600" />
+                        <label className="text-xs font-bold uppercase text-gray-500">Tempo do Carrossel (segundos)</label>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Slider 
+                          value={[siteSettings.carouselDelay]} 
+                          min={2} 
+                          max={20} 
+                          step={1}
+                          onValueChange={([v]) => setSiteSettings({...siteSettings, carouselDelay: v})} 
+                          className="flex-1"
+                        />
+                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-bold text-sm w-12 text-center">
+                          {siteSettings.carouselDelay}s
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full bg-blue-600 mt-4"><Save className="mr-2 h-4 w-4" /> Salvar Configurações</Button>
                   </form>
                 </CardContent>
               </Card>
@@ -403,16 +424,40 @@ const Dashboard = () => {
                       }} />
                     </label>
                   </div>
-                  <div className="space-y-4">
+                  
+                  <div className="space-y-6">
                     {siteSettings.banners.map((banner) => (
-                      <div key={banner.id} className="flex gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                          <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
+                      <div key={banner.id} className="space-y-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
                         </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="flex justify-between"><span className="text-[10px] font-bold text-gray-400">AJUSTES</span><Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-red-500" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={12} /></Button></div>
-                          <Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} />
-                          <Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} />
+                        
+                        {/* Mini Preview Realista */}
+                        <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100">
+                          <img 
+                            src={banner.url} 
+                            className="w-full h-full object-cover" 
+                            style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
+                          <div className="absolute inset-0 flex items-center px-4">
+                            <div className="scale-[0.3] origin-left">
+                              <h1 className="text-6xl font-black text-white italic leading-none">LÍDER</h1>
+                              <h2 className="text-4xl font-black text-white italic leading-none">REFRIGERAÇÃO</h2>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label>
+                            <Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label>
+                            <Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} />
+                          </div>
                         </div>
                       </div>
                     ))}
