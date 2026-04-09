@@ -36,9 +36,10 @@ interface ServiceOrderFormProps {
   technicianName: string;
   inventoryParts: InventoryPart[];
   customers: Customer[];
+  previousOrders: any[];
 }
 
-const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }: ServiceOrderFormProps) => {
+const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers, previousOrders }: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
@@ -54,9 +55,38 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }:
     setFormData(prev => ({ ...prev, technician: technicianName }));
   }, [technicianName]);
 
-  const handleSelectCustomer = (customerId: string) => {
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
+  // Busca inteligente por placa
+  const handlePlateChange = (plate: string) => {
+    const upperPlate = plate.toUpperCase();
+    setFormData(prev => ({ ...prev, plate: upperPlate }));
+    
+    if (upperPlate.length >= 7) {
+      const pastOrder = previousOrders.find(o => o.plate.toUpperCase() === upperPlate);
+      if (pastOrder) {
+        setFormData(prev => ({
+          ...prev,
+          vehicleModel: pastOrder.vehicleModel,
+          boxType: pastOrder.boxType,
+          equipBrand: pastOrder.equipBrand,
+          equipModel: pastOrder.equipModel,
+          clientName: pastOrder.clientName,
+          document: pastOrder.document,
+          phone: pastOrder.phone,
+          email: pastOrder.email
+        }));
+        showSuccess('Dados do veículo e cliente recuperados do histórico!');
+      }
+    }
+  };
+
+  // Busca inteligente por cliente (Nome ou Documento)
+  const handleCustomerSearch = (val: string) => {
+    setFormData(prev => ({ ...prev, clientName: val }));
+    const customer = customers.find(c => 
+      c.name.toLowerCase().includes(val.toLowerCase()) || 
+      c.document.includes(val)
+    );
+    if (customer && val.length > 3) {
       setFormData(prev => ({
         ...prev,
         clientName: customer.name,
@@ -113,7 +143,6 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }:
       total
     };
 
-    // Dados para possível novo cadastro de cliente
     const customerData: Customer = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.clientName,
@@ -141,25 +170,13 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }:
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Dados do Cliente */}
         <Card className="border-blue-100 shadow-sm">
-          <CardHeader className="bg-blue-50/50 border-b border-blue-50 flex flex-row items-center justify-between">
+          <CardHeader className="bg-blue-50/50 border-b border-blue-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><User size={16}/> DADOS DO CLIENTE</CardTitle>
-            {customers.length > 0 && (
-              <Select onValueChange={handleSelectCustomer}>
-                <SelectTrigger className="w-[200px] h-8 text-xs bg-white">
-                  <SelectValue placeholder="Selecionar Cliente..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </CardHeader>
           <CardContent className="pt-6 grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Nome / Empresa</label>
-              <Input value={formData.clientName} onChange={e => setFormData({...formData, clientName: e.target.value})} required />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Nome / Empresa (Busca Automática)</label>
+              <Input value={formData.clientName} onChange={e => handleCustomerSearch(e.target.value)} required placeholder="Digite o nome para buscar..." />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">CPF / CNPJ</label>
@@ -183,8 +200,8 @@ const ServiceOrderForm = ({ onSave, technicianName, inventoryParts, customers }:
           </CardHeader>
           <CardContent className="pt-6 grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Placa</label>
-              <Input value={formData.plate} onChange={e => setFormData({...formData, plate: e.target.value})} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Placa (Busca Automática)</label>
+              <Input value={formData.plate} onChange={e => handlePlateChange(e.target.value)} placeholder="ABC1234" />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">Modelo Veículo</label>
