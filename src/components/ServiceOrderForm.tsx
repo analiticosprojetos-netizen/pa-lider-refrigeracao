@@ -1,37 +1,66 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, FileText, User, Truck, Settings, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
+
+interface InventoryPart {
+  id: string;
+  name: string;
+  quantity: number;
+}
 
 interface Item {
   id: string;
   description: string;
   qty: number;
   value: number;
+  inventoryPartId?: string;
 }
 
-const ServiceOrderForm = ({ onSave }: { onSave: (order: any) => void }) => {
+interface ServiceOrderFormProps {
+  onSave: (order: any) => void;
+  technicianName: string;
+  inventoryParts: InventoryPart[];
+}
+
+const ServiceOrderForm = ({ onSave, technicianName, inventoryParts }: ServiceOrderFormProps) => {
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
     serviceType: 'Corretiva', problem: '', diagnosis: '',
     laborValue: 0, travelValue: 0,
-    warranty: '90 dias', technician: '', observations: ''
+    warranty: '90 dias', technician: technicianName, observations: ''
   });
 
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
+  // Atualiza o técnico se o nome do operador mudar no dashboard
+  React.useEffect(() => {
+    setFormData(prev => ({ ...prev, technician: technicianName }));
+  }, [technicianName]);
+
   const addItem = (type: 'service' | 'part') => {
     const newItem = { id: Math.random().toString(36).substr(2, 9), description: '', qty: 1, value: 0 };
     if (type === 'service') setServices([...services, newItem]);
     else setParts([...parts, newItem]);
+  };
+
+  const handleSelectInventoryPart = (itemId: string, partId: string) => {
+    const selectedPart = inventoryParts.find(p => p.id === partId);
+    if (selectedPart) {
+      setParts(parts.map(p => p.id === itemId ? { 
+        ...p, 
+        description: selectedPart.name, 
+        inventoryPartId: selectedPart.id 
+      } : p));
+    }
   };
 
   const removeItem = (id: string, type: 'service' | 'part') => {
@@ -51,6 +80,20 @@ const ServiceOrderForm = ({ onSave }: { onSave: (order: any) => void }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar estoque antes de salvar (apenas aviso, a baixa ocorre na execução)
+    const insufficientStock = parts.some(p => {
+      if (p.inventoryPartId) {
+        const invPart = inventoryParts.find(ip => ip.id === p.inventoryPartId);
+        return invPart && invPart.quantity < p.qty;
+      }
+      return false;
+    });
+
+    if (insufficientStock) {
+      showError('Atenção: Algumas peças selecionadas não possuem estoque suficiente!');
+    }
+
     const order = {
       ...formData,
       id: Math.random().toString(36).substr(2, 5).toUpperCase(),
@@ -63,6 +106,17 @@ const ServiceOrderForm = ({ onSave }: { onSave: (order: any) => void }) => {
     };
     onSave(order);
     showSuccess('Orçamento gerado com sucesso!');
+    
+    // Resetar formulário
+    setServices([]);
+    setParts([]);
+    setFormData({
+      clientName: '', document: '', phone: '', email: '',
+      plate: '', vehicleModel: '', boxType: '', equipBrand: '', equipModel: '',
+      serviceType: 'Corretiva', problem: '', diagnosis: '',
+      laborValue: 0, travelValue: 0,
+      warranty: '90 dias', technician: technicianName, observations: ''
+    });
   };
 
   return (
@@ -173,20 +227,39 @@ const ServiceOrderForm = ({ onSave }: { onSave: (order: any) => void }) => {
               </div>
             ))}
             {parts.map(p => (
-              <div key={p.id} className="flex gap-2 items-end">
-                <div className="flex-1 space-y-1">
-                  <label className="text-[8px] font-bold text-gray-400 uppercase">Peça</label>
-                  <Input value={p.description} onChange={e => updateItem(p.id, 'part', 'description', e.target.value)} placeholder="Descrição" />
+              <div key={p.id} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[8px] font-bold text-gray-400 uppercase">Vincular ao Estoque (Opcional)</label>
+                    <Select onValueChange={(v) => handleSelectInventoryPart(p.id, v)}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Selecione uma peça do estoque..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventoryParts.map(ip => (
+                          <SelectItem key={ip.id} value={ip.id}>
+                            {ip.name} (Disp: {ip.quantity})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeItem(p.id, 'part')}><Trash2 size={16}/></Button>
                 </div>
-                <div className="w-16 space-y-1">
-                  <label className="text-[8px] font-bold text-gray-400 uppercase">Qtd</label>
-                  <Input type="number" value={p.qty} onChange={e => updateItem(p.id, 'part', 'qty', Number(e.target.value))} />
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[8px] font-bold text-gray-400 uppercase">Descrição da Peça</label>
+                    <Input value={p.description} onChange={e => updateItem(p.id, 'part', 'description', e.target.value)} placeholder="Descrição" />
+                  </div>
+                  <div className="w-16 space-y-1">
+                    <label className="text-[8px] font-bold text-gray-400 uppercase">Qtd</label>
+                    <Input type="number" value={p.qty} onChange={e => updateItem(p.id, 'part', 'qty', Number(e.target.value))} />
+                  </div>
+                  <div className="w-24 space-y-1">
+                    <label className="text-[8px] font-bold text-gray-400 uppercase">Unit.</label>
+                    <Input type="number" value={p.value} onChange={e => updateItem(p.id, 'part', 'value', Number(e.target.value))} />
+                  </div>
                 </div>
-                <div className="w-24 space-y-1">
-                  <label className="text-[8px] font-bold text-gray-400 uppercase">Unit.</label>
-                  <Input type="number" value={p.value} onChange={e => updateItem(p.id, 'part', 'value', Number(e.target.value))} />
-                </div>
-                <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeItem(p.id, 'part')}><Trash2 size={16}/></Button>
               </div>
             ))}
           </CardContent>
@@ -215,7 +288,11 @@ const ServiceOrderForm = ({ onSave }: { onSave: (order: any) => void }) => {
             <div className="pt-4 space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold opacity-50 uppercase">Técnico Responsável</label>
-                <Input className="bg-blue-800 border-blue-700 text-white" value={formData.technician} onChange={e => setFormData({...formData, technician: e.target.value})} />
+                <Input 
+                  className="bg-blue-800 border-blue-700 text-white" 
+                  value={formData.technician} 
+                  onChange={e => setFormData({...formData, technician: e.target.value})} 
+                />
               </div>
               <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-400 py-6 text-lg font-bold"><Save className="mr-2"/> GERAR ORÇAMENTO</Button>
             </div>

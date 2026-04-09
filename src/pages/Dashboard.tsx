@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -151,6 +151,67 @@ const Dashboard = () => {
     const updatedOrders = [order, ...orders];
     setOrders(updatedOrders);
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+  };
+
+  const handleExecuteOrder = (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (order.status === 'Executado') {
+      showError('Este orçamento já foi executado!');
+      return;
+    }
+
+    // Verificar se há estoque para todas as peças vinculadas
+    const partsToDeduct = order.parts.filter((p: any) => p.inventoryPartId);
+    let canExecute = true;
+    
+    partsToDeduct.forEach((p: any) => {
+      const invPart = parts.find(ip => ip.id === p.inventoryPartId);
+      if (!invPart || invPart.quantity < p.qty) {
+        canExecute = false;
+        showError(`Estoque insuficiente para: ${p.description}`);
+      }
+    });
+
+    if (!canExecute) return;
+
+    // Dar baixa no estoque
+    let updatedParts = [...parts];
+    let newMovements = [...movements];
+
+    partsToDeduct.forEach((p: any) => {
+      updatedParts = updatedParts.map(ip => {
+        if (ip.id === p.inventoryPartId) {
+          const newMovement: Movement = {
+            id: Math.random().toString(36).substr(2, 9),
+            partName: ip.name,
+            type: 'saida',
+            quantity: p.qty,
+            user: currentUser,
+            date: new Date().toLocaleString()
+          };
+          newMovements = [newMovement, ...newMovements];
+          return { ...ip, quantity: ip.quantity - p.qty };
+        }
+        return ip;
+      });
+    });
+
+    // Atualizar status do orçamento
+    const updatedOrders = orders.map(o => 
+      o.id === orderId ? { ...o, status: 'Executado' } : o
+    );
+
+    setParts(updatedParts);
+    setMovements(newMovements);
+    setOrders(updatedOrders);
+    
+    localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
+    localStorage.setItem('lider_movements', JSON.stringify(newMovements));
+    localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
+
+    showSuccess('Orçamento executado e estoque atualizado!');
   };
 
   const handleSendEmail = (order: any) => {
@@ -348,6 +409,17 @@ const Dashboard = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
+                                {order.status === 'Pendente' && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="border-green-200 text-green-600 hover:bg-green-50"
+                                    onClick={() => handleExecuteOrder(order.id)}
+                                    title="Executar e dar baixa no estoque"
+                                  >
+                                    <Play size={16} className="mr-1" /> Executar
+                                  </Button>
+                                )}
                                 <Button size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order)} title="Baixar PDF"><Download size={16}/></Button>
                                 <Button size="sm" variant="ghost" onClick={() => handleSendEmail(order)} title="Enviar por Email"><Mail size={16}/></Button>
                               </div>
@@ -364,7 +436,11 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="novo">
-                <ServiceOrderForm onSave={handleSaveOrder} />
+                <ServiceOrderForm 
+                  onSave={handleSaveOrder} 
+                  technicianName={currentUser} 
+                  inventoryParts={parts}
+                />
               </TabsContent>
             </Tabs>
           </TabsContent>
