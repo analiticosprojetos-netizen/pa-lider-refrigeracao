@@ -74,9 +74,11 @@ const Dashboard = () => {
   const [orderSearchTerm, setOrderSearchTerm] = React.useState('');
   const [customerSearchTerm, setCustomerSearchTerm] = React.useState('');
   
+  // Paginação Estoque
   const [currentPage, setCurrentPage] = React.useState(1);
   const ITEMS_PER_PAGE = 7;
 
+  // Paginação Histórico
   const [currentMovementPage, setCurrentMovementPage] = React.useState(1);
   const MOVEMENTS_PER_PAGE = 10;
 
@@ -110,12 +112,13 @@ const Dashboard = () => {
     carouselDelay: 6,
     aboutYears: '15+',
     aboutTitle: 'Excelência em Refrigeração de Transportes',
-    aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas.',
+    aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
     aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
     maxDiscountWarning: 10,
     maxDiscountDanger: 15
   });
 
+  // Função para formatar texto (Primeira letra de cada palavra em maiúsculo)
   const formatToStandardCase = (str: string) => {
     if (!str) return str;
     return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
@@ -132,8 +135,12 @@ const Dashboard = () => {
     return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
   };
 
+  const cleanPhone = (phone: string) => {
+    return phone.replace(/\D/g, '');
+  };
+
   const handleWhatsAppClick = (phone: string, message?: string) => {
-    const cleaned = phone.replace(/\D/g, '');
+    const cleaned = cleanPhone(phone);
     if (!cleaned) return;
     const url = `https://wa.me/55${cleaned}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
     window.open(url, '_blank');
@@ -145,7 +152,7 @@ const Dashboard = () => {
       return;
     }
     const subject = `Orçamento #${order.id} - ${siteSettings.companyName}`;
-    const body = `Olá ${order.clientName},\n\nSegue o detalhamento do seu orçamento #${order.id}.\n\nTotal: R$ ${order.total.toFixed(2)}`;
+    const body = `Olá ${order.clientName},\n\nSegue o detalhamento do seu orçamento #${order.id} para o veículo ${order.plate}.\n\nTotal: R$ ${order.total.toFixed(2)}\n\nAtenciosamente,\n${siteSettings.companyName}`;
     window.location.href = `mailto:${order.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -154,7 +161,7 @@ const Dashboard = () => {
       showError('Cliente não possui telefone cadastrado.');
       return;
     }
-    const message = `Olá ${order.clientName}, aqui é da ${siteSettings.companyName}. Segue o seu orçamento #${order.id}.\n\nTotal: R$ ${order.total.toFixed(2)}`;
+    const message = `Olá ${order.clientName}, aqui é da ${siteSettings.companyName}. Segue o seu orçamento #${order.id} para o veículo ${order.plate}.\n\nTotal: R$ ${order.total.toFixed(2)}\n\nPodemos prosseguir com o serviço?`;
     handleWhatsAppClick(order.phone, message);
   };
 
@@ -164,7 +171,7 @@ const Dashboard = () => {
 
     const shareData = {
       title: `Orçamento #${order.id}`,
-      text: `Olá ${order.clientName}, segue o orçamento da ${siteSettings.companyName}.`,
+      text: `Olá ${order.clientName}, segue o orçamento da ${siteSettings.companyName} para o veículo ${order.plate}.`,
       files: [pdfFile]
     };
 
@@ -174,11 +181,11 @@ const Dashboard = () => {
         showSuccess('Orçamento compartilhado!');
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
-          showError('Erro ao compartilhar.');
+          showError('Erro ao compartilhar. Tente baixar o PDF.');
         }
       }
     } else {
-      showError('Seu navegador não suporta compartilhamento de arquivos.');
+      showError('Seu navegador não suporta compartilhamento de arquivos. Use o botão de Download.');
     }
   };
 
@@ -208,7 +215,9 @@ const Dashboard = () => {
       const parsed = JSON.parse(savedSettings);
       setSiteSettings({
         ...siteSettings,
-        ...parsed
+        ...parsed,
+        maxDiscountWarning: parsed.maxDiscountWarning ?? 10,
+        maxDiscountDanger: parsed.maxDiscountDanger ?? 15
       });
     }
 
@@ -219,6 +228,7 @@ const Dashboard = () => {
     if (savedUsers) setUsersCount(JSON.parse(savedUsers).length);
   }, [navigate]);
 
+  // Resetar página ao buscar
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -230,7 +240,10 @@ const Dashboard = () => {
 
   const handleAddPart = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hasPermission('estoque', 'edit')) return;
+    if (!hasPermission('estoque', 'edit')) {
+      showError('Você não tem permissão para adicionar itens.');
+      return;
+    }
     if (!newName || !newQty) return;
     const qty = parseInt(newQty);
     const formattedName = formatToStandardCase(newName);
@@ -261,7 +274,7 @@ const Dashboard = () => {
     
     setNewName('');
     setNewQty('');
-    showSuccess('Peça cadastrada!');
+    showSuccess('Peça cadastrada com sucesso!');
   };
 
   const handleEditPart = (part: Part) => {
@@ -272,25 +285,53 @@ const Dashboard = () => {
 
   const handleSavePartEdit = () => {
     if (!editingPart) return;
-    const updatedParts = parts.map(p => p.id === editingPart.id ? editingPart : p);
+    
+    const oldPart = parts.find(p => p.id === editingPart.id);
+    if (!oldPart) return;
+
+    const formattedPart = { ...editingPart, name: formatToStandardCase(editingPart.name) };
+    const updatedParts = parts.map(p => p.id === formattedPart.id ? formattedPart : p);
+    
+    if (oldPart.quantity !== formattedPart.quantity) {
+      const diff = formattedPart.quantity - oldPart.quantity;
+      const newMovement: Movement = {
+        id: Math.random().toString(36).substr(2, 9),
+        partName: formattedPart.name,
+        type: 'correcao',
+        quantity: Math.abs(diff),
+        user: currentUser?.username || 'Sistema',
+        date: new Date().toLocaleString(),
+        note: 'Correção manual de estoque'
+      };
+      const updatedMovements = [newMovement, ...movements];
+      setMovements(updatedMovements);
+      localStorage.setItem('lider_movements', JSON.stringify(updatedMovements));
+    }
+
     setParts(updatedParts);
     localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
     setIsEditPartOpen(false);
-    showSuccess('Peça atualizada!');
+    showSuccess('Peça atualizada com sucesso!');
   };
 
   const handleDeletePart = (id: string) => {
-    if (!hasPermission('estoque', 'delete')) return;
-    if (window.confirm('Excluir esta peça?')) {
+    if (!hasPermission('estoque', 'delete')) {
+      showError('Sem permissão para excluir.');
+      return;
+    }
+    if (window.confirm('Tem certeza que deseja excluir esta peça permanentemente do estoque?')) {
       const updatedParts = parts.filter(p => p.id !== id);
       setParts(updatedParts);
       localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
-      showSuccess('Peça removida.');
+      showSuccess('Peça removida do estoque.');
     }
   };
 
   const registerMovement = (partId: string, type: 'entrada' | 'saida', amount: number) => {
-    if (!hasPermission('estoque', 'edit')) return;
+    if (!hasPermission('estoque', 'edit')) {
+      showError('Sem permissão para movimentar estoque.');
+      return;
+    }
     const updatedParts = parts.map(part => {
       if (part.id === partId) {
         const newTotal = type === 'entrada' ? part.quantity + amount : part.quantity - amount;
@@ -320,11 +361,14 @@ const Dashboard = () => {
 
     setParts(updatedParts);
     localStorage.setItem('lider_inventory', JSON.stringify(updatedParts));
-    showSuccess('Movimentação registrada!');
+    showSuccess(`${type === 'entrada' ? 'Entrada' : 'Saída'} registrada!`);
   };
 
   const handleSaveOrder = (order: any, customerData?: Customer) => {
-    if (!hasPermission('orcamentos', 'edit')) return;
+    if (!hasPermission('orcamentos', 'edit')) {
+      showError('Sem permissão para salvar orçamentos.');
+      return;
+    }
     let updatedOrders;
     const existingIndex = orders.findIndex(o => o.id === order.id);
     
@@ -402,7 +446,7 @@ const Dashboard = () => {
     localStorage.setItem('lider_movements', JSON.stringify(newMovements));
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
 
-    showSuccess('Orçamento executado!');
+    showSuccess('Orçamento executado e estoque atualizado!');
   };
 
   const handleRevertOrder = (orderId: string) => {
@@ -410,7 +454,7 @@ const Dashboard = () => {
     const order = orders.find(o => o.id === orderId);
     if (!order || order.status !== 'Executado') return;
 
-    if (!window.confirm('Deseja estornar este orçamento?')) return;
+    if (!window.confirm('Deseja estornar este orçamento? As peças retornarão ao estoque e o status voltará para Pendente.')) return;
 
     const partsToReturn = order.parts.filter((p: any) => p.inventoryPartId);
     
@@ -448,7 +492,7 @@ const Dashboard = () => {
     localStorage.setItem('lider_movements', JSON.stringify(newMovements));
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
 
-    showSuccess('Orçamento estornado!');
+    showSuccess('Orçamento estornado! Peças devolvidas ao estoque.');
   };
 
   const handleCancelOrder = (orderId: string) => {
@@ -458,16 +502,19 @@ const Dashboard = () => {
     );
     setOrders(updatedOrders);
     localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
-    showSuccess('Orçamento cancelado.');
+    showSuccess('Orçamento finalizado como cancelado.');
   };
 
   const handleDeleteOrder = (orderId: string) => {
-    if (!hasPermission('orcamentos', 'delete')) return;
-    if (window.confirm('Excluir este orçamento?')) {
+    if (!hasPermission('orcamentos', 'delete')) {
+      showError('Sem permissão para excluir.');
+      return;
+    }
+    if (window.confirm('Tem certeza que deseja excluir este orçamento permanentemente?')) {
       const updatedOrders = orders.filter(o => o.id !== orderId);
       setOrders(updatedOrders);
       localStorage.setItem('lider_orders', JSON.stringify(updatedOrders));
-      showSuccess('Orçamento excluído.');
+      showSuccess('Orçamento excluído com sucesso.');
     }
   };
 
@@ -490,11 +537,16 @@ const Dashboard = () => {
 
   const handleSaveCustomerEdit = () => {
     if (!editingCustomer) return;
-    const updatedCustomers = customers.map(c => c.id === editingCustomer.id ? editingCustomer : c);
+    
+    const formattedCustomer = { ...editingCustomer, name: formatToStandardCase(editingCustomer.name) };
+    const updatedCustomers = customers.map(c => 
+      c.id === formattedCustomer.id ? formattedCustomer : c
+    );
+    
     setCustomers(updatedCustomers);
     localStorage.setItem('lider_customers', JSON.stringify(updatedCustomers));
     setIsEditCustomerOpen(false);
-    showSuccess('Cliente atualizado!');
+    showSuccess('Dados do cliente atualizados!');
   };
 
   const handleLogout = () => {
@@ -514,12 +566,32 @@ const Dashboard = () => {
     }
   };
 
-  const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const paginatedParts = filteredParts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
+  const handleAboutImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSiteSettings({ ...siteSettings, aboutImage: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-  const paginatedMovements = movements.slice((currentMovementPage - 1) * MOVEMENTS_PER_PAGE, currentMovementPage * MOVEMENTS_PER_PAGE);
+  const filteredParts = parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  // Lógica de Paginação Estoque
+  const totalPages = Math.ceil(filteredParts.length / ITEMS_PER_PAGE);
+  const paginatedParts = filteredParts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Lógica de Paginação Histórico
   const totalMovementPages = Math.ceil(movements.length / MOVEMENTS_PER_PAGE);
+  const paginatedMovements = movements.slice(
+    (currentMovementPage - 1) * MOVEMENTS_PER_PAGE,
+    currentMovementPage * MOVEMENTS_PER_PAGE
+  );
 
   const filteredOrders = orders.filter(o => 
     o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
@@ -528,13 +600,24 @@ const Dashboard = () => {
   );
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-    c.document.toLowerCase().includes(customerSearchTerm.toLowerCase())
+    c.document.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
   
   const lowStockCount = parts.filter(p => p.quantity < 5).length;
-  const totalStockQuantity = parts.reduce((acc, p) => acc + p.quantity, 0);
 
-  if (!currentUser) return null;
+  const totalStockQuantity = parts.reduce((acc, p) => acc + p.quantity, 0);
+  const totalEntradas = movements.filter(m => m.type === 'entrada').reduce((acc, m) => acc + m.quantity, 0);
+  const totalSaidas = movements.filter(m => m.type === 'saida').reduce((acc, m) => acc + m.quantity, 0);
+
+  if (!currentUser) return (
+    <div className="min-h-screen flex items-center justify-center bg-blue-50 dark:bg-slate-950">
+      <div className="text-center space-y-4">
+        <Snowflake className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+        <p className="text-blue-900 dark:text-blue-400 font-bold">Carregando perfil de acesso...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
@@ -545,12 +628,12 @@ const Dashboard = () => {
             <h1 className="text-xl font-bold text-blue-900 dark:text-white hidden md:block">Gestão Lider</h1>
             <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800">
               <ShieldCheck size={14} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-black text-blue-900 dark:text-blue-200 uppercase">{currentUser.username}</span>
+              <span className="text-xs font-black text-blue-900 dark:text-blue-200 uppercase">{currentUser.username} ({currentUser.role})</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-100 dark:border-red-900/30">
+            <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-100 dark:border-red-900/30 dark:hover:bg-red-900/20">
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
           </div>
@@ -561,28 +644,52 @@ const Dashboard = () => {
         <Tabs defaultValue="estoque" className="space-y-8">
           <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 p-1 h-12 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
             {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6 flex-shrink-0">Estoque</TabsTrigger>}
-            {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos</TabsTrigger>}
+            {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-6 flex-shrink-0">Analytics</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
           </TabsList>
 
+          {/* CONTEÚDO ESTOQUE */}
           <TabsContent value="estoque" className="space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Estoque</h2>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <Card className="bg-blue-600 text-white shadow-xl border-none overflow-hidden">
                 <CardContent className="pt-6 relative">
                   <div className="flex justify-between items-start mb-6">
                     <Package size={48} className="opacity-20" />
                     <div className="text-right">
-                      <p className="text-[10px] font-black uppercase opacity-70 tracking-widest">Total em Estoque</p>
+                      <p className="text-[10px] font-black uppercase opacity-70 tracking-widest">Total de Peças em Estoque</p>
                       <p className="text-5xl font-black">{totalStockQuantity}</p>
+                      <p className="text-[10px] opacity-50 mt-1">{parts.length} tipos de itens cadastrados</p>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 text-green-300 mb-1">
+                        <ArrowUpCircle size={14} />
+                        <span className="text-[10px] font-black uppercase">Entradas</span>
+                      </div>
+                      <p className="text-xl font-bold">{totalEntradas}</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 text-red-300 mb-1">
+                        <ArrowDownCircle size={14} />
+                        <span className="text-[10px] font-black uppercase">Saídas</span>
+                      </div>
+                      <p className="text-xl font-bold">{totalSaidas}</p>
+                    </div>
+                  </div>
+
                   {lowStockCount > 0 && (
                     <div className="flex items-center gap-3 bg-red-500/40 p-4 rounded-2xl border border-red-400/30 animate-pulse">
                       <AlertTriangle size={20} className="text-yellow-300 shrink-0" />
-                      <span className="text-sm font-bold">{lowStockCount} itens baixos!</span>
+                      <span className="text-sm font-bold">{lowStockCount} itens com estoque baixo!</span>
                     </div>
                   )}
                 </CardContent>
@@ -591,7 +698,7 @@ const Dashboard = () => {
               <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-bold text-gray-400 flex items-center gap-2 uppercase tracking-wider">
-                    <BarChart3 size={16} className="text-blue-600" /> Níveis de Estoque
+                    <BarChart3 size={16} className="text-blue-600" /> Níveis de Estoque (Top 10)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="h-[200px]">
@@ -601,7 +708,7 @@ const Dashboard = () => {
                       <XAxis dataKey="name" fontSize={10} tick={{fill: '#64748b'}} axisLine={false} />
                       <YAxis fontSize={10} tick={{fill: '#64748b'}} axisLine={false} />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#1e293b', color: '#fff' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff' }}
                         cursor={{ fill: '#f8fafc', opacity: 0.1 }}
                       />
                       <Bar dataKey="quantity" radius={[6, 6, 0, 0]}>
@@ -616,9 +723,9 @@ const Dashboard = () => {
             </div>
 
             <Tabs defaultValue="lista" className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start">
-                <TabsTrigger value="lista">Lista</TabsTrigger>
-                {currentUser.permissions.historico.view && <TabsTrigger value="historico">Histórico</TabsTrigger>}
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
+                <TabsTrigger value="lista" className="flex-shrink-0">Lista de Peças</TabsTrigger>
+                {currentUser.permissions.historico.view && <TabsTrigger value="historico" className="flex-shrink-0">Histórico de Movimentações</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista" className="space-y-8">
@@ -631,14 +738,21 @@ const Dashboard = () => {
                       <CardContent className="pt-6">
                         <form onSubmit={handleAddPart} className="space-y-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase">Nome</label>
-                            <Input placeholder="Ex: Compressor" value={newName} onChange={(e) => setNewName(e.target.value)} required className="dark:bg-slate-950 dark:border-slate-800" />
+                            <label className="text-[10px] font-black text-gray-400 uppercase">Nome da Peça</label>
+                            <Input 
+                              placeholder="Ex: Compressor TM16" 
+                              value={newName} 
+                              onChange={(e) => setNewName(e.target.value)} 
+                              onBlur={(e) => setNewName(formatToStandardCase(e.target.value))}
+                              required 
+                              className="dark:bg-slate-950 dark:border-slate-800" 
+                            />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase">Qtd Inicial</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase">Quantidade Inicial</label>
                             <Input type="number" placeholder="0" value={newQty} onChange={(e) => setNewQty(e.target.value)} required className="dark:bg-slate-950 dark:border-slate-800" />
                           </div>
-                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar</Button>
+                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold">Cadastrar no Sistema</Button>
                         </form>
                       </CardContent>
                     </Card>
@@ -646,54 +760,76 @@ const Dashboard = () => {
 
                   <Card className={`${hasPermission('estoque', 'edit') ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900`}>
                     <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                      <CardTitle className="text-lg text-blue-900 dark:text-white">Controle</CardTitle>
+                      <CardTitle className="text-lg text-blue-900 dark:text-white">Controle de Peças</CardTitle>
                       <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                        <Input placeholder="Buscar..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <Input placeholder="Buscar peça..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                       </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                            <TableHead className="font-bold">Peça</TableHead>
-                            <TableHead className="text-center font-bold">Qtd</TableHead>
-                            <TableHead className="text-right font-bold">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedParts.map((part) => (
-                            <TableRow key={part.id}>
-                              <TableCell className="font-medium dark:text-gray-300">{part.name}</TableCell>
-                              <TableCell className="text-center">
-                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-                                  {part.quantity}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  {hasPermission('estoque', 'edit') && (
-                                    <>
-                                      <Button size="sm" variant="outline" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
-                                      <Button size="sm" variant="outline" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
-                                      <Button size="sm" variant="ghost" onClick={() => handleEditPart(part)}><Edit2 size={16} /></Button>
-                                    </>
-                                  )}
-                                  {hasPermission('estoque', 'delete') && (
-                                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDeletePart(part.id)}><Trash2 size={16} /></Button>
-                                  )}
-                                </div>
-                              </TableCell>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                              <TableHead className="font-bold text-blue-900 dark:text-blue-400">Peça</TableHead>
+                              <TableHead className="text-center font-bold text-blue-900 dark:text-blue-400">Qtd Atual</TableHead>
+                              <TableHead className="text-right font-bold text-blue-900 dark:text-blue-400">Ações</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedParts.map((part) => (
+                              <TableRow key={part.id} className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                <TableCell className="font-medium text-gray-700 dark:text-gray-300">{part.name}</TableCell>
+                                <TableCell className="text-center">
+                                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-sm font-black ${part.quantity < 5 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-red-400'}`}>
+                                    {part.quantity}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    {hasPermission('estoque', 'edit') && (
+                                      <>
+                                        <Button size="sm" variant="outline" className="border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/30 dark:text-green-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'entrada', 1)}><Plus size={16} /></Button>
+                                        <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-green-900/20" onClick={() => registerMovement(part.id, 'saida', 1)}><Minus size={16} /></Button>
+                                        <Button size="sm" variant="ghost" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditPart(part)}><Edit2 size={16} /></Button>
+                                      </>
+                                    )}
+                                    {hasPermission('estoque', 'delete') && (
+                                      <Button size="sm" variant="ghost" className="text-red-500 dark:text-red-400" onClick={() => handleDeletePart(part.id)}><Trash2 size={16} /></Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      
+                      {/* Controles de Paginação */}
                       {totalPages > 1 && (
-                        <div className="flex items-center justify-between px-4 py-4 border-t dark:border-slate-800">
-                          <p className="text-xs text-gray-500">Página {currentPage} de {totalPages}</p>
+                        <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Página {currentPage} de {totalPages}
+                          </p>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}><ChevronLeft size={16} /></Button>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight size={16} /></Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                              disabled={currentPage === 1}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronLeft size={16} />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                              disabled={currentPage === totalPages}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronRight size={16} />
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -705,41 +841,70 @@ const Dashboard = () => {
               <TabsContent value="historico">
                 <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
                   <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><History className="text-blue-600" /> Histórico</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><History className="text-blue-600" /> Histórico de Movimentações</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                          <TableHead className="font-bold">Data</TableHead>
-                          <TableHead className="font-bold">Peça</TableHead>
-                          <TableHead className="font-bold">Tipo</TableHead>
-                          <TableHead className="text-center font-bold">Qtd</TableHead>
-                          <TableHead className="font-bold">Operador</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedMovements.map((m) => (
-                          <TableRow key={m.id}>
-                            <TableCell className="text-xs text-gray-500">{m.date}</TableCell>
-                            <TableCell className="font-medium dark:text-gray-300">{m.partName}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${m.type === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {m.type}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center font-bold">{m.quantity}</TableCell>
-                            <TableCell className="text-sm text-blue-600 font-bold">{m.user}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                            <TableHead className="font-bold">Data/Hora</TableHead>
+                            <TableHead className="font-bold">Peça</TableHead>
+                            <TableHead className="font-bold">Tipo</TableHead>
+                            <TableHead className="text-center font-bold">Qtd</TableHead>
+                            <TableHead className="font-bold">Operador</TableHead>
+                            <TableHead className="font-bold">Observação</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedMovements.map((m) => (
+                            <TableRow key={m.id}>
+                              <TableCell className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{m.date}</TableCell>
+                              <TableCell className="font-medium dark:text-gray-300 whitespace-nowrap">{m.partName}</TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${
+                                  m.type === 'entrada' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                  m.type === 'saida' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                }`}>
+                                  {m.type === 'entrada' ? <ArrowUpCircle size={12} /> : m.type === 'saida' ? <ArrowDownCircle size={12} /> : <Settings size={12} />}
+                                  {m.type}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center font-bold dark:text-gray-300">{m.quantity}</TableCell>
+                              <TableCell className="text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">{m.user}</TableCell>
+                              <TableCell className="text-xs text-gray-500 dark:text-gray-400 italic min-w-[150px]">{m.note || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Controles de Paginação Histórico */}
                     {totalMovementPages > 1 && (
-                      <div className="flex items-center justify-between px-4 py-4 border-t dark:border-slate-800">
-                        <p className="text-xs text-gray-500">Página {currentMovementPage} de {totalMovementPages}</p>
+                      <div className="flex items-center justify-between px-4 py-4 border-t border-blue-50 dark:border-slate-800">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Página {currentMovementPage} de {totalMovementPages}
+                        </p>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setCurrentMovementPage(prev => Math.max(prev - 1, 1))} disabled={currentMovementPage === 1}><ChevronLeft size={16} /></Button>
-                          <Button variant="outline" size="sm" onClick={() => setCurrentMovementPage(prev => Math.min(prev + 1, totalMovementPages))} disabled={currentMovementPage === totalMovementPages}><ChevronRight size={16} /></Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setCurrentMovementPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentMovementPage === 1}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronLeft size={16} />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setCurrentMovementPage(prev => Math.min(prev + 1, totalMovementPages))}
+                            disabled={currentMovementPage === totalMovementPages}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronRight size={16} />
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -749,71 +914,86 @@ const Dashboard = () => {
             </Tabs>
           </TabsContent>
 
+          {/* CONTEÚDO ORÇAMENTOS */}
           <TabsContent value="orcamentos" className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Orçamentos</h2>
+              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Orçamentos</h2>
               <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Buscar..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" value={orderSearchTerm} onChange={(e) => setOrderSearchTerm(e.target.value)} />
+                  <Input 
+                    placeholder="Buscar orçamento..." 
+                    className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" 
+                    value={orderSearchTerm} 
+                    onChange={(e) => setOrderSearchTerm(e.target.value)} 
+                  />
                 </div>
-                <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos')}><TableIcon className="mr-2 h-4 w-4" /> Excel</Button>
+                <Button variant="outline" onClick={() => exportToExcel(orders, 'orcamentos_lider')} className="dark:border-slate-800 dark:hover:bg-slate-800"><TableIcon className="mr-2 h-4 w-4" /> Exportar Excel</Button>
               </div>
             </div>
 
             <Tabs value={activeOrcamentoTab} onValueChange={setActiveOrcamentoTab} className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start">
-                <TabsTrigger value="lista">Histórico</TabsTrigger>
-                {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo">{orderToEdit ? 'Editando' : 'Novo'}</TabsTrigger>}
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
+                <TabsTrigger value="lista" className="flex-shrink-0">Histórico de Orçamentos</TabsTrigger>
+                {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
                 <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                          <TableHead className="font-bold">ID</TableHead>
-                          <TableHead className="font-bold">Cliente</TableHead>
-                          <TableHead className="font-bold">Total</TableHead>
-                          <TableHead className="font-bold">Status</TableHead>
-                          <TableHead className="text-right font-bold">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredOrders.map((order) => (
-                          <TableRow key={order.id} className="cursor-pointer hover:bg-blue-50/30" onClick={() => handleViewDetails(order)}>
-                            <TableCell className="font-bold text-blue-600">#{order.id}</TableCell>
-                            <TableCell className="dark:text-gray-300">{order.clientName}</TableCell>
-                            <TableCell className="font-bold dark:text-gray-300">R$ {order.total.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700' : order.status === 'Executado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {order.status}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end gap-2">
-                                {order.status === 'Pendente' && hasPermission('orcamentos', 'edit') && (
-                                  <>
-                                    <Button size="sm" variant="outline" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
-                                    <Button size="sm" variant="outline" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
-                                    <Button size="sm" variant="outline" onClick={() => handleEditOrder(order)}><Edit2 size={16} /></Button>
-                                  </>
-                                )}
-                                {order.status === 'Executado' && hasPermission('orcamentos', 'edit') && (
-                                  <Button size="sm" variant="outline" onClick={() => handleRevertOrder(order.id)}><RotateCcw size={16} /></Button>
-                                )}
-                                <Button size="sm" variant="ghost" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
-                                <Button size="sm" variant="ghost" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
-                                {hasPermission('orcamentos', 'delete') && (
-                                  <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
-                                )}
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                            <TableHead className="font-bold">ID</TableHead>
+                            <TableHead className="font-bold">Cliente</TableHead>
+                            <TableHead className="font-bold">Veículo</TableHead>
+                            <TableHead className="font-bold">Total</TableHead>
+                            <TableHead className="font-bold">Status</TableHead>
+                            <TableHead className="text-right font-bold">Ações</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredOrders.map((order) => (
+                            <TableRow key={order.id} className="cursor-pointer hover:bg-blue-50/30 dark:hover:bg-slate-800/30" onClick={() => handleViewDetails(order)}>
+                              <TableCell className="font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">#{order.id}</TableCell>
+                              <TableCell className="dark:text-gray-300 whitespace-nowrap">{order.clientName}</TableCell>
+                              <TableCell className="dark:text-gray-300 whitespace-nowrap">{order.plate} - {order.vehicleModel}</TableCell>
+                              <TableCell className="font-bold dark:text-gray-300 whitespace-nowrap">R$ {order.total.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                  order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                                  order.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}>
+                                  {order.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex justify-end gap-2">
+                                  {order.status === 'Pendente' && hasPermission('orcamentos', 'edit') && (
+                                    <>
+                                      <Button title="Executar (Baixa Estoque)" size="sm" variant="outline" className="border-green-200 text-green-600 dark:border-green-900/30 dark:text-green-400" onClick={() => handleExecuteOrder(order.id)}><Play size={16} /></Button>
+                                      <Button title="Cancelar" size="sm" variant="outline" className="border-red-200 text-red-600 dark:border-red-900/30 dark:text-red-400" onClick={() => handleCancelOrder(order.id)}><Ban size={16} /></Button>
+                                      <Button title="Editar" size="sm" variant="outline" className="border-blue-200 text-blue-600 dark:border-blue-900/30 dark:text-blue-400" onClick={() => handleEditOrder(order)}><Edit2 size={16} /></Button>
+                                    </>
+                                  )}
+                                  {order.status === 'Executado' && hasPermission('orcamentos', 'edit') && (
+                                    <Button title="Estornar (Devolver ao Estoque)" size="sm" variant="outline" className="border-orange-200 text-orange-600 dark:border-orange-900/30 dark:text-orange-400" onClick={() => handleRevertOrder(order.id)}><RotateCcw size={16} /></Button>
+                                  )}
+                                  <Button title="Visualizar" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
+                                  <Button title="Baixar PDF" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
+                                  <Button title="Compartilhar PDF via WhatsApp" size="sm" variant="ghost" className="text-[#25D366] hover:bg-[#25D366]/10" onClick={() => handleShareOrder(order)}><MessageCircle size={16}/></Button>
+                                  {hasPermission('orcamentos', 'delete') && (
+                                    <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -837,106 +1017,346 @@ const Dashboard = () => {
             </Tabs>
           </TabsContent>
 
+          {/* CONTEÚDO CLIENTES */}
           <TabsContent value="clientes" className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Clientes</h2>
+              <h2 className="text-2xl font-bold text-blue-900 dark:text-white">Gestão de Clientes</h2>
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <Input placeholder="Buscar..." className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" value={customerSearchTerm} onChange={(e) => setCustomerSearchTerm(e.target.value)} />
+                <Input 
+                  placeholder="Buscar cliente..." 
+                  className="pl-10 bg-white dark:bg-slate-950 dark:border-slate-800" 
+                  value={customerSearchTerm} 
+                  onChange={(e) => setCustomerSearchTerm(e.target.value)} 
+                />
               </div>
             </div>
+
             <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
+                <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Users className="text-blue-600" /> Clientes Cadastrados</CardTitle>
+              </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                      <TableHead className="font-bold">Nome</TableHead>
-                      <TableHead className="font-bold">Documento</TableHead>
-                      <TableHead className="font-bold">Telefone</TableHead>
-                      <TableHead className="text-right font-bold">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map((c) => (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-bold dark:text-gray-300">{c.name}</TableCell>
-                        <TableCell className="dark:text-gray-400">{c.document}</TableCell>
-                        <TableCell className="dark:text-gray-400">{c.phone}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>}
-                          </div>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                        <TableHead className="font-bold dark:text-blue-400">Nome / Empresa</TableHead>
+                        <TableHead className="font-bold dark:text-blue-400">CPF / CNPJ</TableHead>
+                        <TableHead className="font-bold dark:text-blue-400">Telefone</TableHead>
+                        <TableHead className="font-bold dark:text-blue-400">E-mail</TableHead>
+                        <TableHead className="font-bold dark:text-blue-400">Data de Cadastro</TableHead>
+                        <TableHead className="text-right font-bold dark:text-blue-400">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell className="font-bold dark:text-gray-300 whitespace-nowrap">{c.name}</TableCell>
+                          <TableCell className="dark:text-gray-400 whitespace-nowrap">{c.document}</TableCell>
+                          <TableCell className="dark:text-gray-400 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleWhatsAppClick(c.phone)}
+                                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
+                              >
+                                <MessageCircle size={14} className="text-[#25D366]" />
+                                {c.phone}
+                              </button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400 whitespace-nowrap">{c.email}</TableCell>
+                          <TableCell className="dark:text-gray-400 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Calendar size={14} className="text-blue-400" />
+                              {c.createdAt || 'N/A'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {hasPermission('clientes', 'edit') && <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditCustomer(c)}><Edit2 size={16}/></Button>}
+                              {hasPermission('clientes', 'delete') && (
+                                <Button variant="ghost" size="sm" className="text-red-500 dark:text-red-400" onClick={() => {
+                                  if (window.confirm('Excluir este cliente?')) {
+                                    const updated = customers.filter(cust => cust.id !== c.id);
+                                    setCustomers(updated);
+                                    localStorage.setItem('lider_customers', JSON.stringify(updated));
+                                  }
+                                }}><Trash2 size={16}/></Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* CONTEÚDO FINANCEIRO */}
           <TabsContent value="financeiro">
             <FinanceTab orders={orders} />
           </TabsContent>
 
+          {/* CONTEÚDO ANALYTICS */}
           <TabsContent value="analytics">
             <AnalyticsTab orders={orders} usersCount={usersCount} />
           </TabsContent>
 
+          {/* CONTEÚDO CONFIGURAÇÕES */}
           <TabsContent value="config" className="space-y-8">
             <Tabs defaultValue="site" className="w-full">
-              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start">
-                <TabsTrigger value="site">Site</TabsTrigger>
-                <TabsTrigger value="regras">Regras</TabsTrigger>
-                <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+              <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
+                <TabsTrigger value="site" className="flex-shrink-0">Site e Institucional</TabsTrigger>
+                <TabsTrigger value="banners" className="flex-shrink-0">Banners</TabsTrigger>
+                <TabsTrigger value="regras" className="flex-shrink-0">Regras de Negócio</TabsTrigger>
+                <TabsTrigger value="usuarios" className="flex-shrink-0">Gestão de Usuários e Permissões</TabsTrigger>
               </TabsList>
 
               <TabsContent value="site">
-                <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
-                  <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Globe className="text-blue-600" /> Identidade</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-6">
-                    <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
-                      <label className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Logo da Empresa</label>
-                      <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
-                          {siteSettings.logo ? (
-                            <img src={siteSettings.logo} alt="Logo" className="w-full h-full object-contain" />
-                          ) : (
-                            <ImageIcon className="text-blue-200 dark:text-slate-700 w-8 h-8" />
-                          )}
-                          <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                            <Upload size={20} />
-                            <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                          </label>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* COLUNA 1: CONTATOS E IDENTIDADE */}
+                  <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
+                    <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
+                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Globe className="text-blue-600" /> Contatos e Identidade</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <form className="space-y-6">
+                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
+                          <label className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Logo da Empresa (Para o PDF)</label>
+                          <div className="flex flex-col sm:flex-row items-center gap-6">
+                            <div className="w-24 h-24 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                              {siteSettings.logo ? (
+                                <img src={siteSettings.logo} alt="Logo" className="w-full h-full object-contain" />
+                              ) : (
+                                <ImageIcon className="text-blue-200 dark:text-slate-700 w-8 h-8" />
+                              )}
+                              <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                                <Upload size={20} />
+                                <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                              </label>
+                            </div>
+                            <div className="flex-1 space-y-1 text-center sm:text-left">
+                              <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Upload da Logo</p>
+                              <p className="text-xs text-gray-500">Recomendado: PNG ou JPG com fundo branco ou transparente.</p>
+                              {siteSettings.logo && (
+                                <Button variant="ghost" size="sm" className="text-red-500 dark:text-red-400 h-8 px-2" onClick={() => setSiteSettings({...siteSettings, logo: ''})}>
+                                  <Trash2 size={14} className="mr-1" /> Remover Logo
+                                </Button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Upload da Logo</p>
-                          <p className="text-xs text-gray-500">PNG ou JPG recomendado.</p>
+
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold dark:text-gray-400">Nome da Empresa (PDF)</label>
+                          <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">WhatsApp</label><Input value={siteSettings.whatsapp} onChange={(e) => setSiteSettings({...siteSettings, whatsapp: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                          <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">E-mail</label><Input value={siteSettings.email} onChange={(e) => setSiteSettings({...siteSettings, email: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        </div>
+                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Instagram</label><Input value={siteSettings.instagram} onChange={(e) => setSiteSettings({...siteSettings, instagram: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Facebook</label><Input value={siteSettings.facebook} onChange={(e) => setSiteSettings({...siteSettings, facebook: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">Endereço</label><Input value={siteSettings.address} onChange={(e) => setSiteSettings({...siteSettings, address: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                        
+                        <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin size={16} className="text-blue-600" />
+                            <span className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Localização Exata (Google Maps)</span>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Link Direto do Google Maps (Recomendado)</label>
+                            <div className="flex gap-2">
+                              <Input 
+                                value={siteSettings.googleMapsUrl} 
+                                onChange={(e) => setSiteSettings({...siteSettings, googleMapsUrl: e.target.value})} 
+                                placeholder="Cole o link de compartilhamento aqui..." 
+                                className="dark:bg-slate-950 dark:border-slate-800" 
+                              />
+                              {siteSettings.googleMapsUrl && (
+                                <a href={siteSettings.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-blue-100 dark:border-slate-700 flex items-center justify-center text-blue-600">
+                                  <ExternalLink size={18} />
+                                </a>
+                              )}
+                            </div>
+                            <p className="text-[9px] text-gray-500 italic mt-1">Dica: No Google Maps, clique em "Compartilhar" e copie o link.</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Latitude</label>
+                              <Input value={siteSettings.latitude} onChange={(e) => setSiteSettings({...siteSettings, latitude: e.target.value})} placeholder="-18.9723105" className="dark:bg-slate-950 dark:border-slate-800" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold dark:text-gray-400 uppercase">Longitude</label>
+                              <Input value={siteSettings.longitude} onChange={(e) => setSiteSettings({...siteSettings, longitude: e.target.value})} placeholder="-48.3720316" className="dark:bg-slate-950 dark:border-slate-800" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1"><label className="text-xs font-bold dark:text-gray-400">CNPJ</label><Input value={siteSettings.cnpj} onChange={(e) => setSiteSettings({...siteSettings, cnpj: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" /></div>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  {/* COLUNA 2: CONTEÚDO INSTITUCIONAL */}
+                  <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
+                    <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
+                      <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><Info className="text-blue-600" /> Conteúdo Institucional (Sobre Nós)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-6">
+                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
+                        <label className="text-xs font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Imagem da Seção Sobre</label>
+                        <div className="flex flex-col sm:flex-row items-center gap-6">
+                          <div className="w-32 h-32 bg-white dark:bg-slate-900 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                            <img src={siteSettings.aboutImage} alt="Sobre" className="w-full h-full object-cover" />
+                            <label className="absolute inset-0 bg-blue-600/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                              <Upload size={20} />
+                              <input type="file" className="hidden" accept="image/*" onChange={handleAboutImageUpload} />
+                            </label>
+                          </div>
+                          <div className="flex-1 space-y-1 text-center sm:text-left">
+                            <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Alterar Foto</p>
+                            <p className="text-xs text-gray-500">Esta imagem aparece ao lado do texto institucional na página inicial.</p>
+                          </div>
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold dark:text-gray-400">Anos de Experiência</label>
+                          <Input value={siteSettings.aboutYears} onChange={(e) => setSiteSettings({...siteSettings, aboutYears: e.target.value})} placeholder="Ex: 15+" className="dark:bg-slate-950 dark:border-slate-800" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold dark:text-gray-400">Título da Seção</label>
+                          <Input value={siteSettings.aboutTitle} onChange={(e) => setSiteSettings({...siteSettings, aboutTitle: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold dark:text-gray-400">Descrição / História</label>
+                        <Textarea 
+                          className="min-h-[150px] dark:bg-slate-950 dark:border-slate-800" 
+                          value={siteSettings.aboutDescription} 
+                          onChange={(e) => setSiteSettings({...siteSettings, aboutDescription: e.target.value})} 
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="mt-8 flex justify-center">
+                  <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Configurações salvas!');}} className="bg-blue-600 px-12 py-6 text-lg font-bold shadow-xl hover:scale-105 transition-transform w-full sm:w-auto">
+                    <Save className="mr-2 h-5 w-5" /> SALVAR TODAS AS ALTERAÇÕES
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="banners">
+                <Card className="border-blue-100 dark:border-slate-800 shadow-lg max-w-2xl dark:bg-slate-900">
+                  <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><ImageIcon className="text-blue-600" /> Banners do Carrossel</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <PlusCircle className="w-8 h-8 text-blue-400 mb-2" />
+                          <p className="text-sm text-blue-500 font-medium">Subir nova foto</p>
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const newBanner: Banner = { id: Math.random().toString(36).substr(2, 9), url: reader.result as string, zoom: 100, rotate: 0 };
+                              setSiteSettings({...siteSettings, banners: [...siteSettings.banners, newBanner]});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }} />
+                      </label>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold dark:text-gray-400">Nome da Empresa</label>
-                      <Input value={siteSettings.companyName} onChange={(e) => setSiteSettings({...siteSettings, companyName: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                    <div className="space-y-6">
+                      {siteSettings.banners.map((banner) => (
+                        <div key={banner.id} className="space-y-3 p-4 bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prévia do Banner</span>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => setSiteSettings({...siteSettings, banners: siteSettings.banners.filter(b => b.id !== banner.id)})}><X size={14} /></Button>
+                          </div>
+                          <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden bg-blue-900 border border-blue-100 dark:border-slate-800">
+                            <img src={banner.url} className="w-full h-full object-cover" style={{ transform: `scale(${banner.zoom / 100}) rotate(${banner.rotate}deg)` }} />
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-900/40 to-transparent" />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Zoom</label><Slider value={[banner.zoom]} min={50} max={200} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, zoom: v} : b)})} /></div>
+                            <div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase">Rotação</label><Slider value={[banner.rotate]} min={-180} max={180} onValueChange={([v]) => setSiteSettings({...siteSettings, banners: siteSettings.banners.map(b => b.id === banner.id ? {...b, rotate: v} : b)})} /></div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <Button type="button" onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="bg-blue-600 w-full">Salvar</Button>
+                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Banners salvos!');}} className="w-full bg-blue-600"><Save className="mr-2 h-4 w-4" /> Salvar Banners</Button>
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="regras">
-                <Card className="border-blue-100 dark:border-slate-800 shadow-lg dark:bg-slate-900">
+                <Card className="border-blue-100 dark:border-slate-800 shadow-lg max-w-2xl dark:bg-slate-900">
                   <CardHeader className="bg-blue-50 dark:bg-slate-800/50 border-b border-blue-100 dark:border-slate-800">
-                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><TrendingDown className="text-blue-600" /> Regras</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-white"><TrendingDown className="text-blue-600" /> Regras de Negócio e Financeiro</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
-                    <div className="space-y-4">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Alerta de Desconto (%)</label>
-                      <Slider value={[siteSettings.maxDiscountWarning]} min={1} max={50} onValueChange={([v]) => setSiteSettings({...siteSettings, maxDiscountWarning: v})} />
+                    <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Percent size={18} className="text-blue-600" />
+                        <h3 className="text-sm font-bold text-blue-900 dark:text-blue-400 uppercase tracking-wider">Limites de Alerta de Desconto</h3>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Defina os percentuais que disparam avisos visuais no formulário de orçamento para proteger sua margem.</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
+                            Alerta de Atenção (Amarelo)
+                            <span className="text-blue-600">{siteSettings.maxDiscountWarning}%</span>
+                          </label>
+                          <Slider 
+                            value={[siteSettings.maxDiscountWarning]} 
+                            min={1} 
+                            max={50} 
+                            step={1}
+                            onValueChange={([v]) => setSiteSettings({...siteSettings, maxDiscountWarning: v})} 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex justify-between">
+                            Alerta Crítico (Vermelho)
+                            <span className="text-red-600">{siteSettings.maxDiscountDanger}%</span>
+                          </label>
+                          <Slider 
+                            value={[siteSettings.maxDiscountDanger]} 
+                            min={1} 
+                            max={50} 
+                            step={1}
+                            onValueChange={([v]) => setSiteSettings({...siteSettings, maxDiscountDanger: v})} 
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Salvo!');}} className="w-full bg-blue-600">Salvar</Button>
+
+                    <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
+                      <Info size={20} className="text-blue-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Esses valores são usados apenas para fins de **alerta visual** durante a criação do orçamento. Eles não impedem a finalização da venda, mas servem como um guia para o técnico ou vendedor.
+                      </p>
+                    </div>
+
+                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Regras de negócio updated!');}} className="w-full bg-blue-600">
+                      <Save className="mr-2 h-4 w-4" /> Salvar Regras
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -949,6 +1369,7 @@ const Dashboard = () => {
         </Tabs>
       </main>
 
+      {/* Diálogo de Edição de Cliente */}
       <Dialog open={isEditCustomerOpen} onOpenChange={setIsEditCustomerOpen}>
         <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
@@ -957,40 +1378,80 @@ const Dashboard = () => {
           {editingCustomer && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Nome</label>
-                <Input value={editingCustomer.name} onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                <label className="text-xs font-bold text-gray-400 uppercase">Nome / Empresa</label>
+                <Input 
+                  value={editingCustomer.name} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, name: e.target.value})} 
+                  onBlur={(e) => setEditingCustomer({...editingCustomer, name: formatToStandardCase(e.target.value)})}
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">CPF / CNPJ</label>
+                <Input 
+                  value={editingCustomer.document} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, document: e.target.value})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
               </div>
               <div className="grid gap-2">
                 <label className="text-xs font-bold text-gray-400 uppercase">Telefone</label>
-                <Input value={editingCustomer.phone} onChange={(e) => setEditingCustomer({...editingCustomer, phone: formatPhone(e.target.value)})} className="dark:bg-slate-950 dark:border-slate-800" />
+                <Input 
+                  value={editingCustomer.phone} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, phone: formatPhone(e.target.value)})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                  maxLength={15}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-gray-400 uppercase">E-mail</label>
+                <Input 
+                  value={editingCustomer.email} 
+                  onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button className="bg-blue-600" onClick={handleSaveCustomerEdit}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsEditCustomerOpen(false)} className="dark:border-slate-800">Cancelar</Button>
+            <Button className="bg-blue-600" onClick={handleSaveCustomerEdit}>Salvar Alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Diálogo de Edição de Peça (Estoque) */}
       <Dialog open={isEditPartOpen} onOpenChange={setIsEditPartOpen}>
         <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle className="text-blue-900 dark:text-white">Editar Peça</DialogTitle>
+            <DialogTitle className="text-blue-900 dark:text-white">Corrigir Peça no Estoque</DialogTitle>
           </DialogHeader>
           {editingPart && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Nome</label>
-                <Input value={editingPart.name} onChange={(e) => setEditingPart({...editingPart, name: e.target.value})} className="dark:bg-slate-950 dark:border-slate-800" />
+                <label className="text-xs font-bold text-gray-400 uppercase">Nome da Peça</label>
+                <Input 
+                  value={editingPart.name} 
+                  onChange={(e) => setEditingPart({...editingPart, name: e.target.value})} 
+                  onBlur={(e) => setEditingPart({...editingPart, name: formatToStandardCase(e.target.value)})}
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Qtd</label>
-                <Input type="number" value={editingPart.quantity} onChange={(e) => setEditingPart({...editingPart, quantity: Number(e.target.value)})} className="dark:bg-slate-950 dark:border-slate-800" />
+                <label className="text-xs font-bold text-gray-400 uppercase">Quantidade Atual</label>
+                <Input 
+                  type="number"
+                  value={editingPart.quantity} 
+                  onChange={(e) => setEditingPart({...editingPart, quantity: Number(e.target.value)})} 
+                  className="dark:bg-slate-950 dark:border-slate-800"
+                />
+                <p className="text-[10px] text-gray-500 italic">* Alterar a quantidade aqui registrará uma "correção" no histórico.</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button className="bg-blue-600" onClick={handleSavePartEdit}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsEditPartOpen(false)} className="dark:border-slate-800">Cancelar</Button>
+            <Button className="bg-blue-600" onClick={handleSavePartEdit}>Salvar Correção</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
