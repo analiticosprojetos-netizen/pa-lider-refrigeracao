@@ -104,7 +104,7 @@ const ServiceOrderForm = ({
   const [formData, setFormData] = React.useState({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
-    serviceType: 'Corretiva', problem: '', diagnosis: '',
+    serviceType: '', problem: '', diagnosis: '',
     startTime: '', endTime: '',
     travelValue: 0,
     discountPercent: 0,
@@ -143,7 +143,7 @@ const ServiceOrderForm = ({
     setFormData({
       clientName: '', document: '', phone: '', email: '',
       plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
-      serviceType: 'Corretiva', problem: '', diagnosis: '',
+      serviceType: '', problem: '', diagnosis: '',
       startTime: '', endTime: '',
       travelValue: 0,
       discountPercent: 0,
@@ -165,7 +165,7 @@ const ServiceOrderForm = ({
         vehicleModel: initialData.vehicleModel || '',
         equipBrand: initialData.equipBrand || '',
         equipModel: initialData.equipModel || '',
-        serviceType: initialData.serviceType || 'Corretiva',
+        serviceType: initialData.serviceType || '',
         problem: initialData.problem || '',
         diagnosis: initialData.diagnosis || '',
         startTime: initialData.startTime || '',
