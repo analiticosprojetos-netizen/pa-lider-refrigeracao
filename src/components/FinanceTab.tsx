@@ -69,7 +69,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
 
     saveExpenses([expense, ...expenses]);
     setNewExpense({ ...newExpense, description: '', value: '' });
-    showSuccess('Despesa registrada como "Em Aberto"!');
+    showSuccess('Despesa registrada!');
   };
 
   const toggleStatus = (id: string) => {
@@ -85,11 +85,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       return e;
     });
     saveExpenses(updated);
-    showSuccess('Status de pagamento atualizado!');
+    showSuccess('Status atualizado!');
   };
 
   const deleteExpense = (id: string) => {
-    if (window.confirm('Excluir esta despesa permanentemente?')) {
+    if (window.confirm('Excluir esta despesa?')) {
       saveExpenses(expenses.filter(e => e.id !== id));
     }
   };
@@ -107,7 +107,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     showSuccess('Gasto atualizado!');
   };
 
-  // Cálculos Financeiros
   const revenueExecuted = orders
     .filter(o => o.status === 'Executado')
     .reduce((acc, o) => acc + o.total, 0);
@@ -120,36 +119,31 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     .filter(e => e.status === 'Em Aberto')
     .reduce((acc, e) => acc + e.value, 0);
 
-  const totalDiscounts = orders
-    .filter(o => o.status === 'Executado')
-    .reduce((acc, o) => acc + (o.discountValue || 0), 0);
-
   const netProfit = revenueExecuted - totalPaidExpenses;
 
   return (
     <div className="space-y-8">
-      {/* Cards de Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <FinanceCard 
           title="Entradas (Executado)" 
           value={revenueExecuted} 
           icon={<ArrowUpRight className="text-green-500" />} 
           color="border-green-100 bg-green-50/30"
-          subtitle="Dinheiro que já entrou"
+          subtitle="Dinheiro em caixa"
         />
         <FinanceCard 
           title="Saídas (Pago)" 
           value={totalPaidExpenses} 
           icon={<CheckCircle2 className="text-blue-500" />} 
           color="border-blue-100 bg-blue-50/30"
-          subtitle="Contas já liquidadas"
+          subtitle="Contas liquidadas"
         />
         <FinanceCard 
-          title="A Pagar (Em Aberto)" 
+          title="A Pagar (Aberto)" 
           value={totalOpenExpenses} 
           icon={<Clock className="text-red-500" />} 
           color="border-red-100 bg-red-50/30"
-          subtitle="Compromissos pendentes"
+          subtitle="Pendências"
         />
         <FinanceCard 
           title="Lucro Real" 
@@ -161,7 +155,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Lançamento de Despesas */}
         <Card className="h-fit shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
           <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
             <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
@@ -173,7 +166,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
                 <Input 
-                  placeholder="Ex: Aluguel, Peças, Luz..." 
+                  placeholder="Ex: Aluguel, Luz..." 
                   value={newExpense.description}
                   onChange={e => setNewExpense({...newExpense, description: e.target.value})}
                   className="dark:bg-slate-950 dark:border-slate-800"
@@ -219,7 +212,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           </CardContent>
         </Card>
 
-        {/* Tabela de Despesas */}
         <Card className="lg:col-span-2 shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
           <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
             <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
@@ -289,7 +281,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
         </Card>
       </div>
 
-      {/* Modal de Edição */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
