@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown, ExternalLink
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown, ExternalLink, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,6 +132,36 @@ const Dashboard = () => {
       return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
     }
     return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
+  const cleanPhone = (phone: string) => {
+    return phone.replace(/\D/g, '');
+  };
+
+  const handleWhatsAppClick = (phone: string, message?: string) => {
+    const cleaned = cleanPhone(phone);
+    if (!cleaned) return;
+    const url = `https://wa.me/55${cleaned}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSendEmail = (order: any) => {
+    if (!order.email) {
+      showError('Cliente não possui e-mail cadastrado.');
+      return;
+    }
+    const subject = `Orçamento #${order.id} - ${siteSettings.companyName}`;
+    const body = `Olá ${order.clientName},\n\nSegue o detalhamento do seu orçamento #${order.id} para o veículo ${order.plate}.\n\nTotal: R$ ${order.total.toFixed(2)}\n\nAtenciosamente,\n${siteSettings.companyName}`;
+    window.location.href = `mailto:${order.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  const handleSendWhatsAppOrder = (order: any) => {
+    if (!order.phone) {
+      showError('Cliente não possui telefone cadastrado.');
+      return;
+    }
+    const message = `Olá ${order.clientName}, aqui é da ${siteSettings.companyName}. Segue o seu orçamento #${order.id} para o veículo ${order.plate}.\n\nTotal: R$ ${order.total.toFixed(2)}\n\nPodemos prosseguir com o serviço?`;
+    handleWhatsAppClick(order.phone, message);
   };
 
   React.useEffect(() => {
@@ -997,7 +1027,17 @@ const Dashboard = () => {
                         <TableRow key={c.id}>
                           <TableCell className="font-bold dark:text-gray-300 whitespace-nowrap">{c.name}</TableCell>
                           <TableCell className="dark:text-gray-400 whitespace-nowrap">{c.document}</TableCell>
-                          <TableCell className="dark:text-gray-400 whitespace-nowrap">{c.phone}</TableCell>
+                          <TableCell className="dark:text-gray-400 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleWhatsAppClick(c.phone)}
+                                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
+                              >
+                                <MessageCircle size={14} className="text-[#25D366]" />
+                                {c.phone}
+                              </button>
+                            </div>
+                          </TableCell>
                           <TableCell className="dark:text-gray-400 whitespace-nowrap">{c.email}</TableCell>
                           <TableCell className="dark:text-gray-400 whitespace-nowrap">
                             <div className="flex items-center gap-2">
@@ -1389,7 +1429,8 @@ const Dashboard = () => {
         isOpen={isDetailsOpen} 
         onClose={() => setIsDetailsOpen(false)}
         onDownload={(order) => generateServiceOrderPDF(order, siteSettings)}
-        onSendEmail={(order) => showSuccess(`Enviado para ${order.email}`)}
+        onSendEmail={handleSendEmail}
+        onSendWhatsApp={handleSendWhatsAppOrder}
       />
     </div>
   );
