@@ -495,9 +495,6 @@ const ServiceOrderForm = ({
                   onChange={e => setFormData({...formData, endTime: e.target.value})} 
                 />
               </div>
-              <p className="col-span-2 text-[10px] text-gray-500 italic">
-                * Estas datas serão impressas no orçamento para controle de produtividade.
-              </p>
             </CardContent>
           </Card>
         </div>
