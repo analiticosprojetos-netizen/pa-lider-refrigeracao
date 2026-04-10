@@ -145,26 +145,37 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     const finalY = (doc as any).lastAutoTable.finalY + 10;
 
     doc.setFillColor(245, 245, 245);
-    doc.rect(130, finalY, 65, 35, "F");
+    doc.rect(120, finalY, 75, 45, "F");
     doc.setTextColor(26, 54, 93);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     
     const subtotal = order.subtotal || order.total + (order.discountValue || 0);
-    doc.text(`Subtotal:`, 135, finalY + 10);
-    doc.text(`R$ ${subtotal.toFixed(2)}`, 190, finalY + 10, { align: 'right' });
+    const servicesTotal = order.servicesValue || 0;
+    const partsTotal = order.partsValue || 0;
+
+    doc.text(`Total Mão de Obra:`, 125, finalY + 10);
+    doc.text(`R$ ${servicesTotal.toFixed(2)}`, 190, finalY + 10, { align: 'right' });
+    
+    doc.text(`Total Peças:`, 125, finalY + 16);
+    doc.text(`R$ ${partsTotal.toFixed(2)}`, 190, finalY + 16, { align: 'right' });
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`Subtotal:`, 125, finalY + 24);
+    doc.text(`R$ ${subtotal.toFixed(2)}`, 190, finalY + 24, { align: 'right' });
     
     if (order.discountValue > 0) {
       doc.setTextColor(200, 0, 0);
-      doc.text(`Desconto (${order.discountPercent.toFixed(1)}%):`, 135, finalY + 18);
-      doc.text(`- R$ ${order.discountValue.toFixed(2)}`, 190, finalY + 18, { align: 'right' });
+      doc.setFont("helvetica", "normal");
+      doc.text(`Desconto (${order.discountPercent.toFixed(1)}%):`, 125, finalY + 30);
+      doc.text(`- R$ ${order.discountValue.toFixed(2)}`, 190, finalY + 30, { align: 'right' });
     }
 
     doc.setTextColor(26, 54, 93);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text(`TOTAL GERAL:`, 135, finalY + 28);
-    doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 28, { align: 'right' });
+    doc.text(`TOTAL GERAL:`, 125, finalY + 40);
+    doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 40, { align: 'right' });
 
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
@@ -172,7 +183,7 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.text(`Técnico Responsável: ${order.technician}`, 15, finalY + 15);
     
     if (order.observations) {
-      const obs = doc.splitTextToSize(`Obs: ${order.observations}`, 110);
+      const obs = doc.splitTextToSize(`Obs: ${order.observations}`, 100);
       doc.text(obs, 15, finalY + 25);
     }
 

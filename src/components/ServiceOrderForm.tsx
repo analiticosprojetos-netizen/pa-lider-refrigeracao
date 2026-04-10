@@ -706,9 +706,26 @@ const ServiceOrderForm = ({
               </div>
 
               <div className="pt-4 border-t border-blue-800 space-y-2">
-                <div className="flex justify-between text-sm opacity-70"><span>Subtotal:</span><span>R$ {subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm text-red-400"><span>Desconto:</span><span>- R$ {formData.discountValue.toFixed(2)}</span></div>
-                <div className="flex justify-between text-2xl font-black pt-2 border-t border-blue-800"><span>TOTAL:</span><span>R$ {total.toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm opacity-70">
+                  <span>Total Mão de Obra:</span>
+                  <span>R$ {servicesTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm opacity-70">
+                  <span>Total Peças:</span>
+                  <span>R$ {partsTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm opacity-70 pt-2 border-t border-blue-800/50">
+                  <span>Subtotal:</span>
+                  <span>R$ {subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-red-400">
+                  <span>Desconto:</span>
+                  <span>- R$ {formData.discountValue.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-2xl font-black pt-2 border-t border-blue-800">
+                  <span>TOTAL:</span>
+                  <span>R$ {total.toFixed(2)}</span>
+                </div>
               </div>
 
               <div className="pt-4 space-y-4">

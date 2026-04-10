@@ -19,11 +19,12 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
   if (!order) return null;
 
   const subtotal = order.subtotal || order.total + (order.discountValue || 0);
+  const servicesTotal = order.servicesValue || 0;
+  const partsTotal = order.partsValue || 0;
 
   const formatDateTime = (isoString: string) => {
     if (!isoString) return 'Não informado';
     try {
-      // Se a string for apenas YYYY-MM-DD, parseISO funciona corretamente
       return format(parseISO(isoString), 'dd/MM/yyyy');
     } catch (e) {
       return isoString;
@@ -173,6 +174,14 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
             <div className="bg-blue-900 text-white p-6 rounded-2xl space-y-2">
               <div className="flex justify-between text-sm opacity-70">
+                <span>Total Mão de Obra:</span>
+                <span>R$ {servicesTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm opacity-70">
+                <span>Total Peças:</span>
+                <span>R$ {partsTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm opacity-70 pt-2 border-t border-blue-800/50">
                 <span>Subtotal:</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
