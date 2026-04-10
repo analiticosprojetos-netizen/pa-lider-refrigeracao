@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck, Percent, Clock, MessageCircle } from 'lucide-react';
+import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck, Percent, Clock, MessageCircle, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,9 +14,10 @@ interface ServiceOrderDetailsProps {
   onDownload: (order: any) => void;
   onSendEmail: (order: any) => void;
   onSendWhatsApp: (order: any) => void;
+  onShare: (order: any) => void;
 }
 
-const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail, onSendWhatsApp }: ServiceOrderDetailsProps) => {
+const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail, onSendWhatsApp, onShare }: ServiceOrderDetailsProps) => {
   if (!order) return null;
 
   const subtotal = order.subtotal || order.total + (order.discountValue || 0);
@@ -52,8 +53,11 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail, 
               <Button size="sm" variant="outline" onClick={() => onSendEmail(order)} className="dark:border-slate-700">
                 <Mail className="mr-2 h-4 w-4" /> E-mail
               </Button>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-none" onClick={() => onShare(order)}>
+                <Share2 className="mr-2 h-4 w-4" /> Compartilhar PDF
+              </Button>
               <Button size="sm" className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none" onClick={() => onSendWhatsApp(order)}>
-                <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
+                <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp (Texto)
               </Button>
             </div>
           </div>

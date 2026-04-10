@@ -25,7 +25,7 @@ import ServiceOrderForm from '@/components/ServiceOrderForm';
 import ServiceOrderDetails from '@/components/ServiceOrderDetails';
 import UserAdminSettings, { UserProfile } from '@/components/UserAdminSettings';
 import AnalyticsTab from '@/components/AnalyticsTab';
-import { generateServiceOrderPDF, exportToExcel } from '@/utils/exportUtils';
+import { generateServiceOrderPDF, exportToExcel, getServiceOrderFile } from '@/utils/exportUtils';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface Part {
@@ -162,6 +162,30 @@ const Dashboard = () => {
     }
     const message = `Olá ${order.clientName}, aqui é da ${siteSettings.companyName}. Segue o seu orçamento #${order.id} para o veículo ${order.plate}.\n\nTotal: R$ ${order.total.toFixed(2)}\n\nPodemos prosseguir com o serviço?`;
     handleWhatsAppClick(order.phone, message);
+  };
+
+  const handleShareOrder = async (order: any) => {
+    const pdfFile = getServiceOrderFile(order, siteSettings);
+    if (!pdfFile) return;
+
+    const shareData = {
+      title: `Orçamento #${order.id}`,
+      text: `Olá ${order.clientName}, segue o orçamento da ${siteSettings.companyName} para o veículo ${order.plate}.`,
+      files: [pdfFile]
+    };
+
+    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share(shareData);
+        showSuccess('Orçamento compartilhado!');
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          showError('Erro ao compartilhar. Tente baixar o PDF.');
+        }
+      }
+    } else {
+      showError('Seu navegador não suporta compartilhamento de arquivos. Use o botão de Download.');
+    }
   };
 
   React.useEffect(() => {
@@ -1322,7 +1346,7 @@ const Dashboard = () => {
                       </p>
                     </div>
 
-                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Regras de negócio atualizadas!');}} className="w-full bg-blue-600">
+                    <Button onClick={() => {localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings)); showSuccess('Regras de negócio updated!');}} className="w-full bg-blue-600">
                       <Save className="mr-2 h-4 w-4" /> Salvar Regras
                     </Button>
                   </CardContent>
@@ -1431,6 +1455,7 @@ const Dashboard = () => {
         onDownload={(order) => generateServiceOrderPDF(order, siteSettings)}
         onSendEmail={handleSendEmail}
         onSendWhatsApp={handleSendWhatsAppOrder}
+        onShare={handleShareOrder}
       />
     </div>
   );
