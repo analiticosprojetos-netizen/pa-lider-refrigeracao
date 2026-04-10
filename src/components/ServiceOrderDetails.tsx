@@ -1,10 +1,11 @@
 "use client";
 
 import React from 'react';
-import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck, Percent } from 'lucide-react';
+import { Download, Mail, User, Truck, AlertCircle, Package, Calendar, ShieldCheck, Percent, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format, parseISO } from 'date-fns';
 
 interface ServiceOrderDetailsProps {
   order: any;
@@ -17,8 +18,16 @@ interface ServiceOrderDetailsProps {
 const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }: ServiceOrderDetailsProps) => {
   if (!order) return null;
 
-  const totalLabor = (order.laborValue || 0) + (order.servicesValue || 0);
   const subtotal = order.subtotal || order.total + (order.discountValue || 0);
+
+  const formatDateTime = (isoString: string) => {
+    if (!isoString) return 'Não informado';
+    try {
+      return format(parseISO(isoString), 'dd/MM/yyyy HH:mm');
+    } catch (e) {
+      return isoString;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -71,18 +80,36 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
-              <AlertCircle size={16} /> Diagnóstico Técnico
-            </h3>
-            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
-              <div>
-                <p className="text-[10px] font-bold text-blue-400 uppercase">Problema Relatado</p>
-                <p className="text-sm">{order.problem || 'Nenhum relato.'}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
+                <AlertCircle size={16} /> Diagnóstico Técnico
+              </h3>
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3 h-full">
+                <div>
+                  <p className="text-[10px] font-bold text-blue-400 uppercase">Problema Relatado</p>
+                  <p className="text-sm">{order.problem || 'Nenhum relato.'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-blue-400 uppercase">Diagnóstico</p>
+                  <p className="text-sm">{order.diagnosis || 'Nenhum diagnóstico.'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-blue-400 uppercase">Diagnóstico</p>
-                <p className="text-sm">{order.diagnosis || 'Nenhum diagnóstico.'}</p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 uppercase tracking-wider">
+                <Clock size={16} /> Cronograma de Execução
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4 h-full flex flex-col justify-center">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Início:</span>
+                  <span className="text-sm font-bold text-blue-900">{formatDateTime(order.startTime)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Fim:</span>
+                  <span className="text-sm font-bold text-blue-900">{formatDateTime(order.endTime)}</span>
+                </div>
               </div>
             </div>
           </div>

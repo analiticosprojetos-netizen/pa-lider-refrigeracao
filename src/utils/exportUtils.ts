@@ -1,6 +1,7 @@
-import { jsPDF } from "jsPDF";
+import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { format, parseISO } from 'date-fns';
 
 export const exportToExcel = (data: any[], fileName: string) => {
   try {
@@ -24,27 +25,32 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
   const phone = companyInfo.whatsapp || "(11) 99999-9999";
   const address = companyInfo.address || "Av. Industrial, 1000 - Setor de Transportes";
 
+  const formatDateTime = (isoString: string) => {
+    if (!isoString) return 'N/A';
+    try {
+      return format(parseISO(isoString), 'dd/MM/yyyy HH:mm');
+    } catch (e) {
+      return isoString;
+    }
+  };
+
   try {
     const doc = new jsPDF();
     
-    // --- CABEÇALHO PROFISSIONAL ---
     doc.setFillColor(26, 54, 93);
     doc.rect(0, 0, 210, 45, "F");
     
-    // Logo ou Nome da Empresa
     if (logo) {
       try {
-        doc.addImage(logo, 'PNG', 15, 8, 30, 30); // Logo no topo esquerdo
+        doc.addImage(logo, 'PNG', 15, 8, 30, 30);
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text(companyName.toUpperCase(), 50, 22);
-        
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 50, 30);
       } catch (e) {
-        // Fallback se a imagem falhar
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(22);
         doc.setFont("helvetica", "bold");
@@ -55,13 +61,11 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.text(companyName.toUpperCase(), 15, 22);
-      
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 15, 30);
     }
     
-    // Info da Empresa no Topo Direito (Alinhado à Direita para não cortar)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
     doc.text(`CNPJ: ${cnpj}`, 195, 20, { align: 'right' });
@@ -72,7 +76,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.setFont("helvetica", "bold");
     doc.text(`ORÇAMENTO #${String(order.id).toUpperCase()}`, 195, 40, { align: 'right' });
 
-    // --- DADOS DO CLIENTE ---
     doc.setTextColor(26, 54, 93);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -88,7 +91,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.text(`Telefone: ${order.phone || 'N/A'}`, 110, 65);
     doc.text(`Email: ${order.email || 'N/A'}`, 110, 70);
 
-    // --- DADOS DO VEÍCULO ---
     doc.setTextColor(26, 54, 93);
     doc.setFont("helvetica", "bold");
     doc.text("VEÍCULO E EQUIPAMENTO", 15, 85);
@@ -101,21 +103,23 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.text(`Marca Equip.: ${order.equipBrand}`, 110, 95);
     doc.text(`Modelo Equip.: ${order.equipModel}`, 110, 100);
 
-    // --- DIAGNÓSTICO ---
     doc.setTextColor(26, 54, 93);
     doc.setFont("helvetica", "bold");
-    doc.text("DIAGNÓSTICO TÉCNICO", 15, 115);
+    doc.text("CRONOGRAMA E DIAGNÓSTICO", 15, 115);
     doc.line(15, 117, 195, 117);
     
     doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Início: ${formatDateTime(order.startTime)}`, 15, 125);
+    doc.text(`Fim: ${formatDateTime(order.endTime)}`, 110, 125);
+
     doc.setFont("helvetica", "normal");
     const prob = doc.splitTextToSize(`Problema: ${order.problem || 'Não informado'}`, 180);
-    doc.text(prob, 15, 125);
+    doc.text(prob, 15, 135);
     
     const diag = doc.splitTextToSize(`Diagnóstico: ${order.diagnosis || 'Não informado'}`, 180);
-    doc.text(diag, 15, 135 + (prob.length * 2));
+    doc.text(diag, 15, 145 + (prob.length * 2));
 
-    // --- TABELA DE ITENS ---
     const services = order.services || [];
     const parts = order.parts || [];
     const tableData = [
@@ -124,7 +128,7 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     ];
 
     autoTable(doc, {
-      startY: 155,
+      startY: 165,
       head: [["Descrição", "Tipo", "Qtd", "Unitário", "Subtotal"]],
       body: tableData,
       headStyles: { fillColor: [26, 54, 93], fontSize: 10, halign: 'center' },
@@ -140,7 +144,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-    // --- TOTAIS ---
     doc.setFillColor(245, 245, 245);
     doc.rect(130, finalY, 65, 35, "F");
     doc.setTextColor(26, 54, 93);
@@ -163,7 +166,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.text(`TOTAL GERAL:`, 135, finalY + 28);
     doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 28, { align: 'right' });
 
-    // --- RODAPÉ / GARANTIA ---
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
     doc.text(`Garantia: ${order.warranty}`, 15, finalY + 10);
@@ -174,7 +176,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
       doc.text(obs, 15, finalY + 25);
     }
 
-    // --- RODAPÉ FIXO DA EMPRESA ---
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -189,6 +190,6 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
     doc.save(`Orcamento_${companyName.replace(/\s+/g, '_')}_${order.id}.pdf`);
   } catch (error) {
     console.error("Erro PDF:", error);
-    alert("Erro ao gerar PDF profissional. Verifique os dados.");
+    alert("Erro ao gerar PDF profissional.");
   }
 };

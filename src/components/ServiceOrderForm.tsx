@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X, ShieldCheck, Percent } from 'lucide-react';
+import { Plus, Trash2, Save, User, Truck, AlertCircle, Search, X, ShieldCheck, Percent, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from '@/utils/toast';
 
-// Base de dados de equipamentos comuns no mercado brasileiro
 const EQUIPMENT_DATABASE: Record<string, string[]> = {
   "Thermo King": [
     "SLXi 100", "SLXi 200", "SLXi 300", "SLXi 400", "SLXi Spectrum", 
@@ -105,6 +104,7 @@ const ServiceOrderForm = ({
     clientName: '', document: '', phone: '', email: '',
     plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
     serviceType: 'Corretiva', problem: '', diagnosis: '',
+    startTime: '', endTime: '',
     travelValue: 0,
     discountPercent: 0,
     discountValue: 0,
@@ -114,19 +114,17 @@ const ServiceOrderForm = ({
   const [services, setServices] = React.useState<Item[]>([]);
   const [parts, setParts] = React.useState<Item[]>([]);
 
-  // Função para formatar texto (Primeira letra de cada palavra em maiúsculo)
   const formatToStandardCase = (str: string) => {
     if (!str) return str;
     return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   };
 
-  // Lista de placas vinculadas ao cliente selecionado
   const clientPlates = React.useMemo(() => {
     if (!formData.clientName) return [];
     const plates = previousOrders
       .filter(o => o.clientName.toLowerCase() === formData.clientName.toLowerCase())
       .map(o => o.plate.toUpperCase());
-    return Array.from(new Set(plates)); // Apenas placas únicas
+    return Array.from(new Set(plates));
   }, [formData.clientName, previousOrders]);
 
   const formatPhone = (value: string) => {
@@ -145,6 +143,7 @@ const ServiceOrderForm = ({
       clientName: '', document: '', phone: '', email: '',
       plate: '', vehicleModel: '', equipBrand: '', equipModel: '',
       serviceType: 'Corretiva', problem: '', diagnosis: '',
+      startTime: '', endTime: '',
       travelValue: 0,
       discountPercent: 0,
       discountValue: 0,
@@ -168,6 +167,8 @@ const ServiceOrderForm = ({
         serviceType: initialData.serviceType || 'Corretiva',
         problem: initialData.problem || '',
         diagnosis: initialData.diagnosis || '',
+        startTime: initialData.startTime || '',
+        endTime: initialData.endTime || '',
         travelValue: initialData.travelValue || 0,
         discountPercent: initialData.discountPercent || 0,
         discountValue: initialData.discountValue || 0,
@@ -187,7 +188,6 @@ const ServiceOrderForm = ({
     setFormData(prev => ({ ...prev, plate: upperPlate }));
     
     if (!initialData) {
-      // Busca no histórico se essa placa já existe para o cliente atual ou qualquer cliente
       const pastOrder = previousOrders.find(o => 
         o.plate.toUpperCase() === upperPlate && 
         (formData.clientName ? o.clientName.toLowerCase() === formData.clientName.toLowerCase() : true)
@@ -199,13 +199,11 @@ const ServiceOrderForm = ({
           vehicleModel: pastOrder.vehicleModel,
           equipBrand: pastOrder.equipBrand,
           equipModel: pastOrder.equipModel,
-          // Se o cliente ainda não foi preenchido, preenche também
           clientName: prev.clientName || pastOrder.clientName,
           document: prev.document || pastOrder.document,
           phone: prev.phone || pastOrder.phone,
           email: prev.email || pastOrder.email
         }));
-        showSuccess('Dados do veículo recuperados do histórico!');
       }
     }
   };
@@ -261,7 +259,6 @@ const ServiceOrderForm = ({
   const servicesTotal = services.reduce((acc, s) => acc + s.value, 0);
   const subtotal = partsTotal + servicesTotal + Number(formData.travelValue);
   
-  // Lógica de Desconto
   const handleDiscountPercentChange = (percent: number) => {
     const value = (subtotal * percent) / 100;
     setFormData({ ...formData, discountPercent: percent, discountValue: value });
@@ -281,8 +278,6 @@ const ServiceOrderForm = ({
     if (!newId) {
       const now = new Date();
       const datePrefix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-      
-      // Filtra orçamentos do dia atual para encontrar o próximo número sequencial
       const todayOrders = previousOrders.filter(o => o.id.startsWith(datePrefix));
       let nextNum = 1;
       if (todayOrders.length > 0) {
@@ -318,13 +313,9 @@ const ServiceOrderForm = ({
 
     onSave(order, customerData);
     showSuccess(initialData ? 'Orçamento atualizado!' : 'Orçamento gerado com sucesso!');
-    
-    if (!initialData) {
-      resetForm();
-    }
+    if (!initialData) resetForm();
   };
 
-  // Sugestões de modelos baseadas na marca selecionada
   const modelSuggestions = formData.equipBrand ? (EQUIPMENT_DATABASE[formData.equipBrand] || []) : [];
 
   return (
@@ -466,21 +457,50 @@ const ServiceOrderForm = ({
           </Card>
         </div>
 
-        <Card className="border-blue-100 shadow-sm">
-          <CardHeader className="bg-blue-50/50 border-b border-blue-50">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><AlertCircle size={16}/> DIAGNÓSTICO TÉCNICO</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Problema Relatado</label>
-              <Textarea value={formData.problem} onChange={e => setFormData({...formData, problem: e.target.value})} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Diagnóstico Técnico</label>
-              <Textarea value={formData.diagnosis} onChange={e => setFormData({...formData, diagnosis: e.target.value})} />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="border-blue-100 shadow-sm">
+            <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><AlertCircle size={16}/> DIAGNÓSTICO TÉCNICO</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Problema Relatado</label>
+                <Textarea value={formData.problem} onChange={e => setFormData({...formData, problem: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Diagnóstico Técnico</label>
+                <Textarea value={formData.diagnosis} onChange={e => setFormData({...formData, diagnosis: e.target.value})} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-100 shadow-sm">
+            <CardHeader className="bg-blue-50/50 border-b border-blue-50">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-900"><Clock size={16}/> CRONOGRAMA DE EXECUÇÃO</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Início do Serviço</label>
+                <Input 
+                  type="datetime-local" 
+                  value={formData.startTime} 
+                  onChange={e => setFormData({...formData, startTime: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Fim do Serviço</label>
+                <Input 
+                  type="datetime-local" 
+                  value={formData.endTime} 
+                  onChange={e => setFormData({...formData, endTime: e.target.value})} 
+                />
+              </div>
+              <p className="col-span-2 text-[10px] text-gray-500 italic">
+                * Estes horários serão impressos no orçamento para controle de produtividade.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="border-blue-100 shadow-sm">
@@ -592,7 +612,6 @@ const ServiceOrderForm = ({
                   </div>
                 </div>
 
-                {/* INDICADOR DE MARGEM / ALERTA DINÂMICO */}
                 {formData.discountPercent > 0 && (
                   <div className={`p-3 rounded-lg text-[10px] font-bold flex items-center gap-2 ${
                     formData.discountPercent >= maxDiscountDanger ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 
