@@ -28,7 +28,7 @@ export const generateServiceOrderPDF = (order: any, settings?: any) => {
   const formatDateTime = (isoString: string) => {
     if (!isoString) return 'N/A';
     try {
-      return format(parseISO(isoString), 'dd/MM/yyyy HH:mm');
+      return format(parseISO(isoString), 'dd/MM/yyyy');
     } catch (e) {
       return isoString;
     }

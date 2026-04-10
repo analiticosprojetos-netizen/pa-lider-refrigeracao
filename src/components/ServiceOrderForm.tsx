@@ -482,7 +482,7 @@ const ServiceOrderForm = ({
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Início do Serviço</label>
                 <Input 
-                  type="datetime-local" 
+                  type="date" 
                   value={formData.startTime} 
                   onChange={e => setFormData({...formData, startTime: e.target.value})} 
                 />
@@ -490,13 +490,13 @@ const ServiceOrderForm = ({
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase">Fim do Serviço</label>
                 <Input 
-                  type="datetime-local" 
+                  type="date" 
                   value={formData.endTime} 
                   onChange={e => setFormData({...formData, endTime: e.target.value})} 
                 />
               </div>
               <p className="col-span-2 text-[10px] text-gray-500 italic">
-                * Estes horários serão impressos no orçamento para controle de produtividade.
+                * Estas datas serão impressas no orçamento para controle de produtividade.
               </p>
             </CardContent>
           </Card>

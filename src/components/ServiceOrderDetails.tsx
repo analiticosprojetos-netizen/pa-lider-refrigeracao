@@ -23,7 +23,8 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail }
   const formatDateTime = (isoString: string) => {
     if (!isoString) return 'Não informado';
     try {
-      return format(parseISO(isoString), 'dd/MM/yyyy HH:mm');
+      // Se a string for apenas YYYY-MM-DD, parseISO funciona corretamente
+      return format(parseISO(isoString), 'dd/MM/yyyy');
     } catch (e) {
       return isoString;
     }
