@@ -4,14 +4,13 @@ import React from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Receipt, Plus, Trash2, 
   AlertCircle, Wallet, PieChart, Calendar, ArrowUpRight, ArrowDownRight,
-  Percent, CheckCircle2, Clock, Edit2, Save, X
+  Percent
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
 
 interface Expense {
@@ -19,9 +18,8 @@ interface Expense {
   description: string;
   value: number;
   category: string;
-  dueDate: string;
-  paymentDate?: string;
-  status: 'Pago' | 'Em Aberto';
+  date: string;
+  recurring: boolean;
 }
 
 interface FinanceTabProps {
@@ -30,14 +28,12 @@ interface FinanceTabProps {
 
 const FinanceTab = ({ orders }: FinanceTabProps) => {
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
-  const [editingExpense, setEditingExpense] = React.useState<Expense | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  
   const [newExpense, setNewExpense] = React.useState({
     description: '',
     value: '',
     category: 'Fixo',
-    dueDate: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    recurring: false
   });
 
   React.useEffect(() => {
@@ -62,42 +58,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       description: newExpense.description,
       value: Number(newExpense.value),
       category: newExpense.category,
-      dueDate: newExpense.dueDate,
-      status: 'Em Aberto'
+      date: newExpense.date,
+      recurring: newExpense.recurring
     };
 
     saveExpenses([expense, ...expenses]);
     setNewExpense({ ...newExpense, description: '', value: '' });
-    showSuccess('Despesa registrada como "Em Aberto"!');
-  };
-
-  const toggleStatus = (id: string) => {
-    const updated = expenses.map(e => {
-      if (e.id === id) {
-        const isPaying = e.status === 'Em Aberto';
-        return { 
-          ...e, 
-          status: isPaying ? 'Pago' : 'Em Aberto',
-          paymentDate: isPaying ? new Date().toISOString().split('T')[0] : undefined
-        } as Expense;
-      }
-      return e;
-    });
-    saveExpenses(updated);
-    showSuccess('Status da despesa atualizado!');
-  };
-
-  const handleEditClick = (expense: Expense) => {
-    setEditingExpense({ ...expense });
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingExpense) return;
-    const updated = expenses.map(e => e.id === editingExpense.id ? editingExpense : e);
-    saveExpenses(updated);
-    setIsEditModalOpen(false);
-    showSuccess('Despesa atualizada!');
+    showSuccess('Despesa registrada!');
   };
 
   const deleteExpense = (id: string) => {
@@ -111,19 +78,16 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     .filter(o => o.status === 'Executado')
     .reduce((acc, o) => acc + o.total, 0);
 
-  const totalPaidExpenses = expenses
-    .filter(e => e.status === 'Pago')
-    .reduce((acc, e) => acc + e.value, 0);
-
-  const totalPendingExpenses = expenses
-    .filter(e => e.status === 'Em Aberto')
-    .reduce((acc, e) => acc + e.value, 0);
+  const revenuePending = orders
+    .filter(o => o.status === 'Pendente')
+    .reduce((acc, o) => acc + o.total, 0);
 
   const totalDiscounts = orders
     .filter(o => o.status === 'Executado')
     .reduce((acc, o) => acc + (o.discountValue || 0), 0);
 
-  const netProfit = revenueExecuted - totalPaidExpenses;
+  const totalExpenses = expenses.reduce((acc, e) => acc + e.value, 0);
+  const netProfit = revenueExecuted - totalExpenses;
 
   return (
     <div className="space-y-8">
@@ -137,25 +101,25 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           subtitle="Dinheiro em caixa"
         />
         <FinanceCard 
-          title="Saídas (Pago)" 
-          value={totalPaidExpenses} 
+          title="Saídas (Despesas)" 
+          value={totalExpenses} 
           icon={<ArrowDownRight className="text-red-500" />} 
           color="border-red-100 bg-red-50/30"
-          subtitle="Total já quitado"
-        />
-        <FinanceCard 
-          title="Contas a Pagar" 
-          value={totalPendingExpenses} 
-          icon={<Clock className="text-orange-500" />} 
-          color="border-orange-100 bg-orange-50/30"
-          subtitle="Dívidas em aberto"
+          subtitle="Custos operacionais"
         />
         <FinanceCard 
           title="Saldo Real" 
           value={netProfit} 
           icon={<Wallet className={netProfit >= 0 ? "text-blue-500" : "text-red-600"} />} 
           color={netProfit >= 0 ? "border-blue-100 bg-blue-50/30" : "border-red-200 bg-red-50"}
-          subtitle="Lucro (Entradas - Pagos)"
+          subtitle="Lucro líquido atual"
+        />
+        <FinanceCard 
+          title="Descontos Dados" 
+          value={totalDiscounts} 
+          icon={<Percent className="text-orange-500" />} 
+          color="border-orange-100 bg-orange-50/30"
+          subtitle="Total de abatimentos"
         />
       </div>
 
@@ -203,11 +167,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase">Data de Vencimento</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase">Data do Pagamento</label>
                 <Input 
                   type="date" 
-                  value={newExpense.dueDate}
-                  onChange={e => setNewExpense({...newExpense, dueDate: e.target.value})}
+                  value={newExpense.date}
+                  onChange={e => setNewExpense({...newExpense, date: e.target.value})}
                   className="dark:bg-slate-950 dark:border-slate-800"
                 />
               </div>
@@ -230,51 +194,28 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                    <TableHead className="font-bold">Vencimento</TableHead>
+                    <TableHead className="font-bold">Data</TableHead>
                     <TableHead className="font-bold">Descrição</TableHead>
-                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="font-bold">Categoria</TableHead>
                     <TableHead className="text-right font-bold">Valor</TableHead>
                     <TableHead className="text-right font-bold">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {expenses.map((e) => (
-                    <TableRow key={e.id} className="hover:bg-blue-50/10 dark:hover:bg-slate-800/10">
-                      <TableCell className="text-xs text-gray-500 dark:text-gray-400">
-                        <div className="flex flex-col">
-                          <span>{e.dueDate.split('-').reverse().join('/')}</span>
-                          {e.paymentDate && <span className="text-[9px] text-green-500 font-bold">Pago em: {e.paymentDate.split('-').reverse().join('/')}</span>}
-                        </div>
-                      </TableCell>
+                    <TableRow key={e.id} className="hover:bg-red-50/10 dark:hover:bg-red-900/10">
+                      <TableCell className="text-xs text-gray-500 dark:text-gray-400">{e.date.split('-').reverse().join('/')}</TableCell>
+                      <TableCell className="font-medium dark:text-gray-300">{e.description}</TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium dark:text-gray-300">{e.description}</span>
-                          <span className="text-[9px] text-gray-400 uppercase font-bold">{e.category}</span>
-                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400">
+                          {e.category}
+                        </span>
                       </TableCell>
-                      <TableCell>
-                        <button 
-                          onClick={() => toggleStatus(e.id)}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-black uppercase transition-all ${
-                            e.status === 'Pago' 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                              : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                          }`}
-                        >
-                          {e.status === 'Pago' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                          {e.status}
-                        </button>
-                      </TableCell>
-                      <TableCell className="text-right font-bold dark:text-gray-300">R$ {e.value.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-bold text-red-600 dark:text-red-400">R$ {e.value.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditClick(e)}>
-                            <Edit2 size={14} />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteExpense(e.id)}>
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
+                        <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteExpense(e.id)}>
+                          <Trash2 size={16} />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -290,64 +231,24 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
         </Card>
       </div>
 
-      {/* Modal de Edição */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
-          <DialogHeader>
-            <DialogTitle className="text-blue-900 dark:text-white">Editar Despesa</DialogTitle>
-          </DialogHeader>
-          {editingExpense && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Descrição</label>
-                <Input 
-                  value={editingExpense.description} 
-                  onChange={(e) => setEditingExpense({...editingExpense, description: e.target.value})} 
-                  className="dark:bg-slate-950 dark:border-slate-800"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Valor (R$)</label>
-                  <Input 
-                    type="number"
-                    value={editingExpense.value} 
-                    onChange={(e) => setEditingExpense({...editingExpense, value: Number(e.target.value)})} 
-                    className="dark:bg-slate-950 dark:border-slate-800"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Categoria</label>
-                  <Select value={editingExpense.category} onValueChange={v => setEditingExpense({...editingExpense, category: v})}>
-                    <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Fixo">Fixo</SelectItem>
-                      <SelectItem value="Variável">Variável</SelectItem>
-                      <SelectItem value="Pessoal">Pessoal</SelectItem>
-                      <SelectItem value="Outros">Outros</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Vencimento</label>
-                <Input 
-                  type="date"
-                  value={editingExpense.dueDate} 
-                  onChange={(e) => setEditingExpense({...editingExpense, dueDate: e.target.value})} 
-                  className="dark:bg-slate-950 dark:border-slate-800"
-                />
-              </div>
+      {/* Resumo de Orçamentos Pendentes */}
+      <Card className="shadow-lg border-yellow-100 dark:border-yellow-900/30 bg-yellow-50/20 dark:bg-yellow-900/5">
+        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-2xl">
+              <DollarSign className="text-yellow-600 dark:text-yellow-400" size={32} />
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="dark:border-slate-800">Cancelar</Button>
-            <Button className="bg-blue-600" onClick={handleSaveEdit}>
-              <Save className="mr-2 h-4 w-4" /> Salvar Alterações
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <div>
+              <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-400">Previsão de Recebimento</h3>
+              <p className="text-sm text-yellow-600 dark:text-yellow-500/70">Valores de orçamentos que ainda estão como "Pendente"</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-black text-yellow-700 dark:text-yellow-400">R$ {revenuePending.toFixed(2)}</p>
+            <p className="text-xs font-bold text-yellow-600 uppercase tracking-widest">Aguardando Execução</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
