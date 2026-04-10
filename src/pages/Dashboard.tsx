@@ -981,6 +981,7 @@ const Dashboard = () => {
                                   )}
                                   <Button title="Visualizar" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => handleViewDetails(order)}><Eye size={16}/></Button>
                                   <Button title="Baixar PDF" size="sm" variant="ghost" className="dark:text-gray-400" onClick={() => generateServiceOrderPDF(order, siteSettings)}><Download size={16}/></Button>
+                                  <Button title="Compartilhar PDF via WhatsApp" size="sm" variant="ghost" className="text-[#25D366] hover:bg-[#25D366]/10" onClick={() => handleShareOrder(order)}><MessageCircle size={16}/></Button>
                                   {hasPermission('orcamentos', 'delete') && (
                                     <Button title="Excluir Permanentemente" size="sm" variant="ghost" className="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteOrder(order.id)}><Trash2 size={16}/></Button>
                                   )}
