@@ -37,7 +37,7 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800">
         <DialogHeader className="border-b pb-4 dark:border-slate-800">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div>
               <DialogTitle className="text-2xl font-bold text-blue-900 dark:text-white">
                 Orçamento #{order.id}
@@ -46,18 +46,18 @@ const ServiceOrderDetails = ({ order, isOpen, onClose, onDownload, onSendEmail, 
                 <Calendar size={12} /> Gerado em: {order.date}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => onDownload(order)} className="dark:border-slate-700">
+            <div className="flex flex-row flex-wrap items-center gap-2 w-full lg:w-auto">
+              <Button size="sm" variant="outline" onClick={() => onDownload(order)} className="dark:border-slate-700 h-9">
                 <Download className="mr-2 h-4 w-4" /> PDF
               </Button>
-              <Button size="sm" variant="outline" onClick={() => onSendEmail(order)} className="dark:border-slate-700">
+              <Button size="sm" variant="outline" onClick={() => onSendEmail(order)} className="dark:border-slate-700 h-9">
                 <Mail className="mr-2 h-4 w-4" /> E-mail
               </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-none" onClick={() => onShare(order)}>
-                <Share2 className="mr-2 h-4 w-4" /> Compartilhar PDF
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-none h-9" onClick={() => onShare(order)}>
+                <Share2 className="mr-2 h-4 w-4" /> Compartilhar
               </Button>
-              <Button size="sm" className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none" onClick={() => onSendWhatsApp(order)}>
-                <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp (Texto)
+              <Button size="sm" className="bg-[#25D366] hover:bg-[#128C7E] text-white border-none h-9" onClick={() => onSendWhatsApp(order)}>
+                <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
               </Button>
             </div>
           </div>
