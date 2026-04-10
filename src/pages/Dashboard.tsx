@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Plus, Minus, LogOut, PlusCircle, Search, Snowflake, Trash2, 
   BarChart3, AlertTriangle, Settings, Save, Globe, Image as ImageIcon,
-  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown, ExternalLink, MessageCircle
+  History, User, ArrowUpCircle, ArrowDownCircle, X, Clock, FileText, Mail, Download, Table as TableIcon, Play, Ban, Users, Eye, Edit2, ShieldCheck, ShieldAlert, Upload, Info, Calendar, MapPin, ChevronLeft, ChevronRight, RotateCcw, Percent, TrendingDown, ExternalLink, MessageCircle, Landmark
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import ServiceOrderForm from '@/components/ServiceOrderForm';
 import ServiceOrderDetails from '@/components/ServiceOrderDetails';
 import UserAdminSettings, { UserProfile } from '@/components/UserAdminSettings';
 import AnalyticsTab from '@/components/AnalyticsTab';
+import FinanceTab from '@/components/FinanceTab';
 import { generateServiceOrderPDF, exportToExcel, getServiceOrderFile } from '@/utils/exportUtils';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -645,6 +646,7 @@ const Dashboard = () => {
             {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6 flex-shrink-0">Estoque</TabsTrigger>}
             {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
+            {currentUser.permissions.config.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-6 flex-shrink-0">Analytics</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
           </TabsList>
@@ -1091,6 +1093,11 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* CONTEÚDO FINANCEIRO */}
+          <TabsContent value="financeiro">
+            <FinanceTab orders={orders} />
           </TabsContent>
 
           {/* CONTEÚDO ANALYTICS */}
