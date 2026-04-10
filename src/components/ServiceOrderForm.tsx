@@ -324,6 +324,9 @@ const ServiceOrderForm = ({
     ? differenceInDays(parseISO(formData.endTime), parseISO(formData.startTime)) + 1
     : 0;
 
+  // Filtra os primeiros 4 serviços para a linha do tempo
+  const timelineServices = services.filter(s => s.description).slice(0, 4);
+
   return (
     <div className="space-y-8">
       {initialData && (
@@ -504,7 +507,7 @@ const ServiceOrderForm = ({
                 </div>
               </div>
 
-              {/* Visualização Estilo Gantt */}
+              {/* Visualização Estilo Gantt com Serviços */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Linha do Tempo do Projeto</span>
@@ -515,19 +518,51 @@ const ServiceOrderForm = ({
                   )}
                 </div>
                 
-                <div className="relative h-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex items-center px-4 overflow-hidden">
+                <div className="relative min-h-[80px] bg-gray-50 rounded-xl border border-dashed border-gray-200 flex flex-col justify-center px-4 py-4 overflow-hidden">
                   {formData.startTime && formData.endTime ? (
                     durationDays > 0 ? (
-                      <div className="w-full flex flex-col gap-1">
+                      <div className="w-full flex flex-col gap-3">
+                        {/* Datas no topo */}
                         <div className="flex justify-between text-[9px] text-gray-400 font-bold uppercase">
                           <span>{format(parseISO(formData.startTime), 'dd/MM')}</span>
                           <span>{format(parseISO(formData.endTime), 'dd/MM')}</span>
                         </div>
+                        
+                        {/* Barra com Marcadores */}
                         <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                           <div 
                             className="absolute inset-y-0 left-0 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.3)] animate-in slide-in-from-left duration-500"
                             style={{ width: '100%' }}
                           />
+                          {/* Marcadores de Divisão */}
+                          {timelineServices.length > 1 && timelineServices.map((_, idx) => (
+                            idx > 0 && (
+                              <div 
+                                key={`marker-${idx}`}
+                                className="absolute top-0 bottom-0 w-0.5 bg-white/30"
+                                style={{ left: `${(idx / timelineServices.length) * 100}%` }}
+                              />
+                            )
+                          ))}
+                        </div>
+
+                        {/* Nomes dos Serviços abaixo da barra */}
+                        <div className="flex w-full">
+                          {timelineServices.length > 0 ? (
+                            timelineServices.map((s, idx) => (
+                              <div 
+                                key={`label-${idx}`}
+                                className="text-[8px] font-bold text-blue-900/70 uppercase truncate px-1 text-center"
+                                style={{ width: `${100 / timelineServices.length}%` }}
+                              >
+                                {s.description}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="w-full text-center text-[8px] text-gray-400 italic">
+                              Adicione serviços para visualizar no cronograma
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (
