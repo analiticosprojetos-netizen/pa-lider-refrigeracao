@@ -232,6 +232,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                       <SelectItem value="Variável">Variável</SelectItem>
                       <SelectItem value="Serviço">Serviço</SelectItem>
                       <SelectItem value="Venda">Venda</SelectItem>
+                      <SelectItem value="Piedade">Piedade</SelectItem>
                       <SelectItem value="Outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
@@ -365,6 +366,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                       <SelectItem value="Variável">Variável</SelectItem>
                       <SelectItem value="Serviço">Serviço</SelectItem>
                       <SelectItem value="Venda">Venda</SelectItem>
+                      <SelectItem value="Piedade">Piedade</SelectItem>
                       <SelectItem value="Outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
