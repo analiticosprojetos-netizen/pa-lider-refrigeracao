@@ -43,7 +43,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     value: '',
     category: 'Orçamento',
     date: new Date().toISOString().split('T')[0],
-    status: 'Pendente' as const
+    status: 'Concluído' as const
   });
 
   React.useEffect(() => {
@@ -75,12 +75,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       category: newTransaction.category,
       date: newTransaction.date,
       type: typeToUse,
-      status: 'Pendente'
+      status: 'Concluído',
+      paymentDate: new Date().toLocaleDateString()
     };
 
     saveTransactions([transaction, ...transactions]);
     setNewTransaction({ ...newTransaction, description: '', value: '' });
-    showSuccess(`${typeToUse} registrada com sucesso!`);
+    showSuccess(`${typeToUse} registrada como concluída!`);
   };
 
   const toggleStatus = (id: string) => {
