@@ -937,7 +937,7 @@ const Dashboard = () => {
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
                 <TabsTrigger value="lista" className="flex-shrink-0">Histórico de Orçamentos</TabsTrigger>
                 {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
-                {hasPermission('config', 'view') && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
+                {hasPermission('orcamentos', 'view') && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
