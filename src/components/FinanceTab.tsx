@@ -43,7 +43,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     value: '',
     category: 'Orçamento',
     date: new Date().toISOString().split('T')[0],
-    status: 'Concluído' as const
+    status: 'Pendente' as const
   });
 
   React.useEffect(() => {
@@ -59,7 +59,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     localStorage.setItem('lider_transactions', JSON.stringify(updated));
   };
 
-  const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída', forcedCategory?: string) => {
+  const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída') => {
     e.preventDefault();
     if (!newTransaction.description || !newTransaction.value) {
       showError('Preencha a descrição e o valor.');
@@ -67,22 +67,20 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     }
 
     const typeToUse = forcedType || formType;
-    const categoryToUse = forcedCategory || newTransaction.category;
 
     const transaction: Transaction = {
       id: Math.random().toString(36).substr(2, 6).toUpperCase(),
       description: newTransaction.description,
       value: Number(newTransaction.value),
-      category: categoryToUse,
+      category: newTransaction.category,
       date: newTransaction.date,
       type: typeToUse,
-      status: 'Concluído',
-      paymentDate: new Date().toLocaleDateString()
+      status: 'Pendente'
     };
 
     saveTransactions([transaction, ...transactions]);
     setNewTransaction({ ...newTransaction, description: '', value: '' });
-    showSuccess(`${typeToUse} registrada como concluída!`);
+    showSuccess(`${typeToUse} registrada com sucesso!`);
   };
 
   const toggleStatus = (id: string) => {
@@ -221,7 +219,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={(e) => handleAddTransaction(e, onlyEntrada ? 'Entrada' : undefined, onlyEntrada ? 'Orçamento' : undefined)} className="space-y-4">
+        <form onSubmit={(e) => handleAddTransaction(e, onlyEntrada ? 'Entrada' : undefined)} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
             <Input 
@@ -244,11 +242,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black text-gray-400 uppercase">Categoria</label>
-              <Select 
-                value={onlyEntrada ? 'Orçamento' : newTransaction.category} 
-                onValueChange={v => setNewTransaction({...newTransaction, category: v})}
-                disabled={onlyEntrada}
-              >
+              <Select value={newTransaction.category} onValueChange={v => setNewTransaction({...newTransaction, category: v})}>
                 <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Orçamento">Orçamento</SelectItem>
