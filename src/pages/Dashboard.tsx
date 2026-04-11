@@ -67,6 +67,7 @@ const Dashboard = () => {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
+  const [transactions, setTransactions] = React.useState<any[]>([]);
   const [usersCount, setUsersCount] = React.useState(0);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   
@@ -223,6 +224,9 @@ const Dashboard = () => {
 
     const savedOrders = localStorage.getItem('lider_orders');
     if (savedOrders) setOrders(JSON.parse(savedOrders));
+
+    const savedTransactions = localStorage.getItem('lider_transactions');
+    if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
 
     const savedUsers = localStorage.getItem('lider_users');
     if (savedUsers) setUsersCount(JSON.parse(savedUsers).length);
@@ -1018,7 +1022,7 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="produtividade">
-                <AnalyticsTab orders={orders} usersCount={usersCount} />
+                <AnalyticsTab orders={orders} transactions={transactions} usersCount={usersCount} />
               </TabsContent>
             </Tabs>
           </TabsContent>
