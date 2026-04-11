@@ -54,12 +54,14 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     localStorage.setItem('lider_transactions', JSON.stringify(updated));
   };
 
-  const handleAddTransaction = (e: React.FormEvent) => {
+  const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída') => {
     e.preventDefault();
     if (!newTransaction.description || !newTransaction.value) {
       showError('Preencha a descrição e o valor.');
       return;
     }
+
+    const typeToUse = forcedType || formType;
 
     const transaction: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
@@ -67,13 +69,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       value: Number(newTransaction.value),
       category: newTransaction.category,
       date: newTransaction.date,
-      type: formType,
+      type: typeToUse,
       status: 'Pendente'
     };
 
     saveTransactions([transaction, ...transactions]);
     setNewTransaction({ ...newTransaction, description: '', value: '' });
-    showSuccess(`${formType} registrada com sucesso!`);
+    showSuccess(`${typeToUse} registrada com sucesso!`);
   };
 
   const toggleStatus = (id: string) => {
@@ -137,43 +139,52 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
   const totalPendente = orders.filter(o => o.status === 'Pendente').reduce((acc, o) => acc + o.total, 0);
   const totalCancelado = orders.filter(o => o.status === 'Cancelado').reduce((acc, o) => acc + o.total, 0);
 
-  const TransactionForm = () => (
+  const TransactionForm = ({ onlyEntrada = false }: { onlyEntrada?: boolean }) => (
     <Card className="h-fit shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
       <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
         <div className="flex flex-col gap-4">
           <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
             <Receipt className="text-blue-600" /> Novo Lançamento
           </CardTitle>
-          <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
-            <button 
-              onClick={() => setFormType('Entrada')}
-              className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
-                formType === 'Entrada' 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <ArrowUpRight size={14} /> Entrada
-            </button>
-            <button 
-              onClick={() => setFormType('Saída')}
-              className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
-                formType === 'Saída' 
-                  ? 'bg-red-500 text-white shadow-lg' 
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <ArrowDownRight size={14} /> Saída
-            </button>
-          </div>
+          
+          {!onlyEntrada ? (
+            <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
+              <button 
+                onClick={() => setFormType('Entrada')}
+                className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  formType === 'Entrada' 
+                    ? 'bg-green-500 text-white shadow-lg' 
+                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <ArrowUpRight size={14} /> Entrada
+              </button>
+              <button 
+                onClick={() => setFormType('Saída')}
+                className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  formType === 'Saída' 
+                    ? 'bg-red-500 text-white shadow-lg' 
+                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <ArrowDownRight size={14} /> Saída
+              </button>
+            </div>
+          ) : (
+            <div className="flex p-1 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-900/30">
+              <div className="flex-1 py-2 text-xs font-black uppercase rounded-lg flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
+                <ArrowUpRight size={14} /> Somente Entrada (Orçamentos)
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={handleAddTransaction} className="space-y-4">
+        <form onSubmit={(e) => handleAddTransaction(e, onlyEntrada ? 'Entrada' : undefined)} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
             <Input 
-              placeholder={formType === 'Entrada' ? "Ex: Venda de Peça Avulsa, Aporte..." : "Ex: Aluguel, Luz, Peças..."}
+              placeholder={onlyEntrada || formType === 'Entrada' ? "Ex: Venda de Peça Avulsa, Aporte..." : "Ex: Aluguel, Luz, Peças..."}
               value={newTransaction.description}
               onChange={e => setNewTransaction({...newTransaction, description: e.target.value})}
               className="dark:bg-slate-950 dark:border-slate-800"
@@ -217,10 +228,10 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           <Button 
             type="submit" 
             className={`w-full py-6 font-bold transition-colors ${
-              formType === 'Entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+              onlyEntrada || formType === 'Entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            <Plus className="mr-2 h-4 w-4" /> Lançar {formType}
+            <Plus className="mr-2 h-4 w-4" /> Lançar {onlyEntrada ? 'Entrada' : formType}
           </Button>
         </form>
       </CardContent>
@@ -371,7 +382,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <TransactionForm />
+            <TransactionForm onlyEntrada={true} />
 
             <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
               <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
