@@ -647,7 +647,6 @@ const Dashboard = () => {
             {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
-            {currentUser.permissions.config.view && <TabsTrigger value="analytics" className="px-6 flex-shrink-0">Analytics</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
           </TabsList>
 
@@ -936,6 +935,7 @@ const Dashboard = () => {
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
                 <TabsTrigger value="lista" className="flex-shrink-0">Histórico de Orçamentos</TabsTrigger>
                 {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
+                {currentUser.permissions.config.view && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
@@ -1013,6 +1013,10 @@ const Dashboard = () => {
                   maxDiscountWarning={siteSettings.maxDiscountWarning}
                   maxDiscountDanger={siteSettings.maxDiscountDanger}
                 />
+              </TabsContent>
+
+              <TabsContent value="produtividade">
+                <AnalyticsTab orders={orders} usersCount={usersCount} />
               </TabsContent>
             </Tabs>
           </TabsContent>
@@ -1098,11 +1102,6 @@ const Dashboard = () => {
           {/* CONTEÚDO FINANCEIRO */}
           <TabsContent value="financeiro">
             <FinanceTab orders={orders} />
-          </TabsContent>
-
-          {/* CONTEÚDO ANALYTICS */}
-          <TabsContent value="analytics">
-            <AnalyticsTab orders={orders} usersCount={usersCount} />
           </TabsContent>
 
           {/* CONTEÚDO CONFIGURAÇÕES */}
