@@ -59,7 +59,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     localStorage.setItem('lider_transactions', JSON.stringify(updated));
   };
 
-  const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída') => {
+  const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída', forcedCategory?: string) => {
     e.preventDefault();
     if (!newTransaction.description || !newTransaction.value) {
       showError('Preencha a descrição e o valor.');
@@ -67,12 +67,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     }
 
     const typeToUse = forcedType || formType;
+    const categoryToUse = forcedCategory || newTransaction.category;
 
     const transaction: Transaction = {
       id: Math.random().toString(36).substr(2, 6).toUpperCase(),
       description: newTransaction.description,
       value: Number(newTransaction.value),
-      category: newTransaction.category,
+      category: categoryToUse,
       date: newTransaction.date,
       type: typeToUse,
       status: 'Concluído',
@@ -220,7 +221,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={(e) => handleAddTransaction(e, onlyEntrada ? 'Entrada' : undefined)} className="space-y-4">
+        <form onSubmit={(e) => handleAddTransaction(e, onlyEntrada ? 'Entrada' : undefined, onlyEntrada ? 'Orçamento' : undefined)} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
             <Input 
@@ -243,7 +244,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black text-gray-400 uppercase">Categoria</label>
-              <Select value={newTransaction.category} onValueChange={v => setNewTransaction({...newTransaction, category: v})}>
+              <Select 
+                value={onlyEntrada ? 'Orçamento' : newTransaction.category} 
+                onValueChange={v => setNewTransaction({...newTransaction, category: v})}
+                disabled={onlyEntrada}
+              >
                 <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Orçamento">Orçamento</SelectItem>
