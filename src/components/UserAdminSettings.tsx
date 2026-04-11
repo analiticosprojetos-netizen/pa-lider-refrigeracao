@@ -87,100 +87,10 @@ const UserAdminSettings = () => {
         ...u,
         permissions: {
           ...DEFAULT_PERMISSIONS,
-          ...u.permissions,<dyad-write path="src/components/UserAdminSettings.tsx" description="Finalizando a implementação do controle de sub-permissões financeiras com modal de configuração detalhada.">
-"use client";
-
-import React from 'react';
-import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail, Save, Settings2, Landmark, Receipt, BarChart3, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { showSuccess, showError } from '@/utils/toast';
-
-export interface Permission {
-  view: boolean;
-  edit: boolean;
-  delete: boolean;
-}
-
-export interface FinanceSubPermissions extends Permission {
-  abaLancamentos: boolean;
-  abaRelatorios: boolean;
-  abaFluxoCaixa: boolean;
-  abaContasPagar: boolean;
-  abaContasReceber: boolean;
-}
-
-export interface RolePermissions {
-  estoque: Permission;
-  orcamentos: Permission;
-  clientes: Permission;
-  historico: Permission;
-  financeiro: FinanceSubPermissions;
-  config: Permission;
-}
-
-export interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  password?: string;
-  role: string;
-  permissions: RolePermissions;
-}
-
-const DEFAULT_PERMISSIONS: RolePermissions = {
-  estoque: { view: true, edit: false, delete: false },
-  orcamentos: { view: true, edit: false, delete: false },
-  clientes: { view: true, edit: false, delete: false },
-  historico: { view: true, edit: false, delete: false },
-  financeiro: { 
-    view: false, edit: false, delete: false,
-    abaLancamentos: false, abaRelatorios: false, abaFluxoCaixa: false, abaContasPagar: false, abaContasReceber: false
-  },
-  config: { view: false, edit: false, delete: false },
-};
-
-const FULL_PERMISSIONS: RolePermissions = {
-  estoque: { view: true, edit: true, delete: true },
-  orcamentos: { view: true, edit: true, delete: true },
-  clientes: { view: true, edit: true, delete: true },
-  historico: { view: true, edit: true, delete: true },
-  financeiro: { 
-    view: true, edit: true, delete: true,
-    abaLancamentos: true, abaRelatorios: true, abaFluxoCaixa: true, abaContasPagar: true, abaContasReceber: true
-  },
-  config: { view: true, edit: true, delete: true },
-};
-
-const UserAdminSettings = () => {
-  const [users, setUsers] = React.useState<UserProfile[]>([]);
-  const [roles, setRoles] = React.useState<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA']);
-  const [newRoleName, setNewRoleName] = React.useState('');
-  const [newUser, setNewUser] = React.useState({ username: '', email: '', password: '', role: 'ANALISTA' });
-  
-  const [editingUser, setEditingUser] = React.useState<UserProfile | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  
-  const [financeConfigUser, setFinanceConfigUser] = React.useState<UserProfile | null>(null);
-  const [isFinanceModalOpen, setIsFinanceModalOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    const savedUsers = localStorage.getItem('lider_users');
-    if (savedUsers) {
-      const parsedUsers = JSON.parse(savedUsers);
-      const migratedUsers = parsedUsers.map((u: UserProfile) => ({
-        ...u,
-        permissions: {
-          ...DEFAULT_PERMISSIONS,
           ...u.permissions,
           financeiro: {
             ...DEFAULT_PERMISSIONS.financeiro,
-            ...u.permissions.financeiro
+            ...(u.permissions?.financeiro || {})
           }
         }
       }));
