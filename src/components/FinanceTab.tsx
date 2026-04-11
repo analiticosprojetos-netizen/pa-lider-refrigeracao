@@ -137,6 +137,96 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
   const totalPendente = orders.filter(o => o.status === 'Pendente').reduce((acc, o) => acc + o.total, 0);
   const totalCancelado = orders.filter(o => o.status === 'Cancelado').reduce((acc, o) => acc + o.total, 0);
 
+  const TransactionForm = () => (
+    <Card className="h-fit shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
+        <div className="flex flex-col gap-4">
+          <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
+            <Receipt className="text-blue-600" /> Novo Lançamento
+          </CardTitle>
+          <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
+            <button 
+              onClick={() => setFormType('Entrada')}
+              className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
+                formType === 'Entrada' 
+                  ? 'bg-green-500 text-white shadow-lg' 
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <ArrowUpRight size={14} /> Entrada
+            </button>
+            <button 
+              onClick={() => setFormType('Saída')}
+              className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
+                formType === 'Saída' 
+                  ? 'bg-red-500 text-white shadow-lg' 
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <ArrowDownRight size={14} /> Saída
+            </button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <form onSubmit={handleAddTransaction} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
+            <Input 
+              placeholder={formType === 'Entrada' ? "Ex: Venda de Peça Avulsa, Aporte..." : "Ex: Aluguel, Luz, Peças..."}
+              value={newTransaction.description}
+              onChange={e => setNewTransaction({...newTransaction, description: e.target.value})}
+              className="dark:bg-slate-950 dark:border-slate-800"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase">Valor (R$)</label>
+              <Input 
+                type="number" 
+                placeholder="0.00" 
+                value={newTransaction.value}
+                onChange={e => setNewTransaction({...newTransaction, value: e.target.value})}
+                className="dark:bg-slate-950 dark:border-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase">Categoria</label>
+              <Select value={newTransaction.category} onValueChange={v => setNewTransaction({...newTransaction, category: v})}>
+                <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Fixo">Fixo</SelectItem>
+                  <SelectItem value="Variável">Variável</SelectItem>
+                  <SelectItem value="Serviço">Serviço</SelectItem>
+                  <SelectItem value="Venda">Venda</SelectItem>
+                  <SelectItem value="Piedade">Piedade</SelectItem>
+                  <SelectItem value="Outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-gray-400 uppercase">Data</label>
+            <Input 
+              type="date" 
+              value={newTransaction.date}
+              onChange={e => setNewTransaction({...newTransaction, date: e.target.value})}
+              className="dark:bg-slate-950 dark:border-slate-800"
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className={`w-full py-6 font-bold transition-colors ${
+              formType === 'Entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Lançar {formType}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-8">
       <Tabs defaultValue="gastos" className="w-full">
@@ -179,94 +269,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Lançamento Financeiro */}
-            <Card className="h-fit shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                <div className="flex flex-col gap-4">
-                  <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
-                    <Receipt className="text-blue-600" /> Novo Lançamento
-                  </CardTitle>
-                  <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
-                    <button 
-                      onClick={() => setFormType('Entrada')}
-                      className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
-                        formType === 'Entrada' 
-                          ? 'bg-green-500 text-white shadow-lg' 
-                          : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <ArrowUpRight size={14} /> Entrada
-                    </button>
-                    <button 
-                      onClick={() => setFormType('Saída')}
-                      className={`flex-1 py-2 text-xs font-black uppercase rounded-lg transition-all flex items-center justify-center gap-2 ${
-                        formType === 'Saída' 
-                          ? 'bg-red-500 text-white shadow-lg' 
-                          : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <ArrowDownRight size={14} /> Saída
-                    </button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <form onSubmit={handleAddTransaction} className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase">Descrição</label>
-                    <Input 
-                      placeholder={formType === 'Entrada' ? "Ex: Venda de Peça Avulsa, Aporte..." : "Ex: Aluguel, Luz, Peças..."}
-                      value={newTransaction.description}
-                      onChange={e => setNewTransaction({...newTransaction, description: e.target.value})}
-                      className="dark:bg-slate-950 dark:border-slate-800"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase">Valor (R$)</label>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        value={newTransaction.value}
-                        onChange={e => setNewTransaction({...newTransaction, value: e.target.value})}
-                        className="dark:bg-slate-950 dark:border-slate-800"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase">Categoria</label>
-                      <Select value={newTransaction.category} onValueChange={v => setNewTransaction({...newTransaction, category: v})}>
-                        <SelectTrigger className="dark:bg-slate-950 dark:border-slate-800"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Fixo">Fixo</SelectItem>
-                          <SelectItem value="Variável">Variável</SelectItem>
-                          <SelectItem value="Serviço">Serviço</SelectItem>
-                          <SelectItem value="Venda">Venda</SelectItem>
-                          <SelectItem value="Piedade">Piedade</SelectItem>
-                          <SelectItem value="Outros">Outros</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase">Data</label>
-                    <Input 
-                      type="date" 
-                      value={newTransaction.date}
-                      onChange={e => setNewTransaction({...newTransaction, date: e.target.value})}
-                      className="dark:bg-slate-950 dark:border-slate-800"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className={`w-full py-6 font-bold transition-colors ${
-                      formType === 'Entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Lançar {formType}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            <TransactionForm />
 
             {/* Tabela de Lançamentos */}
             <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
@@ -367,55 +370,59 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
             />
           </div>
 
-          <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
-            <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
-                <FileText className="text-blue-600" /> Impacto Financeiro por Orçamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                      <TableHead className="font-bold">ID</TableHead>
-                      <TableHead className="font-bold">Cliente</TableHead>
-                      <TableHead className="font-bold">Data</TableHead>
-                      <TableHead className="font-bold">Status</TableHead>
-                      <TableHead className="text-right font-bold">Valor Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orders.map((order) => (
-                      <TableRow key={order.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/30">
-                        <TableCell className="font-bold text-blue-600 dark:text-blue-400">#{order.id}</TableCell>
-                        <TableCell className="dark:text-gray-300">{order.clientName}</TableCell>
-                        <TableCell className="text-xs text-gray-500 dark:text-gray-400">{order.date}</TableCell>
-                        <TableCell>
-                          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${
-                            order.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
-                            order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                          }`}>
-                            {order.status === 'Executado' ? <CheckCircle2 size={12} /> : order.status === 'Pendente' ? <Clock size={12} /> : <Ban size={12} />}
-                            {order.status}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-bold dark:text-gray-300">
-                          R$ {order.total.toFixed(2)}
-                        </TableCell>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <TransactionForm />
+
+            <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
+                  <FileText className="text-blue-600" /> Impacto Financeiro por Orçamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                        <TableHead className="font-bold">ID</TableHead>
+                        <TableHead className="font-bold">Cliente</TableHead>
+                        <TableHead className="font-bold">Data</TableHead>
+                        <TableHead className="font-bold">Status</TableHead>
+                        <TableHead className="text-right font-bold">Valor Total</TableHead>
                       </TableRow>
-                    ))}
-                    {orders.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-gray-500">Nenhum orçamento encontrado.</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/30">
+                          <TableCell className="font-bold text-blue-600 dark:text-blue-400">#{order.id}</TableCell>
+                          <TableCell className="dark:text-gray-300">{order.clientName}</TableCell>
+                          <TableCell className="text-xs text-gray-500 dark:text-gray-400">{order.date}</TableCell>
+                          <TableCell>
+                            <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${
+                              order.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                              order.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>
+                              {order.status === 'Executado' ? <CheckCircle2 size={12} /> : order.status === 'Pendente' ? <Clock size={12} /> : <Ban size={12} />}
+                              {order.status}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-bold dark:text-gray-300">
+                            R$ {order.total.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {orders.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">Nenhum orçamento encontrado.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
