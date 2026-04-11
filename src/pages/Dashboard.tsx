@@ -646,7 +646,7 @@ const Dashboard = () => {
             {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6 flex-shrink-0">Estoque</TabsTrigger>}
             {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
             {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
-            {currentUser.permissions.config.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
+            {currentUser.permissions.financeiro.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
             {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
           </TabsList>
 

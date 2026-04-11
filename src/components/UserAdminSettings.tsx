@@ -21,6 +21,7 @@ export interface RolePermissions {
   orcamentos: Permission;
   clientes: Permission;
   historico: Permission;
+  financeiro: Permission;
   config: Permission;
 }
 
@@ -38,6 +39,7 @@ const DEFAULT_PERMISSIONS: RolePermissions = {
   orcamentos: { view: true, edit: false, delete: false },
   clientes: { view: true, edit: false, delete: false },
   historico: { view: true, edit: false, delete: false },
+  financeiro: { view: false, edit: false, delete: false },
   config: { view: false, edit: false, delete: false },
 };
 
@@ -46,6 +48,7 @@ const FULL_PERMISSIONS: RolePermissions = {
   orcamentos: { view: true, edit: true, delete: true },
   clientes: { view: true, edit: true, delete: true },
   historico: { view: true, edit: true, delete: true },
+  financeiro: { view: true, edit: true, delete: true },
   config: { view: true, edit: true, delete: true },
 };
 
@@ -60,8 +63,19 @@ const UserAdminSettings = () => {
 
   React.useEffect(() => {
     const savedUsers = localStorage.getItem('lider_users');
-    if (savedUsers) setUsers(JSON.parse(savedUsers));
-    else {
+    if (savedUsers) {
+      const parsedUsers = JSON.parse(savedUsers);
+      // Migração: Adiciona permissão financeira se não existir
+      const migratedUsers = parsedUsers.map((u: UserProfile) => ({
+        ...u,
+        permissions: {
+          ...DEFAULT_PERMISSIONS,
+          ...u.permissions,
+          financeiro: u.permissions.financeiro || (u.role === 'ADMIN' ? FULL_PERMISSIONS.financeiro : DEFAULT_PERMISSIONS.financeiro)
+        }
+      }));
+      setUsers(migratedUsers);
+    } else {
       const admin: UserProfile = { 
         id: '1', 
         username: 'admin', 
@@ -284,11 +298,12 @@ const UserAdminSettings = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 dark:bg-slate-800/30">
-                  <TableHead className="w-[250px] font-bold">Usuário / E-mail</TableHead>
+                  <TableHead className="w-[200px] font-bold">Usuário / E-mail</TableHead>
                   <TableHead className="text-center font-bold">Estoque</TableHead>
                   <TableHead className="text-center font-bold">Orçamentos</TableHead>
                   <TableHead className="text-center font-bold">Clientes</TableHead>
                   <TableHead className="text-center font-bold">Histórico</TableHead>
+                  <TableHead className="text-center font-bold">Financeiro</TableHead>
                   <TableHead className="text-center font-bold">Config</TableHead>
                   <TableHead className="text-right font-bold">Ações</TableHead>
                 </TableRow>
@@ -304,7 +319,7 @@ const UserAdminSettings = () => {
                       </div>
                     </TableCell>
                     
-                    {(['estoque', 'orcamentos', 'clientes', 'historico', 'config'] as const).map((tab) => (
+                    {(['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'config'] as const).map((tab) => (
                       <TableCell key={tab} className="text-center">
                         <div className="flex gap-1 justify-center">
                           <PermissionToggle 
