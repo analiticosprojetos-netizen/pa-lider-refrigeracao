@@ -234,8 +234,10 @@ const Dashboard = () => {
   }, [searchTerm]);
 
   const hasPermission = (tab: keyof UserProfile['permissions'], action: 'view' | 'edit' | 'delete') => {
-    if (!currentUser) return false;
-    return currentUser.permissions[tab][action];
+    if (!currentUser || !currentUser.permissions) return false;
+    const tabPerms = currentUser.permissions[tab];
+    if (!tabPerms) return false;
+    return tabPerms[action];
   };
 
   const handleAddPart = (e: React.FormEvent) => {
@@ -643,11 +645,11 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="estoque" className="space-y-8">
           <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 p-1 h-12 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
-            {currentUser.permissions.estoque.view && <TabsTrigger value="estoque" className="px-6 flex-shrink-0">Estoque</TabsTrigger>}
-            {currentUser.permissions.orcamentos.view && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
-            {currentUser.permissions.clientes.view && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
-            {currentUser.permissions.financeiro.view && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
-            {currentUser.permissions.config.view && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
+            {hasPermission('estoque', 'view') && <TabsTrigger value="estoque" className="px-6 flex-shrink-0">Estoque</TabsTrigger>}
+            {hasPermission('orcamentos', 'view') && <TabsTrigger value="orcamentos" className="px-6 flex-shrink-0">Orçamentos / OS</TabsTrigger>}
+            {hasPermission('clientes', 'view') && <TabsTrigger value="clientes" className="px-6 flex-shrink-0">Clientes</TabsTrigger>}
+            {hasPermission('financeiro', 'view') && <TabsTrigger value="financeiro" className="px-6 flex-shrink-0">Financeiro</TabsTrigger>}
+            {hasPermission('config', 'view') && <TabsTrigger value="config" className="px-6 flex-shrink-0">Configurações</TabsTrigger>}
           </TabsList>
 
           {/* CONTEÚDO ESTOQUE */}
@@ -724,7 +726,7 @@ const Dashboard = () => {
             <Tabs defaultValue="lista" className="w-full">
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
                 <TabsTrigger value="lista" className="flex-shrink-0">Lista de Peças</TabsTrigger>
-                {currentUser.permissions.historico.view && <TabsTrigger value="historico" className="flex-shrink-0">Histórico de Movimentações</TabsTrigger>}
+                {hasPermission('historico', 'view') && <TabsTrigger value="historico" className="flex-shrink-0">Histórico de Movimentações</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista" className="space-y-8">
@@ -935,7 +937,7 @@ const Dashboard = () => {
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
                 <TabsTrigger value="lista" className="flex-shrink-0">Histórico de Orçamentos</TabsTrigger>
                 {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
-                {currentUser.permissions.config.view && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
+                {hasPermission('config', 'view') && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
