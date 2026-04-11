@@ -243,7 +243,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       <Tabs defaultValue="gastos" className="w-full">
         <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
           <TabsTrigger value="gastos" className="flex-shrink-0">Gestão de Gastos</TabsTrigger>
-          <TabsTrigger value="orcamentos" className="flex-shrink-0">Status de Orçamentos</TabsTrigger>
+          <TabsTrigger value="orcamentos" className="flex-shrink-0">Gestão de Orçamentos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="gastos" className="space-y-8">
