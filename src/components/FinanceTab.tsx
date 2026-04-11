@@ -163,21 +163,25 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
   const combinedImpactData = [
     ...orders.map(o => ({
       id: o.id,
+      displayId: `#${o.id}`,
       client: o.clientName,
       date: o.date,
       status: o.status,
       total: o.total,
-      isManual: false
+      isManual: false,
+      originalId: o.id
     })),
     ...transactions
       .filter(t => t.category === 'Orçamento')
       .map(t => ({
         id: `AV-${t.id}`,
+        displayId: `#AV-${t.id}`,
         client: 'Serviço Avulso',
         date: t.date.split('-').reverse().join('/'),
         status: t.status,
         total: t.value,
-        isManual: true
+        isManual: true,
+        originalId: t.id
       }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -297,19 +301,31 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                       {combinedImpactData.map((item) => (
                         <TableRow key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/30">
                           <TableCell className={`font-bold whitespace-nowrap ${item.isManual ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                            #{item.id}
+                            {item.displayId}
                           </TableCell>
                           <TableCell className="dark:text-gray-300 font-medium">{item.client}</TableCell>
                           <TableCell className="text-xs text-gray-500 dark:text-gray-400">{item.date}</TableCell>
                           <TableCell>
-                            <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${
-                              item.status === 'Executado' || item.status === 'Concluído' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
-                              item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}>
-                              {item.status === 'Executado' || item.status === 'Concluído' ? <CheckCircle2 size={12} /> : item.status === 'Pendente' ? <Clock size={12} /> : <Ban size={12} />}
-                              {item.status}
-                            </span>
+                            {item.isManual ? (
+                              <button 
+                                onClick={() => toggleStatus(item.originalId)}
+                                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit transition-all hover:scale-105 ${
+                                  item.status === 'Concluído' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 animate-pulse'
+                                }`}
+                              >
+                                {item.status === 'Concluído' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                                {item.status}
+                              </button>
+                            ) : (
+                              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit ${
+                                item.status === 'Executado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              }`}>
+                                {item.status === 'Executado' ? <CheckCircle2 size={12} /> : item.status === 'Pendente' ? <Clock size={12} /> : <Ban size={12} />}
+                                {item.status}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right font-bold dark:text-gray-300">R$ {item.total.toFixed(2)}</TableCell>
                         </TableRow>
