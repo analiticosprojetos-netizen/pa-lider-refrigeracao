@@ -151,8 +151,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
 
   const saldoCaixa = totalEntradasGeral - manualSaidasPagas;
 
-  const totalExecutado = orders.filter(o => o.status === 'Executado').reduce((acc, o) => acc + o.total, 0);
-  const totalPendente = orders.filter(o => o.status === 'Pendente').reduce((acc, o) => acc + o.total, 0);
+  // Cálculos para Status de Orçamentos (Incluindo manuais de categoria Orçamento)
+  const totalExecutado = orders.filter(o => o.status === 'Executado').reduce((acc, o) => acc + o.total, 0) +
+    transactions.filter(t => t.category === 'Orçamento' && t.status === 'Concluído').reduce((acc, t) => acc + t.value, 0);
+
+  const totalPendente = orders.filter(o => o.status === 'Pendente').reduce((acc, o) => acc + o.total, 0) +
+    transactions.filter(t => t.category === 'Orçamento' && t.status === 'Pendente').reduce((acc, t) => acc + t.value, 0);
+
   const totalCancelado = orders.filter(o => o.status === 'Cancelado').reduce((acc, o) => acc + o.total, 0);
 
   const combinedImpactData = [
