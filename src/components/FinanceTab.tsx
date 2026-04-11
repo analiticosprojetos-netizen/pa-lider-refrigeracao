@@ -4,7 +4,7 @@ import React from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Receipt, Plus, Trash2, 
   AlertCircle, Wallet, PieChart, Calendar, ArrowUpRight, ArrowDownRight,
-  Percent, CheckCircle2, Clock, Edit2, Save, X, FileText, Ban
+  Percent, CheckCircle2, Clock, Edit2, Save, X, FileText, Ban, Landmark
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -111,68 +111,73 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     showSuccess('Lançamento atualizado!');
   };
 
-  // Cálculos Financeiros
+  // Cálculos para Gestão de Gastos (Fluxo de Caixa)
   const revenueFromOrders = orders
     .filter(o => o.status === 'Executado')
     .reduce((acc, o) => acc + o.total, 0);
 
-  const manualEntries = transactions
+  const manualEntradas = transactions
     .filter(t => t.type === 'Entrada' && t.status === 'Concluído')
     .reduce((acc, t) => acc + t.value, 0);
 
-  const totalRevenue = revenueFromOrders + manualEntries;
+  const totalEntradasGeral = revenueFromOrders + manualEntradas;
 
-  const totalPaidExpenses = transactions
+  const manualSaidasPagas = transactions
     .filter(t => t.type === 'Saída' && t.status === 'Concluído')
     .reduce((acc, t) => acc + t.value, 0);
 
-  const totalOpenExpenses = transactions
+  const manualSaidasPendentes = transactions
     .filter(t => t.type === 'Saída' && t.status === 'Pendente')
     .reduce((acc, t) => acc + t.value, 0);
 
-  const netProfit = totalRevenue - totalPaidExpenses;
+  const saldoCaixa = totalEntradasGeral - manualSaidasPagas;
+
+  // Cálculos para Status de Orçamentos
+  const totalExecutado = orders.filter(o => o.status === 'Executado').reduce((acc, o) => acc + o.total, 0);
+  const totalPendente = orders.filter(o => o.status === 'Pendente').reduce((acc, o) => acc + o.total, 0);
+  const totalCancelado = orders.filter(o => o.status === 'Cancelado').reduce((acc, o) => acc + o.total, 0);
 
   return (
     <div className="space-y-8">
-      {/* Cards de Resumo Financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <FinanceCard 
-          title="Entradas (Total)" 
-          value={totalRevenue} 
-          icon={<ArrowUpRight className="text-green-500" />} 
-          color="border-green-100 bg-green-50/30"
-          subtitle="Orçamentos + Entradas Manuais"
-        />
-        <FinanceCard 
-          title="Saídas (Pago)" 
-          value={totalPaidExpenses} 
-          icon={<CheckCircle2 className="text-blue-500" />} 
-          color="border-blue-100 bg-blue-50/30"
-          subtitle="Contas já liquidadas"
-        />
-        <FinanceCard 
-          title="A Pagar (Pendente)" 
-          value={totalOpenExpenses} 
-          icon={<Clock className="text-red-500" />} 
-          color="border-red-100 bg-red-50/30"
-          subtitle="Despesas em aberto"
-        />
-        <FinanceCard 
-          title="Lucro Real" 
-          value={netProfit} 
-          icon={<Wallet className={netProfit >= 0 ? "text-green-600" : "text-red-600"} />} 
-          color={netProfit >= 0 ? "border-green-100 bg-green-50/30" : "border-red-200 bg-red-50"}
-          subtitle="Entradas - Saídas Pagas"
-        />
-      </div>
-
       <Tabs defaultValue="gastos" className="w-full">
         <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
           <TabsTrigger value="gastos" className="flex-shrink-0">Gestão de Gastos</TabsTrigger>
           <TabsTrigger value="orcamentos" className="flex-shrink-0">Status de Orçamentos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="gastos">
+        <TabsContent value="gastos" className="space-y-8">
+          {/* Cards Específicos de Gastos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FinanceCard 
+              title="Entradas Totais" 
+              value={totalEntradasGeral} 
+              icon={<ArrowUpRight className="text-green-500" />} 
+              color="border-green-100 bg-green-50/30"
+              subtitle="OS Executadas + Manuais"
+            />
+            <FinanceCard 
+              title="Saídas (Pagas)" 
+              value={manualSaidasPagas} 
+              icon={<CheckCircle2 className="text-blue-500" />} 
+              color="border-blue-100 bg-blue-50/30"
+              subtitle="Despesas liquidadas"
+            />
+            <FinanceCard 
+              title="Saídas (Pendentes)" 
+              value={manualSaidasPendentes} 
+              icon={<Clock className="text-red-500" />} 
+              color="border-red-100 bg-red-50/30"
+              subtitle="Contas a pagar"
+            />
+            <FinanceCard 
+              title="Saldo em Caixa" 
+              value={saldoCaixa} 
+              icon={<Wallet className={saldoCaixa >= 0 ? "text-green-600" : "text-red-600"} />} 
+              color={saldoCaixa >= 0 ? "border-green-100 bg-green-50/30" : "border-red-200 bg-red-50"}
+              subtitle="Entradas - Saídas Pagas"
+            />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Lançamento Financeiro */}
             <Card className="h-fit shadow-lg border-blue-100 dark:border-slate-800 dark:bg-slate-900">
@@ -336,11 +341,36 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           </div>
         </TabsContent>
 
-        <TabsContent value="orcamentos">
+        <TabsContent value="orcamentos" className="space-y-8">
+          {/* Cards Específicos de Orçamentos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FinanceCard 
+              title="Receita (Executado)" 
+              value={totalExecutado} 
+              icon={<CheckCircle2 className="text-green-500" />} 
+              color="border-green-100 bg-green-50/30"
+              subtitle="Serviços concluídos"
+            />
+            <FinanceCard 
+              title="Previsão (Pendente)" 
+              value={totalPendente} 
+              icon={<Clock className="text-yellow-500" />} 
+              color="border-yellow-100 bg-yellow-50/30"
+              subtitle="Orçamentos em aberto"
+            />
+            <FinanceCard 
+              title="Perda (Cancelado)" 
+              value={totalCancelado} 
+              icon={<Ban className="text-red-500" />} 
+              color="border-red-100 bg-red-50/30"
+              subtitle="Serviços não realizados"
+            />
+          </div>
+
           <Card className="shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
             <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
               <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
-                <FileText className="text-blue-600" /> Impacto Financeiro por Status
+                <FileText className="text-blue-600" /> Impacto Financeiro por Orçamento
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
