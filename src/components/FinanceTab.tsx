@@ -30,10 +30,11 @@ interface Transaction {
 
 interface FinanceTabProps {
   orders: any[];
+  transactions: Transaction[];
+  onTransactionsChange: (updated: Transaction[]) => void;
 }
 
-const FinanceTab = ({ orders }: FinanceTabProps) => {
-  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+const FinanceTab = ({ orders, transactions, onTransactionsChange }: FinanceTabProps) => {
   const [formType, setFormType] = React.useState<'Entrada' | 'Saída'>('Saída');
   const [editingTransaction, setEditingTransaction] = React.useState<Transaction | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
@@ -48,17 +49,9 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
   });
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('lider_transactions');
-    if (saved) setTransactions(JSON.parse(saved));
-    
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
   }, []);
-
-  const saveTransactions = (updated: Transaction[]) => {
-    setTransactions(updated);
-    localStorage.setItem('lider_transactions', JSON.stringify(updated));
-  };
 
   const handleAddTransaction = (e: React.FormEvent, forcedType?: 'Entrada' | 'Saída') => {
     e.preventDefault();
@@ -79,7 +72,7 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       status: 'Pendente'
     };
 
-    saveTransactions([transaction, ...transactions]);
+    onTransactionsChange([transaction, ...transactions]);
     setNewTransaction({ ...newTransaction, description: '', value: '' });
     showSuccess(`${typeToUse} registrada com sucesso!`);
   };
@@ -96,13 +89,13 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       }
       return t;
     });
-    saveTransactions(updated);
+    onTransactionsChange(updated);
     showSuccess('Status atualizado!');
   };
 
   const deleteTransaction = (id: string) => {
     if (window.confirm('Excluir este lançamento permanentemente?')) {
-      saveTransactions(transactions.filter(t => t.id !== id));
+      onTransactionsChange(transactions.filter(t => t.id !== id));
     }
   };
 
@@ -114,12 +107,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
   const handleSaveEdit = () => {
     if (!editingTransaction) return;
     const updated = transactions.map(t => t.id === editingTransaction.id ? editingTransaction : t);
-    saveTransactions(updated);
+    onTransactionsChange(updated);
     setIsEditModalOpen(false);
     showSuccess('Lançamento atualizado!');
   };
 
-  // Lógica de permissão atualizada para respeitar o cargo ADMIN
   const canViewFinance = currentUser?.role === 'ADMIN' || currentUser?.permissions?.financeiro?.view;
   const canManageTransactions = currentUser?.role === 'ADMIN' || currentUser?.permissions?.financeiro?.edit;
 
@@ -153,7 +145,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
 
   const saldoCaixa = totalEntradasGeral - manualSaidasPagas;
 
-  // Cálculos para Status de Orçamentos (Incluindo manuais de categoria Orçamento)
   const totalExecutado = orders.filter(o => o.status === 'Executado').reduce((acc, o) => acc + o.total, 0) +
     transactions.filter(t => t.category === 'Orçamento' && t.status === 'Concluído').reduce((acc, t) => acc + t.value, 0);
 
