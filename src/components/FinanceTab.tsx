@@ -119,7 +119,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
     showSuccess('Lançamento atualizado!');
   };
 
-  if (currentUser && !currentUser.permissions.financeiro.view) {
+  // Lógica de permissão atualizada para respeitar o cargo ADMIN
+  const canViewFinance = currentUser?.role === 'ADMIN' || currentUser?.permissions?.financeiro?.view;
+  const canManageTransactions = currentUser?.role === 'ADMIN' || currentUser?.permissions?.financeiro?.edit;
+
+  if (currentUser && !canViewFinance) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
         <div className="bg-red-50 p-4 rounded-full"><AlertCircle className="text-red-500 h-12 w-12" /></div>
@@ -128,8 +132,6 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
       </div>
     );
   }
-
-  const perms = currentUser?.permissions.financeiro;
 
   const revenueFromOrders = orders
     .filter(o => o.status === 'Executado')
@@ -187,22 +189,22 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
 
   return (
     <div className="space-y-8">
-      <Tabs defaultValue={perms?.abaLancamentos ? "gastos" : "orcamentos"} className="w-full">
+      <Tabs defaultValue="gastos" className="w-full">
         <TabsList className="bg-white dark:bg-slate-950 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
-          {perms?.abaLancamentos && <TabsTrigger value="gastos" className="flex-shrink-0">Gestão de Gastos</TabsTrigger>}
+          <TabsTrigger value="gastos" className="flex-shrink-0">Gestão de Fluxo de Caixa</TabsTrigger>
           <TabsTrigger value="orcamentos" className="flex-shrink-0">Gestão de Orçamentos</TabsTrigger>
         </TabsList>
 
-        {perms?.abaLancamentos && (
-          <TabsContent value="gastos" className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <FinanceCard title="Entradas Totais" value={totalEntradasGeral} icon={<ArrowUpRight className="text-green-500" />} color="border-green-100 bg-green-50/30" subtitle="OS Executadas + Manuais" />
-              <FinanceCard title="Saídas (Pagas)" value={manualSaidasPagas} icon={<CheckCircle2 className="text-blue-500" />} color="border-blue-100 bg-blue-50/30" subtitle="Despesas liquidadas" />
-              <FinanceCard title="Saídas (Pendentes)" value={manualSaidasPendentes} icon={<Clock className="text-red-500" />} color="border-red-100 bg-red-50/30" subtitle="Contas a pagar" />
-              <FinanceCard title="Saldo em Caixa" value={saldoCaixa} icon={<Wallet className={saldoCaixa >= 0 ? "text-green-600" : "text-red-600"} />} color={saldoCaixa >= 0 ? "border-green-100 bg-green-50/30" : "border-red-200 bg-red-50"} subtitle="Entradas - Saídas Pagas" />
-            </div>
+        <TabsContent value="gastos" className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FinanceCard title="Entradas Totais" value={totalEntradasGeral} icon={<ArrowUpRight className="text-green-500" />} color="border-green-100 bg-green-50/30" subtitle="OS Executadas + Manuais" />
+            <FinanceCard title="Saídas (Pagas)" value={manualSaidasPagas} icon={<CheckCircle2 className="text-blue-500" />} color="border-blue-100 bg-blue-50/30" subtitle="Despesas liquidadas" />
+            <FinanceCard title="Saídas (Pendentes)" value={manualSaidasPendentes} icon={<Clock className="text-red-500" />} color="border-red-100 bg-red-50/30" subtitle="Contas a pagar" />
+            <FinanceCard title="Saldo em Caixa" value={saldoCaixa} icon={<Wallet className={saldoCaixa >= 0 ? "text-green-600" : "text-red-600"} />} color={saldoCaixa >= 0 ? "border-green-100 bg-green-50/30" : "border-red-200 bg-red-50"} subtitle="Entradas - Saídas Pagas" />
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {canManageTransactions && (
               <TransactionForm 
                 formType={formType}
                 setFormType={setFormType}
@@ -210,60 +212,66 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                 setNewTransaction={setNewTransaction}
                 onSubmit={handleAddTransaction}
               />
-              <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
-                <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
-                  <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white"><PieChart className="text-blue-600" /> Gestão de Fluxo de Caixa</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
-                          <TableHead className="font-bold">Data</TableHead>
-                          <TableHead className="font-bold">Descrição</TableHead>
-                          <TableHead className="font-bold">Status</TableHead>
-                          <TableHead className="text-right font-bold">Valor</TableHead>
-                          <TableHead className="text-right font-bold">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions.map((t) => (
-                          <TableRow key={t.id} className={`hover:bg-gray-50/50 dark:hover:bg-slate-800/30 ${t.status === 'Concluído' ? 'opacity-70' : ''}`}>
-                            <TableCell className="text-xs text-gray-500 dark:text-gray-400">{t.date.split('-').reverse().join('/')}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                  {t.type === 'Entrada' ? <ArrowUpRight size={12} className="text-green-500" /> : <ArrowDownRight size={12} className="text-red-500" />}
-                                  <span className="font-bold dark:text-gray-300">{t.description}</span>
-                                </div>
-                                <span className="text-[10px] text-gray-400 uppercase ml-5">{t.category}</span>
+            )}
+            <Card className={`${canManageTransactions ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900`}>
+              <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white"><PieChart className="text-blue-600" /> Lançamentos Recentes</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50/50 dark:bg-slate-800/30">
+                        <TableHead className="font-bold">Data</TableHead>
+                        <TableHead className="font-bold">Descrição</TableHead>
+                        <TableHead className="font-bold">Status</TableHead>
+                        <TableHead className="text-right font-bold">Valor</TableHead>
+                        {canManageTransactions && <TableHead className="text-right font-bold">Ações</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((t) => (
+                        <TableRow key={t.id} className={`hover:bg-gray-50/50 dark:hover:bg-slate-800/30 ${t.status === 'Concluído' ? 'opacity-70' : ''}`}>
+                          <TableCell className="text-xs text-gray-500 dark:text-gray-400">{t.date.split('-').reverse().join('/')}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                {t.type === 'Entrada' ? <ArrowUpRight size={12} className="text-green-500" /> : <ArrowDownRight size={12} className="text-red-500" />}
+                                <span className="font-bold dark:text-gray-300">{t.description}</span>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <button onClick={() => toggleStatus(t.id)} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all ${t.status === 'Concluído' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 animate-pulse'}`}>
-                                {t.status === 'Concluído' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                                {t.status === 'Concluído' ? (t.type === 'Entrada' ? 'Recebido' : 'Pago') : 'Pendente'}
-                              </button>
-                            </TableCell>
-                            <TableCell className={`text-right font-bold ${t.type === 'Entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                              {t.type === 'Entrada' ? '+' : '-'} R$ {t.value.toFixed(2)}
-                            </TableCell>
+                              <span className="text-[10px] text-gray-400 uppercase ml-5">{t.category}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <button 
+                              onClick={() => canManageTransactions && toggleStatus(t.id)} 
+                              disabled={!canManageTransactions}
+                              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all ${t.status === 'Concluído' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 animate-pulse'} ${!canManageTransactions ? 'cursor-default' : ''}`}
+                            >
+                              {t.status === 'Concluído' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                              {t.status === 'Concluído' ? (t.type === 'Entrada' ? 'Recebido' : 'Pago') : 'Pendente'}
+                            </button>
+                          </TableCell>
+                          <TableCell className={`text-right font-bold ${t.type === 'Entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {t.type === 'Entrada' ? '+' : '-'} R$ {t.value.toFixed(2)}
+                          </TableCell>
+                          {canManageTransactions && (
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
                                 <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditClick(t)}><Edit2 size={14} /></Button>
                                 <Button variant="ghost" size="sm" className="text-red-500" onClick={() => deleteTransaction(t.id)}><Trash2 size={14} /></Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        )}
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         <TabsContent value="orcamentos" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -273,15 +281,17 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <TransactionForm 
-              onlyEntrada={true}
-              formType={formType}
-              setFormType={setFormType}
-              newTransaction={newTransaction}
-              setNewTransaction={setNewTransaction}
-              onSubmit={handleAddTransaction}
-            />
-            <Card className="lg:col-span-2 shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900">
+            {canManageTransactions && (
+              <TransactionForm 
+                onlyEntrada={true}
+                formType={formType}
+                setFormType={setFormType}
+                newTransaction={newTransaction}
+                setNewTransaction={setNewTransaction}
+                onSubmit={handleAddTransaction}
+              />
+            )}
+            <Card className={`${canManageTransactions ? 'lg:col-span-2' : 'lg:col-span-3'} shadow-lg border-blue-50 dark:border-slate-800 dark:bg-slate-900`}>
               <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
                 <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white"><FileText className="text-blue-600" /> Impacto Financeiro por Orçamento</CardTitle>
               </CardHeader>
@@ -308,10 +318,11 @@ const FinanceTab = ({ orders }: FinanceTabProps) => {
                           <TableCell>
                             {item.isManual ? (
                               <button 
-                                onClick={() => toggleStatus(item.originalId)}
-                                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit transition-all hover:scale-105 ${
+                                onClick={() => canManageTransactions && toggleStatus(item.originalId)}
+                                disabled={!canManageTransactions}
+                                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase w-fit transition-all ${
                                   item.status === 'Concluído' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 animate-pulse'
-                                }`}
+                                } ${!canManageTransactions ? 'cursor-default' : 'hover:scale-105'}`}
                               >
                                 {item.status === 'Concluído' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
                                 {item.status}
