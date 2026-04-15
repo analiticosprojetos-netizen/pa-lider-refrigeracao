@@ -67,7 +67,6 @@ const Dashboard = () => {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [orders, setOrders] = React.useState<any[]>([]);
-  const [transactions, setTransactions] = React.useState<any[]>([]);
   const [usersCount, setUsersCount] = React.useState(0);
   const [currentUser, setCurrentUser] = React.useState<UserProfile | null>(null);
   
@@ -225,9 +224,6 @@ const Dashboard = () => {
     const savedOrders = localStorage.getItem('lider_orders');
     if (savedOrders) setOrders(JSON.parse(savedOrders));
 
-    const savedTransactions = localStorage.getItem('lider_transactions');
-    if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
-
     const savedUsers = localStorage.getItem('lider_users');
     if (savedUsers) setUsersCount(JSON.parse(savedUsers).length);
   }, [navigate]);
@@ -238,10 +234,10 @@ const Dashboard = () => {
   }, [searchTerm]);
 
   const hasPermission = (tab: keyof UserProfile['permissions'], action: 'view' | 'edit' | 'delete') => {
-    if (!currentUser || !currentUser.permissions) return false;
-    const tabPerms = currentUser.permissions[tab];
-    if (!tabPerms) return false;
-    return tabPerms[action];
+    if (!currentUser) return false;
+    if (currentUser.role === 'ADMIN') return true; // Admin tem acesso total sempre
+    if (!currentUser.permissions || !currentUser.permissions[tab]) return false;
+    return currentUser.permissions[tab][action];
   };
 
   const handleAddPart = (e: React.FormEvent) => {
@@ -941,7 +937,7 @@ const Dashboard = () => {
               <TabsList className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 mb-6 w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
                 <TabsTrigger value="lista" className="flex-shrink-0">Histórico de Orçamentos</TabsTrigger>
                 {hasPermission('orcamentos', 'edit') && <TabsTrigger value="novo" className="flex-shrink-0">{orderToEdit ? 'Editando Orçamento' : 'Novo Orçamento'}</TabsTrigger>}
-                {hasPermission('orcamentos', 'view') && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
+                {hasPermission('config', 'view') && <TabsTrigger value="produtividade" className="flex-shrink-0">Produtividade</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="lista">
@@ -1022,7 +1018,7 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="produtividade">
-                <AnalyticsTab orders={orders} transactions={transactions} usersCount={usersCount} />
+                <AnalyticsTab orders={orders} usersCount={usersCount} />
               </TabsContent>
             </Tabs>
           </TabsContent>

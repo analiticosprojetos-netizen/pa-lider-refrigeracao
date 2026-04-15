@@ -1,14 +1,13 @@
 "use client";
 
 import React from 'react';
-import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail, Save, Settings2, Landmark, Receipt, BarChart3, Wallet } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Check, X, Lock, Eye, Edit2, AlertCircle, Briefcase, Plus, Mail, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
 
 export interface Permission {
@@ -17,20 +16,12 @@ export interface Permission {
   delete: boolean;
 }
 
-export interface FinanceSubPermissions extends Permission {
-  abaLancamentos: boolean;
-  abaRelatorios: boolean;
-  abaFluxoCaixa: boolean;
-  abaContasPagar: boolean;
-  abaContasReceber: boolean;
-}
-
 export interface RolePermissions {
   estoque: Permission;
   orcamentos: Permission;
   clientes: Permission;
   historico: Permission;
-  financeiro: FinanceSubPermissions;
+  financeiro: Permission;
   config: Permission;
 }
 
@@ -48,10 +39,7 @@ const DEFAULT_PERMISSIONS: RolePermissions = {
   orcamentos: { view: true, edit: false, delete: false },
   clientes: { view: true, edit: false, delete: false },
   historico: { view: true, edit: false, delete: false },
-  financeiro: { 
-    view: false, edit: false, delete: false,
-    abaLancamentos: false, abaRelatorios: false, abaFluxoCaixa: false, abaContasPagar: false, abaContasReceber: false
-  },
+  financeiro: { view: false, edit: false, delete: false },
   config: { view: false, edit: false, delete: false },
 };
 
@@ -60,10 +48,7 @@ const FULL_PERMISSIONS: RolePermissions = {
   orcamentos: { view: true, edit: true, delete: true },
   clientes: { view: true, edit: true, delete: true },
   historico: { view: true, edit: true, delete: true },
-  financeiro: { 
-    view: true, edit: true, delete: true,
-    abaLancamentos: true, abaRelatorios: true, abaFluxoCaixa: true, abaContasPagar: true, abaContasReceber: true
-  },
+  financeiro: { view: true, edit: true, delete: true },
   config: { view: true, edit: true, delete: true },
 };
 
@@ -75,9 +60,6 @@ const UserAdminSettings = () => {
   
   const [editingUser, setEditingUser] = React.useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  
-  const [financeConfigUser, setFinanceConfigUser] = React.useState<UserProfile | null>(null);
-  const [isFinanceModalOpen, setIsFinanceModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     const savedUsers = localStorage.getItem('lider_users');
@@ -85,13 +67,10 @@ const UserAdminSettings = () => {
       const parsedUsers = JSON.parse(savedUsers);
       const migratedUsers = parsedUsers.map((u: UserProfile) => ({
         ...u,
-        permissions: {
+        permissions: u.role === 'ADMIN' ? FULL_PERMISSIONS : {
           ...DEFAULT_PERMISSIONS,
           ...u.permissions,
-          financeiro: {
-            ...DEFAULT_PERMISSIONS.financeiro,
-            ...(u.permissions?.financeiro || {})
-          }
+          financeiro: u.permissions?.financeiro || DEFAULT_PERMISSIONS.financeiro
         }
       }));
       setUsers(migratedUsers);
@@ -115,12 +94,6 @@ const UserAdminSettings = () => {
   const saveUsers = (updatedUsers: UserProfile[]) => {
     setUsers(updatedUsers);
     localStorage.setItem('lider_users', JSON.stringify(updatedUsers));
-    
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const updatedSelf = updatedUsers.find(u => u.id === currentUser.id);
-    if (updatedSelf) {
-      localStorage.setItem('currentUser', JSON.stringify(updatedSelf));
-    }
   };
 
   const saveRoles = (updatedRoles: string[]) => {
@@ -198,30 +171,17 @@ const UserAdminSettings = () => {
     showSuccess('Dados do usuário atualizados!');
   };
 
-  const togglePermission = (userId: string, tab: keyof RolePermissions, action: string) => {
+  const togglePermission = (userId: string, tab: keyof RolePermissions, action: keyof Permission) => {
     const updated = users.map(u => {
       if (u.id === userId) {
+        if (u.role === 'ADMIN') return u; // Impede alteração de admin
         const newPerms = { ...u.permissions };
-        // @ts-ignore
-        newPerms[tab][action] = !newPerms[tab][action];
+        newPerms[tab] = { ...newPerms[tab], [action]: !newPerms[tab][action] };
         return { ...u, permissions: newPerms };
       }
       return u;
     });
     saveUsers(updated);
-  };
-
-  const handleOpenFinanceConfig = (user: UserProfile) => {
-    setFinanceConfigUser({ ...user });
-    setIsFinanceModalOpen(true);
-  };
-
-  const saveFinanceSubPerms = () => {
-    if (!financeConfigUser) return;
-    const updated = users.map(u => u.id === financeConfigUser.id ? financeConfigUser : u);
-    saveUsers(updated);
-    setIsFinanceModalOpen(false);
-    showSuccess(`Permissões financeiras de ${financeConfigUser.username} atualizadas!`);
   };
 
   const deleteUser = (id: string) => {
@@ -330,7 +290,7 @@ const UserAdminSettings = () => {
       <Card className="border-blue-100 dark:border-slate-800 shadow-md overflow-hidden dark:bg-slate-900">
         <CardHeader className="bg-blue-50/50 dark:bg-slate-800/50 border-b border-blue-50 dark:border-slate-800">
           <CardTitle className="text-lg flex items-center gap-2 text-blue-900 dark:text-white">
-            <Shield className="text-blue-600" /> Controle de Acessos e Sub-abas
+            <Shield className="text-blue-600" /> Controle de Acessos
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -338,12 +298,12 @@ const UserAdminSettings = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 dark:bg-slate-800/30">
-                  <TableHead className="w-[200px] font-bold">Usuário / Cargo</TableHead>
+                  <TableHead className="w-[200px] font-bold">Usuário / E-mail</TableHead>
                   <TableHead className="text-center font-bold">Estoque</TableHead>
                   <TableHead className="text-center font-bold">Orçamentos</TableHead>
                   <TableHead className="text-center font-bold">Clientes</TableHead>
                   <TableHead className="text-center font-bold">Histórico</TableHead>
-                  <TableHead className="text-center font-bold bg-blue-50/30 dark:bg-blue-900/10">Financeiro</TableHead>
+                  <TableHead className="text-center font-bold">Financeiro</TableHead>
                   <TableHead className="text-center font-bold">Config</TableHead>
                   <TableHead className="text-right font-bold">Ações</TableHead>
                 </TableRow>
@@ -354,67 +314,42 @@ const UserAdminSettings = () => {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-blue-900 dark:text-white">{user.username}</span>
-                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">{user.role}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">{user.email}</span>
+                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter mt-1">{user.role}</span>
                       </div>
                     </TableCell>
                     
-                    {(['estoque', 'orcamentos', 'clientes', 'historico'] as const).map((tab) => (
+                    {(['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'config'] as const).map((tab) => (
                       <TableCell key={tab} className="text-center">
                         <div className="flex gap-1 justify-center">
                           <PermissionToggle 
-                            active={user.permissions[tab].view} 
+                            active={user.role === 'ADMIN' ? true : user.permissions[tab]?.view} 
                             icon={<Eye size={12} />} 
+                            label="Ver"
                             onClick={() => togglePermission(user.id, tab, 'view')}
                             disabled={user.role === 'ADMIN'}
                           />
                           <PermissionToggle 
-                            active={user.permissions[tab].edit} 
+                            active={user.role === 'ADMIN' ? true : user.permissions[tab]?.edit} 
                             icon={<Edit2 size={12} />} 
+                            label="Edit"
                             onClick={() => togglePermission(user.id, tab, 'edit')}
+                            disabled={user.role === 'ADMIN'}
+                          />
+                          <PermissionToggle 
+                            active={user.role === 'ADMIN' ? true : user.permissions[tab]?.delete} 
+                            icon={<Trash2 size={12} />} 
+                            label="Del"
+                            onClick={() => togglePermission(user.id, tab, 'delete')}
                             disabled={user.role === 'ADMIN'}
                           />
                         </div>
                       </TableCell>
                     ))}
 
-                    {/* COLUNA FINANCEIRO COM BOTÃO DE CONFIGURAÇÃO */}
-                    <TableCell className="text-center bg-blue-50/10 dark:bg-blue-900/5">
-                      <div className="flex gap-1 justify-center items-center">
-                        <PermissionToggle 
-                          active={user.permissions.financeiro.view} 
-                          icon={<Eye size={12} />} 
-                          onClick={() => togglePermission(user.id, 'financeiro', 'view')}
-                          disabled={user.role === 'ADMIN'}
-                        />
-                        <PermissionToggle 
-                          active={user.permissions.financeiro.edit} 
-                          icon={<Edit2 size={12} />} 
-                          onClick={() => togglePermission(user.id, 'financeiro', 'edit')}
-                          disabled={user.role === 'ADMIN'}
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className={`h-7 w-7 p-0 ${user.permissions.financeiro.view ? 'text-blue-600 animate-pulse' : 'text-gray-300'}`}
-                          onClick={() => handleOpenFinanceConfig(user)}
-                        >
-                          <Settings2 size={14} />
-                        </Button>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <PermissionToggle 
-                        active={user.permissions.config.view} 
-                        icon={<Eye size={12} />} 
-                        onClick={() => togglePermission(user.id, 'config', 'view')}
-                        disabled={user.role === 'ADMIN'}
-                      />
-                    </TableCell>
-
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleEditUser(user)}>
+                        <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400" onClick={() => handleEditUser(user)}>
                           <Edit2 size={16} />
                         </Button>
                         {user.role !== 'ADMIN' && (
@@ -431,104 +366,6 @@ const UserAdminSettings = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* MODAL DE SUB-PERMISSÕES FINANCEIRAS */}
-      <Dialog open={isFinanceModalOpen} onOpenChange={setIsFinanceModalOpen}>
-        <DialogContent className="sm:max-w-[500px] dark:bg-slate-900 dark:border-slate-800">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-900 dark:text-white">
-              <Landmark className="text-blue-600" /> 
-              Acessos Financeiros: {financeConfigUser?.username}
-            </DialogTitle>
-            <DialogDescription>
-              Defina quais abas e funções específicas este usuário pode acessar dentro do módulo Financeiro.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {financeConfigUser && (
-            <div className="grid gap-6 py-4">
-              <div className="space-y-4">
-                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-2">Abas Disponíveis</h4>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  <SubPermItem 
-                    label="Lançamentos (Entradas/Saídas)" 
-                    icon={<Receipt size={16} />}
-                    checked={financeConfigUser.permissions.financeiro.abaLancamentos}
-                    onCheckedChange={(v) => setFinanceConfigUser({
-                      ...financeConfigUser, 
-                      permissions: {
-                        ...financeConfigUser.permissions, 
-                        financeiro: {...financeConfigUser.permissions.financeiro, abaLancamentos: !!v}
-                      }
-                    })}
-                  />
-                  <SubPermItem 
-                    label="Fluxo de Caixa / Gráficos" 
-                    icon={<BarChart3 size={16} />}
-                    checked={financeConfigUser.permissions.financeiro.abaFluxoCaixa}
-                    onCheckedChange={(v) => setFinanceConfigUser({
-                      ...financeConfigUser, 
-                      permissions: {
-                        ...financeConfigUser.permissions, 
-                        financeiro: {...financeConfigUser.permissions.financeiro, abaFluxoCaixa: !!v}
-                      }
-                    })}
-                  />
-                  <SubPermItem 
-                    label="Contas a Pagar" 
-                    icon={<Wallet size={16} className="text-red-500" />}
-                    checked={financeConfigUser.permissions.financeiro.abaContasPagar}
-                    onCheckedChange={(v) => setFinanceConfigUser({
-                      ...financeConfigUser, 
-                      permissions: {
-                        ...financeConfigUser.permissions, 
-                        financeiro: {...financeConfigUser.permissions.financeiro, abaContasPagar: !!v}
-                      }
-                    })}
-                  />
-                  <SubPermItem 
-                    label="Contas a Receber" 
-                    icon={<Landmark size={16} className="text-green-500" />}
-                    checked={financeConfigUser.permissions.financeiro.abaContasReceber}
-                    onCheckedChange={(v) => setFinanceConfigUser({
-                      ...financeConfigUser, 
-                      permissions: {
-                        ...financeConfigUser.permissions, 
-                        financeiro: {...financeConfigUser.permissions.financeiro, abaContasReceber: !!v}
-                      }
-                    })}
-                  />
-                  <SubPermItem 
-                    label="Relatórios de Fechamento" 
-                    icon={<Receipt size={16} />}
-                    checked={financeConfigUser.permissions.financeiro.abaRelatorios}
-                    onCheckedChange={(v) => setFinanceConfigUser({
-                      ...financeConfigUser, 
-                      permissions: {
-                        ...financeConfigUser.permissions, 
-                        financeiro: {...financeConfigUser.permissions.financeiro, abaRelatorios: !!v}
-                      }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex gap-3">
-                <AlertCircle className="text-blue-600 shrink-0" size={18} />
-                <p className="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-                  <strong>Nota:</strong> Se a permissão principal "Editar" no Financeiro estiver desativada na tabela anterior, o usuário poderá ver as abas marcadas aqui, mas não conseguirá salvar novos dados.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFinanceModalOpen(false)}>Cancelar</Button>
-            <Button className="bg-blue-600" onClick={saveFinanceSubPerms}>Salvar Sub-permissões</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* MODAL DE EDIÇÃO DE USUÁRIO */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -593,10 +430,11 @@ const UserAdminSettings = () => {
   );
 };
 
-const PermissionToggle = ({ active, icon, onClick, disabled }: { active: boolean, icon: React.ReactNode, onClick: () => void, disabled?: boolean }) => (
+const PermissionToggle = ({ active, icon, label, onClick, disabled }: { active: boolean, icon: React.ReactNode, label: string, onClick: () => void, disabled?: boolean }) => (
   <button 
     onClick={onClick}
     disabled={disabled}
+    title={label}
     className={`p-1.5 rounded-md transition-all border ${
       active 
         ? 'bg-blue-600 border-blue-700 text-white shadow-sm' 
@@ -605,16 +443,6 @@ const PermissionToggle = ({ active, icon, onClick, disabled }: { active: boolean
   >
     {icon}
   </button>
-);
-
-const SubPermItem = ({ label, icon, checked, onCheckedChange }: { label: string, icon: React.ReactNode, checked: boolean, onCheckedChange: (v: boolean) => void }) => (
-  <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-xl hover:border-blue-200 transition-colors">
-    <div className="flex items-center gap-3">
-      <div className="text-blue-600">{icon}</div>
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-    </div>
-    <Checkbox checked={checked} onCheckedChange={(v) => onCheckedChange(!!v)} />
-  </div>
 );
 
 export default UserAdminSettings;
