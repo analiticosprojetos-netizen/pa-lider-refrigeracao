@@ -5,10 +5,11 @@ import {
   MapPin, CheckCircle2, History 
 } from 'lucide-vue-next'
 import { useCustomerStore } from '../stores/customers'
+import { formatToTitleCase } from '../utils/textUtils'
 
 const customerStore = useCustomerStore()
 const searchQuery = ref('')
-const isNewCustomerModalOpen = ref(ref(false))
+const isNewCustomerModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 
 const form = ref({
@@ -150,7 +151,7 @@ const handleDelete = (id: string) => {
         <div class="p-10 space-y-6">
           <div>
             <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block tracking-widest">Nome Completo / Razão Social</label>
-            <input v-model="form.name" type="text" placeholder="Ex: Transportadora Líder LTDA" class="w-full px-6 py-4.5 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-4 focus:ring-blue-100 transition shadow-inner font-bold text-lg outline-none" required />
+            <input v-model="form.name" @input="form.name = formatToTitleCase(form.name)" type="text" placeholder="Ex: Transportadora Líder LTDA" class="w-full px-6 py-4.5 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-4 focus:ring-blue-100 transition shadow-inner font-bold text-lg outline-none" required spellcheck="true" lang="pt-BR" />
           </div>
           <div class="grid grid-cols-2 gap-4">
              <div>
@@ -184,7 +185,7 @@ const handleDelete = (id: string) => {
         <div class="p-10 space-y-6">
           <div>
             <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block">Nome Completo</label>
-            <input v-model="editForm.name" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-4 focus:ring-blue-100 font-bold text-lg outline-none" />
+            <input v-model="editForm.name" @input="editForm.name = formatToTitleCase(editForm.name)" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-4 focus:ring-blue-100 font-bold text-lg outline-none" spellcheck="true" lang="pt-BR" />
           </div>
           <div class="grid grid-cols-2 gap-4">
              <div>

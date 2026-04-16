@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import { useInventoryStore } from '../stores/inventory'
 import { useAuthStore } from '../stores/auth'
+import { formatToTitleCase } from '../utils/textUtils'
 
 const inventoryStore = useInventoryStore()
 const authStore = useAuthStore()
@@ -153,149 +154,112 @@ const handleDeletePart = (id: string) => {
       </div>
     </div>
 
-    <!-- 3. Navegação de Sub-Tabs -->
-    <div class="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm flex w-fit mb-8">
-       <button @click="currentSubTab = 'lista'" 
-         :class="[currentSubTab === 'lista' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-600', 'px-8 py-2.5 rounded-xl text-xs font-black uppercase transition-all tracking-widest']">
-         Lista de Peças
-       </button>
-       <button @click="currentSubTab = 'historico'" 
-         :class="[currentSubTab === 'historico' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-600', 'px-8 py-2.5 rounded-xl text-xs font-black uppercase transition-all tracking-widest']">
-         Histórico de Movimentações
-       </button>
-    </div>
-
-    <!-- 4. Area Principal (Grid 1/4 e 3/4) -->
-    <div v-if="currentSubTab === 'lista'" class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-       <!-- Coluna Esquerda: Formulário -->
-       <div class="space-y-6">
-          <div class="bg-white dark:bg-slate-900 rounded-[28px] p-8 shadow-xl border border-blue-50 dark:border-slate-800 space-y-8">
-             <h3 class="text-sm font-black text-blue-900 dark:text-white flex items-center gap-2">
-                <PlusCircle :size="18" class="text-blue-600" /> Nova Peça
-             </h3>
-             
-             <div class="space-y-6">
-                <div class="space-y-1.5">
-                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Nome da Peça</label>
-                   <input v-model="newPartName" type="text" placeholder="Ex: Compressor TM16" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 font-bold text-sm outline-none focus:border-blue-500 transition-all dark:text-white" />
-                </div>
-                <div class="space-y-1.5">
-                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Quantidade Inicial</label>
-                   <input v-model.number="newPartQty" type="number" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 font-bold text-sm outline-none focus:border-blue-500 transition-all dark:text-white" />
-                </div>
-                <button @click="handleCreatePart" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-blue-500/30 transition-all active:scale-95">
-                   Cadastrar no Sistema
-                </button>
-             </div>
-          </div>
-
-          <!-- Alerta de Estoque Baixo (Sticky hint) -->
-          <div v-if="inventoryStore.lowStockCount > 0" class="flex items-center gap-4 bg-red-50 dark:bg-red-900/10 p-6 rounded-2xl border border-red-100 dark:border-red-900/30">
-             <AlertTriangle class="text-red-500 shrink-0" :size="20" />
-             <div>
-                <p class="text-xs font-black text-red-600 uppercase">{{ inventoryStore.lowStockCount }} Itens em Nível Crítico</p>
-                <p class="text-[9px] text-red-400 font-bold uppercase mt-0.5 tracking-tight">Necessário reposição urgente</p>
-             </div>
-          </div>
+    <!-- 3. Filtros e Abas -->
+    <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-lg">
+       <div class="flex gap-1">
+          <button @click="currentSubTab = 'lista'" :class="['px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all', currentSubTab === 'lista' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200']">Lista de Itens</button>
+          <button @click="currentSubTab = 'historico'" :class="['px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all', currentSubTab === 'historico' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200']">Histórico Geral</button>
        </div>
-
-       <!-- Coluna Direita: Tabela -->
-       <div class="lg:col-span-3 bg-white dark:bg-slate-900 rounded-[28px] shadow-xl border border-blue-50 dark:border-slate-800 overflow-hidden flex flex-col">
-          <div class="p-8 border-b border-gray-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
-             <h3 class="text-sm font-black text-blue-900 dark:text-white uppercase tracking-widest">Controle de Peças</h3>
-             <div class="relative w-full max-w-sm">
-                <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="16" />
-                <input v-model="searchQuery" type="text" placeholder="Buscar peça..." class="w-full pl-11 pr-5 py-3 rounded-xl bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 text-sm font-bold outline-none focus:border-blue-500 transition-all dark:text-white shadow-inner" />
-             </div>
-          </div>
-
-          <div class="overflow-x-auto">
-             <table class="w-full text-left">
-                <thead>
-                   <tr class="bg-blue-50/20 dark:bg-slate-800/20 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b dark:border-slate-800">
-                      <th class="px-8 py-5">Peça</th>
-                      <th class="px-8 py-5 text-center">Qtd Atual</th>
-                      <th class="px-8 py-5 text-right">Ações</th>
-                   </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
-                   <tr v-for="part in paginatedParts" :key="part.id" class="group hover:bg-blue-50/10 dark:hover:bg-slate-800/10 transition-colors">
-                      <td class="px-8 py-6">
-                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                               <Package :size="18" class="text-blue-600" />
-                            </div>
-                            <span class="font-black text-slate-800 dark:text-gray-100 text-base tracking-tight">{{ part.name }}</span>
-                         </div>
-                      </td>
-                      <td class="px-8 py-6 text-center">
-                         <span :class="[part.quantity < 5 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-600 border-blue-200', 'inline-block px-4 py-2 rounded-xl font-black text-sm border shadow-sm']">
-                            {{ part.quantity }}
-                         </span>
-                      </td>
-                      <td class="px-8 py-6 text-right">
-                         <div class="flex justify-end gap-2">
-                            <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'entrada')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-green-50 text-green-600 border border-green-200 hover:bg-green-500 hover:text-white transition-all shadow-sm">
-                               <Plus :size="16" />
-                            </button>
-                            <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'saida')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                               <Minus :size="16" />
-                            </button>
-                            <button @click="openEditModal(part)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-blue-600 border border-slate-200 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                               <Edit3 :size="16" />
-                            </button>
-                            <button @click="handleDeletePart(part.id)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-red-400 border border-slate-200 hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                               <Trash2 :size="16" />
-                            </button>
-                         </div>
-                      </td>
-                   </tr>
-                </tbody>
-             </table>
-          </div>
-          <!-- Paginação da Lista -->
-          <div class="p-5 border-t border-gray-50 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
-            <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Página {{ currentPageList }} de {{ totalPagesList }}</span>
-            <div class="flex gap-2">
-               <button @click="currentPageList--" :disabled="currentPageList === 1" class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-xs font-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-300 transition-all">Anterior</button>
-               <button @click="currentPageList++" :disabled="currentPageList === totalPagesList" class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-xs font-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-300 transition-all">Próxima</button>
-            </div>
-          </div>
+       
+       <div v-if="currentSubTab === 'lista'" class="relative w-64">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="14" />
+          <input v-model="searchQuery" type="text" placeholder="Pesquisar..." class="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-950 border border-transparent focus:border-blue-500 outline-none text-xs font-bold transition-all dark:text-white" />
        </div>
     </div>
 
-    <!-- 5. View: Histórico -->
-    <div v-else class="bg-white dark:bg-slate-900 rounded-[28px] shadow-xl border border-blue-50 dark:border-slate-800 overflow-hidden animate-in slide-in-from-right duration-500">
-       <div class="p-8 border-b dark:border-slate-800 flex items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30">
-          <History class="w-6 h-6 text-blue-600" />
-          <h3 class="text-xl font-black text-blue-900 dark:text-white uppercase tracking-tighter">Histórico de Movimentações</h3>
-       </div>
+    <!-- 4. Visualização: Lista de Itens -->
+    <div v-if="currentSubTab === 'lista'" class="bg-white dark:bg-slate-900 rounded-[32px] border border-blue-50 dark:border-slate-800 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
        <div class="overflow-x-auto">
           <table class="w-full text-left">
              <thead>
-                <tr class="bg-blue-50/10 dark:bg-slate-800/20 text-[10px] font-black uppercase text-gray-500 tracking-widest border-b dark:border-slate-800">
-                   <th class="px-8 py-5">Data/Hora</th>
-                   <th class="px-8 py-4">Peça / Insumo</th>
-                   <th class="px-8 py-4">Tipo Movimento</th>
-                   <th class="px-8 py-4 text-center">Quantidade</th>
-                   <th class="px-8 py-4 text-right">Executor</th>
+                <tr class="bg-gray-50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b dark:border-slate-800">
+                   <th class="px-8 py-5">Status</th>
+                   <th class="px-8 py-5">Nome da Peça / Código</th>
+                   <th class="px-8 py-5 text-center">Quantidade</th>
+                   <th class="px-8 py-5 text-right">Ações Rápidas</th>
                 </tr>
              </thead>
              <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
-                <tr v-for="mov in paginatedMovements" :key="mov.id" class="hover:bg-blue-50/10 transition-colors">
-                   <td class="px-8 py-5 text-gray-400 text-xs font-bold">{{ mov.date }}</td>
-                   <td class="px-8 py-5 font-black text-slate-800 dark:text-white text-base">{{ mov.partName }}</td>
-                   <td class="px-8 py-5 text-xs font-black uppercase" :class="mov.type === 'entrada' ? 'text-green-600' : 'text-red-500'">
-                      {{ mov.type }}
+                <tr v-for="part in paginatedParts" :key="part.id" class="group hover:bg-blue-50/10 dark:hover:bg-slate-800/20 transition-all">
+                   <td class="px-8 py-6">
+                      <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-black uppercase', part.quantity > 5 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+                        {{ part.quantity > 5 ? 'Em Estoque' : 'Baixo Nível' }}
+                      </span>
                    </td>
-                   <td class="px-8 py-5 text-center font-black text-xl" :class="mov.type === 'entrada' ? 'text-green-600' : 'text-red-500'">
-                      {{ mov.type === 'entrada' ? '+' : '-' }}{{ mov.quantity }}
+                   <td class="px-8 py-6">
+                      <p class="font-black text-slate-800 dark:text-gray-100 text-base">{{ part.name }}</p>
+                      <p class="text-[10px] text-blue-600 font-bold uppercase mt-0.5">REF: {{ part.id.slice(0, 8).toUpperCase() }}</p>
                    </td>
-                   <td class="px-8 py-5 text-right text-xs font-bold text-gray-400 opacity-60">{{ mov.user }}</td>
+                   <td class="px-8 py-6 text-center">
+                      <div class="inline-flex items-center gap-4 bg-gray-50 dark:bg-slate-950 px-4 py-2 rounded-2xl border border-gray-100 dark:border-slate-800">
+                         <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'saida')" class="text-red-400 hover:text-red-600 transition-colors"><Minus :size="18" /></button>
+                         <span class="text-xl font-black dark:text-white w-8 text-center">{{ part.quantity }}</span>
+                         <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'entrada')" class="text-green-400 hover:text-green-600 transition-colors"><Plus :size="18" /></button>
+                      </div>
+                   </td>
+                   <td class="px-8 py-6 text-right">
+                      <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button @click="openEditModal(part)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit3 :size="16" /></button>
+                         <button @click="handleDeletePart(part.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 :size="16" /></button>
+                      </div>
+                   </td>
                 </tr>
              </tbody>
           </table>
        </div>
+
+       <!-- Paginação da Lista -->
+       <div class="p-5 border-t border-gray-50 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
+          <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Página {{ currentPageList }} de {{ totalPagesList }}</span>
+          <div class="flex gap-2">
+             <button @click="currentPageList--" :disabled="currentPageList === 1" class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-xs font-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-300 transition-all">Anterior</button>
+             <button @click="currentPageList++" :disabled="currentPageList === totalPagesList" class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-xs font-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-300 transition-all">Próxima</button>
+          </div>
+       </div>
+    </div>
+
+    <!-- 5. Visualização: Histórico de Movimentações -->
+    <div v-if="currentSubTab === 'historico'" class="bg-white dark:bg-slate-900 rounded-[32px] border border-blue-50 dark:border-slate-800 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+       <div class="overflow-x-auto">
+          <table class="w-full text-left">
+             <thead>
+                <tr class="bg-gray-50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b dark:border-slate-800">
+                   <th class="px-8 py-5">Tipo</th>
+                   <th class="px-8 py-5">Item</th>
+                   <th class="px-8 py-5">Quantidade</th>
+                   <th class="px-8 py-5">Motivo / Descrição</th>
+                   <th class="px-8 py-5">Data / Hora</th>
+                </tr>
+             </thead>
+             <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+                <tr v-for="move in paginatedMovements" :key="move.id" class="hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all">
+                   <td class="px-8 py-6">
+                      <div class="flex items-center gap-2">
+                         <div :class="['w-2 h-2 rounded-full', move.type === 'entrada' ? 'bg-green-500' : 'bg-red-500']"></div>
+                         <span class="text-[10px] font-black uppercase">{{ move.type }}</span>
+                      </div>
+                   </td>
+                   <td class="px-8 py-6">
+                      <p class="font-black text-slate-800 dark:text-gray-100 text-sm">{{ move.partName }}</p>
+                   </td>
+                   <td class="px-8 py-6">
+                      <p :class="['font-black text-lg', move.type === 'entrada' ? 'text-green-600' : 'text-red-600']">
+                        {{ move.type === 'entrada' ? '+' : '-' }}{{ move.quantity }}
+                      </p>
+                   </td>
+                   <td class="px-8 py-6">
+                      <p class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                         <History :size="12" /> {{ move.note }}
+                      </p>
+                   </td>
+                   <td class="px-8 py-6">
+                      <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ move.date }}</p>
+                   </td>
+                </tr>
+             </tbody>
+          </table>
+       </div>
+
        <!-- Paginação do Histórico -->
        <div class="p-5 border-t border-gray-50 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
           <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Página {{ currentPageHist }} de {{ totalPagesHist }}</span>
@@ -316,7 +280,7 @@ const handleDeletePart = (id: string) => {
           <div class="p-10 space-y-6">
              <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase text-gray-400 pl-1">Nome da Peça / Insumo</label>
-                <input v-model="newPartName" type="text" class="w-full px-6 py-5 rounded-3xl bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 font-black text-lg transition-all dark:text-white" />
+                <input v-model="newPartName" @input="newPartName = formatToTitleCase(newPartName)" type="text" class="w-full px-6 py-5 rounded-3xl bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 font-black text-lg transition-all dark:text-white" spellcheck="true" lang="pt-BR" />
              </div>
              <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase text-gray-400 pl-1">Quantidade Inicial</label>
@@ -340,7 +304,7 @@ const handleDeletePart = (id: string) => {
           <div class="p-10 space-y-6">
              <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase text-gray-400 pl-1">Nome da Peça</label>
-                <input v-model="editPartForm.name" type="text" class="w-full px-6 py-5 rounded-3xl bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-black text-lg dark:text-white" />
+                <input v-model="editPartForm.name" @input="editPartForm.name = formatToTitleCase(editPartForm.name)" type="text" class="w-full px-6 py-5 rounded-3xl bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-black text-lg dark:text-white" spellcheck="true" lang="pt-BR" />
              </div>
              <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase text-gray-400 pl-1">Quantidade Atual</label>
@@ -348,9 +312,9 @@ const handleDeletePart = (id: string) => {
                 <p class="text-[10px] text-gray-400 italic px-2">Alterar a quantidade aqui não registra movimentação, apenas corrige o saldo.</p>
              </div>
           </div>
-          <div class="px-10 py-8 bg-gray-50 dark:bg-slate-800/30 border-t flex justify-end gap-4">
-             <button @click="isEditModalOpen = false" class="px-8 py-4 font-black text-gray-400 uppercase text-xs">Cancelar</button>
-             <button @click="handleUpdatePart" class="px-12 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-2xl active:scale-95 transition-all uppercase text-xs tracking-widest">Salvar Correção</button>
+          <div class="px-10 py-8 bg-gray-50 dark:bg-slate-800/30 border-t flex justify-end gap-3">
+             <button @click="isEditModalOpen = false" class="px-6 py-2.5 font-bold text-gray-400 uppercase text-xs">Cancelar</button>
+             <button @click="handleUpdatePart" class="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs shadow-2xl shadow-blue-500/20 active:scale-95 transition-all">Salvar Alterações</button>
           </div>
        </div>
     </div>

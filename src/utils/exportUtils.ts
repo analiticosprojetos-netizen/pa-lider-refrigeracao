@@ -34,9 +34,18 @@ const buildPDFDoc = (order: any, settings: any) => {
 
   const doc = new jsPDF()
   
-  // Header Azul
-  doc.setFillColor(26, 54, 93)
-  doc.rect(0, 0, 210, 45, "F")
+  // Header em Degradê (Simulando o bg-mesh-gradient do site)
+  const r1 = 29, g1 = 78, b1 = 216 // #1d4ed8
+  const r2 = 30, g2 = 27, b2 = 75  // #1e1b4b
+  
+  for (let i = 0; i <= 210; i += 0.5) {
+    const ratio = i / 210
+    const r = Math.floor(r1 + (r2 - r1) * ratio)
+    const g = Math.floor(g1 + (g2 - g1) * ratio)
+    const b = Math.floor(b1 + (b2 - b1) * ratio)
+    doc.setFillColor(r, g, b)
+    doc.rect(i, 0, 0.6, 45, "F")
+  }
   
   if (logo) {
     try {

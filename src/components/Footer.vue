@@ -52,9 +52,13 @@ onMounted(() => {
         <div>
           <h4 class="text-xs font-black uppercase tracking-[0.2em] text-blue-400 mb-6">Navegação</h4>
           <ul class="space-y-4">
-            <li v-for="link in ['Serviços', 'Sobre Nós', 'Contato']" :key="link">
-              <a :href="`#${link.toLowerCase().replace(' ', '-')}`" class="text-sm font-bold text-blue-100/60 hover:text-white transition-colors uppercase tracking-widest">
-                {{ link }}
+            <li v-for="link in [
+              { name: 'Serviços', id: 'servicos' },
+              { name: 'Sobre Nós', id: 'sobre' },
+              { name: 'Contato', id: 'contato' }
+            ]" :key="link.id">
+              <a :href="`/#${link.id}`" class="text-sm font-bold text-blue-100/60 hover:text-white transition-colors uppercase tracking-widest">
+                {{ link.name }}
               </a>
             </li>
           </ul>

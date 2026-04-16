@@ -6,6 +6,7 @@ import { useInventoryStore } from '../stores/inventory'
 import { useCustomerStore } from '../stores/customers'
 import { EQUIPMENT_DATABASE, SERVICE_TYPES } from '../services/OrderService'
 import CurrencyInput from './CurrencyInput.vue'
+import { formatToTitleCase } from '../utils/textUtils'
 
 const props = defineProps<{
   initialData?: any
@@ -53,7 +54,7 @@ onMounted(async () => {
   if (saved) {
     const parsed = JSON.parse(saved)
     siteSettings.value.maxDiscountWarning = parsed.maxDiscountWarning || 10
-    siteSettings.value.maxDiscountDanger = parsed.maxDiscountDanger || 20
+    siteSettings.value.maxDiscountDanger = parsed.maxDiscountWarning || 20
   }
   
   if (props.initialData) {
@@ -237,7 +238,7 @@ const handleSave = async () => {
         <div class="space-y-4">
           <div class="space-y-1">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Nome / Empresa</label>
-            <input list="registered_customers" v-model="formData.clientName" @input="onClientNameSelect" type="text" placeholder="Digite o nome..." class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white shadow-sm" />
+            <input list="registered_customers" v-model="formData.clientName" @input="() => { onClientNameSelect(); formData.clientName = formatToTitleCase(formData.clientName) }" type="text" placeholder="Digite o nome..." class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white shadow-sm" spellcheck="true" lang="pt-BR" />
             <datalist id="registered_customers">
               <option v-for="c in customerStore.customers" :key="c.id" :value="c.name"></option>
             </datalist>
@@ -267,35 +268,35 @@ const handleSave = async () => {
         <div class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Placa</label>
-              <input v-model="formData.plate" type="text" placeholder="ABC-1234" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
+               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Placa</label>
+               <input v-model="formData.plate" @input="formData.plate = formData.plate.toUpperCase()" type="text" placeholder="ABC-1234" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white uppercase" />
             </div>
             <div class="space-y-1">
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Modelo Veículo</label>
-              <input v-model="formData.vehicleModel" type="text" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
+              <input v-model="formData.vehicleModel" @input="formData.vehicleModel = formatToTitleCase(formData.vehicleModel)" type="text" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" spellcheck="true" lang="pt-BR" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Marca Equipamento</label>
-              <select v-model="formData.equipBrand" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 appearance-none font-bold text-sm dark:text-white">
-                <option value="">Ex: Thermo King</option>
-                <option v-for="brand in Object.keys(EQUIPMENT_DATABASE)" :key="brand" :value="brand">{{ brand }}</option>
-              </select>
+               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Marca Equipamento</label>
+               <select v-model="formData.equipBrand" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 appearance-none font-bold text-sm dark:text-white">
+                 <option value="">Ex: Thermo King</option>
+                 <option v-for="brand in Object.keys(EQUIPMENT_DATABASE)" :key="brand" :value="brand">{{ brand }}</option>
+               </select>
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Modelo Equipamento</label>
-              <select v-model="formData.equipModel" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 appearance-none font-bold text-sm dark:text-white">
-                <option value="">Selecione ou digite...</option>
-                <option v-for="model in filteredModels" :key="model" :value="model">{{ model }}</option>
-              </select>
+               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Modelo Equipamento</label>
+               <select v-model="formData.equipModel" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 appearance-none font-bold text-sm dark:text-white">
+                 <option value="">Selecione ou digite...</option>
+                 <option v-for="model in filteredModels" :key="model" :value="model">{{ model }}</option>
+               </select>
             </div>
           </div>
           <div class="space-y-1">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Tipo de Serviço</label>
             <select v-model="formData.serviceType" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 appearance-none font-bold text-sm dark:text-white">
-              <option value="">Selecione ou digite o tipo...</option>
-              <option v-for="st in SERVICE_TYPES" :key="st" :value="st">{{ st }}</option>
+               <option value="">Selecione ou digite o tipo...</option>
+               <option v-for="st in SERVICE_TYPES" :key="st" :value="st">{{ st }}</option>
             </select>
           </div>
         </div>
@@ -309,11 +310,11 @@ const handleSave = async () => {
         <div class="space-y-4">
           <div class="space-y-1">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Problema Relatado</label>
-            <textarea v-model="formData.problem" rows="3" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white resize-none"></textarea>
+            <textarea v-model="formData.problem" @input="formData.problem = formatToTitleCase(formData.problem)" rows="3" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white resize-none" spellcheck="true" lang="pt-BR"></textarea>
           </div>
           <div class="space-y-1">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Diagnóstico Técnico</label>
-            <textarea v-model="formData.diagnosis" rows="3" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white resize-none"></textarea>
+            <textarea v-model="formData.diagnosis" @input="formData.diagnosis = formatToTitleCase(formData.diagnosis)" rows="3" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white resize-none" spellcheck="true" lang="pt-BR"></textarea>
           </div>
         </div>
       </div>
@@ -388,19 +389,21 @@ const handleSave = async () => {
         </div>
         <div class="p-8 space-y-2 max-h-[500px] overflow-y-auto">
            <!-- Lista de Serviços -->
-           <div v-for="(item, idx) in formData.services" :key="item.id" class="flex gap-4 items-end mb-4">
-              <div class="flex-1 space-y-1.5">
-                 <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400">Serviço</label>
-                 <input v-model="item.description" placeholder="Descrição" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm" />
+           <div v-for="(item, idx) in formData.services" :key="item.id" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mb-6 p-4 bg-gray-50/50 dark:bg-slate-950/20 rounded-xl border border-transparent hover:border-blue-100 dark:hover:border-slate-800 transition-all">
+              <div class="col-span-1 md:col-span-8 space-y-1.5">
+                 <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Serviço / Mão de Obra</label>
+                 <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição do Serviço</label>
+                 <input v-model="item.description" @input="item.description = formatToTitleCase(item.description)" placeholder="Ex: Carga de Gás" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm" spellcheck="true" lang="pt-BR" />
               </div>
-              <div class="w-32 space-y-1.5">
-                 <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400">Valor</label>
+              <div class="col-span-9 md:col-span-3 space-y-1.5">
+                 <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Valor</label>
+                 <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Valor Unitário</label>
                  <CurrencyInput v-model="item.value" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm text-right" />
               </div>
               <!-- Deixando quantity invisivel para serviços mas computável (1 por default) -->
               <input type="hidden" v-model="item.qty" />
-              <div class="flex items-center justify-center pb-3">
-                 <button @click="removeService(idx)" class="text-red-400 hover:text-red-500 transition-colors"><Trash2 :size="18" /></button>
+              <div class="col-span-3 md:col-span-1 flex items-center justify-center pb-3">
+                 <button @click="removeService(idx)" class="p-3 md:p-0 text-red-400 hover:text-red-500 transition-colors bg-red-50 md:bg-transparent rounded-lg"><Trash2 :size="18" /></button>
               </div>
            </div>
 
@@ -422,11 +425,18 @@ const handleSave = async () => {
                  </div>
               </div>
 
-              <div class="flex gap-3 relative">
-                <input v-model="part.description" placeholder="Descrição" class="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all" />
-                <input v-model.number="part.qty" type="number" :min="1" :max="getMaxQty(part)" @input="validateQty(part)" class="w-16 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm text-center dark:text-white shadow-sm transition-all" />
-                <div class="relative">
-                  <CurrencyInput v-model="part.value" class="w-28 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white text-right shadow-sm transition-all" />
+              <div class="grid grid-cols-12 gap-3">
+                <div class="col-span-12 md:col-span-7 space-y-1.5">
+                  <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição Manual</label>
+                  <input v-model="part.description" @input="part.description = formatToTitleCase(part.description)" placeholder="Descrição da Peça" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all" spellcheck="true" lang="pt-BR" />
+                </div>
+                <div class="col-span-4 md:col-span-2 space-y-1.5">
+                  <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Qtd</label>
+                  <input v-model.number="part.qty" type="number" :min="1" :max="getMaxQty(part)" @input="validateQty(part)" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm text-center dark:text-white shadow-sm transition-all" />
+                </div>
+                <div class="col-span-8 md:col-span-3 space-y-1.5">
+                  <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Valor Unitário</label>
+                  <CurrencyInput v-model="part.value" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white text-right shadow-sm transition-all" />
                 </div>
               </div>
            </div>
@@ -469,7 +479,7 @@ const handleSave = async () => {
                <span>Total Peças:</span>
                <span>R$ {{ partsValue.toFixed(2) }}</span>
             </div>
-            <div class="flex justify-between items-center text-[11px] font-black text-blue-50 uppercase border-t border-blue-800 pt-2">
+            <div class="flex justify-between items-center text-[11px] font-black text-blue-5 uppercase border-t border-blue-800 pt-2">
                <span>Subtotal:</span>
                <span>R$ {{ subtotal.toFixed(2) }}</span>
             </div>
@@ -489,7 +499,7 @@ const handleSave = async () => {
           <div class="space-y-3">
              <div class="space-y-1">
                 <label class="text-[9px] font-black text-blue-300 uppercase">Técnico Responsável</label>
-                <input v-model="formData.technician" type="text" placeholder="admin" class="w-full bg-blue-800/50 border border-blue-700/50 rounded-xl px-4 py-2.5 outline-none font-bold text-xs" />
+                <input v-model="formData.technician" @input="formData.technician = formatToTitleCase(formData.technician)" type="text" placeholder="admin" class="w-full bg-blue-800/50 border border-blue-700/50 rounded-xl px-4 py-2.5 outline-none font-bold text-xs" spellcheck="true" lang="pt-BR" />
              </div>
              <button @click="handleSave" class="w-full bg-blue-500 hover:bg-blue-400 text-white py-4 rounded-xl font-black uppercase text-sm tracking-widest shadow-2xl transition-all flex items-center justify-center gap-2">
                <Plus v-if="!formData.id" :size="18" />

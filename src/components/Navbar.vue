@@ -19,9 +19,9 @@ onUnmounted(() => {
 })
 
 const navLinks = [
-  { name: 'Serviços', href: '#servicos' },
-  { name: 'Sobre Nós', href: '#sobre' },
-  { name: 'Contato', href: '#contato' }
+  { name: 'Serviços', href: '/#servicos' },
+  { name: 'Sobre Nós', href: '/#sobre' },
+  { name: 'Contato', href: '/#contato' }
 ]
 </script>
 
