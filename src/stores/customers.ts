@@ -29,11 +29,17 @@ export const useCustomerStore = defineStore('customers', () => {
     }
   }
 
+  const deleteCustomer = (id: string) => {
+    customers.value = customers.value.filter(c => c.id !== id)
+    localStorage.setItem('lider_customers', JSON.stringify(customers.value))
+  }
+
   return {
     customers,
     isLoading,
     loadCustomers,
     createCustomer,
-    updateCustomer
+    updateCustomer,
+    deleteCustomer
   }
 })

@@ -39,7 +39,7 @@ const filteredCustomers = computed(() => {
 })
 
 const save = async () => {
-  await customerStore.addCustomer({ ...form.value })
+  await customerStore.createCustomer({ ...form.value })
   isNewCustomerModalOpen.value = false
   form.value = { name: '', document: '', phone: '', email: '' }
 }
