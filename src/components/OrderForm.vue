@@ -102,6 +102,7 @@ const onPartSelect = (index: number, partId: string) => {
   if (part) {
     formData.value.parts[index].description = part.name
     formData.value.parts[index].inventoryPartId = part.id
+    validateQty(formData.value.parts[index])
   }
 }
 
@@ -156,6 +157,22 @@ const formatDateShort = (dateStr: string) => {
   const parts = dateStr.split('-')
   if (parts.length !== 3) return ''
   return `${parts[2]}/${parts[1]}`
+}
+
+const getMaxQty = (part: any) => {
+  if (!part.inventoryPartId) return 9999
+  const inventoryItem = inventoryStore.parts.find(p => p.id === part.inventoryPartId)
+  return inventoryItem ? inventoryItem.quantity : 9999
+}
+
+const validateQty = (part: any) => {
+  const max = getMaxQty(part)
+  if (part.qty > max) {
+    part.qty = max
+  }
+  if (part.qty < 1) {
+    part.qty = 1
+  }
 }
 
 const handleSave = async () => {
@@ -397,7 +414,7 @@ const handleSave = async () => {
 
               <div class="flex gap-3 relative">
                 <input v-model="part.description" placeholder="Descrição" class="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all" />
-                <input v-model.number="part.qty" type="number" class="w-16 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm text-center dark:text-white shadow-sm transition-all" />
+                <input v-model.number="part.qty" type="number" :min="1" :max="getMaxQty(part)" @input="validateQty(part)" class="w-16 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm text-center dark:text-white shadow-sm transition-all" />
                 <div class="relative">
                   <CurrencyInput v-model="part.value" class="w-28 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white text-right shadow-sm transition-all" />
                 </div>
