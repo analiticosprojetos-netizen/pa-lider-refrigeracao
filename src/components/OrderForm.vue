@@ -98,6 +98,16 @@ const removePart = (index: number) => {
 }
 
 const onPartSelect = (index: number, partId: string) => {
+  if (!partId) return
+
+  // Verifica se a peça já existe em outro campo para evitar duplicidade
+  const isDuplicate = formData.value.parts.some((p, i) => i !== index && p.inventoryPartId === partId)
+  if (isDuplicate) {
+    alert('Esta peça já foi adicionada ao orçamento. Por favor, ajuste a quantidade no campo já existente.')
+    formData.value.parts[index].inventoryPartId = ''
+    return
+  }
+
   const part = inventoryStore.parts.find(p => p.id === partId)
   if (part) {
     formData.value.parts[index].description = part.name
