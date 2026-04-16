@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Users, UserPlus, X, Edit3, Search, Trash2 } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { 
+  Users, UserPlus, Search, Edit3, Trash2, X, Mail, Phone, FileText, 
+  MapPin, CheckCircle2, History 
+} from 'lucide-vue-next'
 import { useCustomerStore } from '../stores/customers'
 
 const customerStore = useCustomerStore()
-const isNewCustomerModalOpen = ref(false)
-const isEditModalOpen = ref(false)
-const currentEditingId = ref('')
 const searchQuery = ref('')
+const isNewCustomerModalOpen = ref(ref(false))
+const isEditModalOpen = ref(false)
 
 const form = ref({
   name: '',
@@ -17,6 +19,7 @@ const form = ref({
 })
 
 const editForm = ref({
+  id: '',
   name: '',
   document: '',
   phone: '',
@@ -29,33 +32,31 @@ onMounted(async () => {
 
 const filteredCustomers = computed(() => {
   if (!searchQuery.value) return customerStore.customers
-  const q = searchQuery.value.toLowerCase()
   return customerStore.customers.filter(c => 
-    c.name.toLowerCase().includes(q) || 
-    (c.document && c.document.includes(q))
+    c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    c.document?.includes(searchQuery.value)
   )
 })
 
 const save = async () => {
-  await customerStore.createCustomer({ ...form.value })
+  await customerStore.addCustomer({ ...form.value })
   isNewCustomerModalOpen.value = false
   form.value = { name: '', document: '', phone: '', email: '' }
 }
 
 const openEditModal = (customer: any) => {
-  currentEditingId.value = customer.id
   editForm.value = { ...customer }
   isEditModalOpen.value = true
 }
 
 const handleUpdate = async () => {
-  await (customerStore as any).updateCustomer(currentEditingId.value, { ...editForm.value })
+  await customerStore.updateCustomer(editForm.value.id, { ...editForm.value })
   isEditModalOpen.value = false
 }
 
 const handleDelete = (id: string) => {
-  if (confirm('Deseja realmente excluir este cliente?')) {
-    // Implementar se necessário no store
+  if (confirm('Deseja excluir este cliente?')) {
+    customerStore.deleteCustomer(id)
   }
 }
 </script>
@@ -103,7 +104,6 @@ const handleDelete = (id: string) => {
                 <tr v-for="customer in filteredCustomers" :key="customer.id" class="group hover:bg-blue-50/10 dark:hover:bg-slate-800/10 transition-colors">
                    <td class="px-8 py-6">
                       <p class="font-black text-slate-800 dark:text-gray-100 text-base tracking-tight">{{ customer.name }}</p>
-                      <p class="text-[10px] text-blue-600 font-bold uppercase mt-0.5">ID: {{ customer.id.toUpperCase() }}</p>
                    </td>
                    <td class="px-8 py-6 text-sm font-bold text-gray-500 dark:text-gray-400">
                       {{ customer.document || '---' }}
@@ -128,24 +128,23 @@ const handleDelete = (id: string) => {
                       </div>
                    </td>
                 </tr>
-                <tr v-if="filteredCustomers.length === 0">
-                   <td colspan="6" class="px-8 py-20 text-center">
-                      <div class="flex flex-col items-center opacity-30">
-                         <Users :size="48" class="text-gray-400 mb-4" />
-                         <p class="font-black text-sm uppercase tracking-widest text-gray-500">Nenhum cliente localizado</p>
-                      </div>
-                   </td>
-                </tr>
              </tbody>
           </table>
+          
+          <div v-if="filteredCustomers.length === 0" class="py-24 text-center">
+             <div class="opacity-10 mb-6">
+                <Users :size="80" class="mx-auto" />
+             </div>
+             <p class="text-sm font-black text-gray-300 uppercase tracking-widest italic">Nenhum cliente encontrado</p>
+          </div>
        </div>
     </div>
 
     <!-- Modal Novo Cliente -->
-    <div v-show="isNewCustomerModalOpen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div v-show="isNewCustomerModalOpen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 rounded-[40px] w-full max-w-md shadow-3xl overflow-hidden border border-white/20 dark:border-slate-800 animate-in zoom-in-95">
-        <div class="px-10 py-8 bg-blue-50/50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center text-blue-900 dark:text-white">
-           <h3 class="text-2xl font-black">Cadastrar Cliente</h3>
+        <div class="px-10 py-8 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center text-blue-900 dark:text-white">
+           <h3 class="text-2xl font-black uppercase tracking-tighter">Cadastrar Cliente</h3>
            <button @click="isNewCustomerModalOpen = false" class="p-3 hover:bg-red-50 rounded-2xl text-gray-400 transition-all"><X :size="24"/></button>
         </div>
         <div class="p-10 space-y-6">
