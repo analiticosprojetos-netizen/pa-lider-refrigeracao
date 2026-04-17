@@ -20,8 +20,16 @@ const whatsappUrl = computed(() => {
 </script>
 
 <template>
-  <div class="fixed right-4 bottom-1/2 translate-y-1/2 z-50 flex flex-col gap-4 pointer-events-none">
-    <div class="flex flex-col gap-3 pointer-events-auto">
+  <div :class="[
+    'fixed z-50 transition-all duration-500',
+    'md:right-6 md:top-1/2 md:-translate-y-1/2 md:bottom-auto',
+    'bottom-4 left-0 w-full md:w-auto md:left-auto px-4 md:p-0'
+  ]">
+    <div :class="[
+      'flex gap-3 pointer-events-auto transition-all',
+      'md:flex-col items-center justify-center',
+      'flex-row justify-center'
+    ]">
       <a 
         v-for="social in [
           { name: 'WhatsApp', icon: MessageCircle, url: whatsappUrl, color: 'bg-[#25D366]', shadow: 'shadow-[#25D366]/40' },
@@ -33,12 +41,12 @@ const whatsappUrl = computed(() => {
         target="_blank" 
         rel="noopener noreferrer"
         :class="[
-          'p-2.5 rounded-xl text-white shadow-xl hover:scale-110 active:scale-95 transition-all duration-300 group',
+          'p-2.5 rounded-xl text-white shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 group flex justify-center',
           social.color, social.shadow
         ]"
         :title="social.name"
       >
-        <component :is="social.icon" :size="20" class="group-hover:rotate-12 transition-transform" />
+        <component :is="social.icon" :size="18" class="group-hover:rotate-12 transition-transform" />
       </a>
     </div>
   </div>

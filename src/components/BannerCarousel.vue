@@ -68,8 +68,7 @@ const scrollNext = () => emblaApi.value?.scrollNext()
         
         <!-- BANNER 1: OFICIAL (Design Lider) -->
         <div class="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#0f172a] overflow-hidden">
-          <!-- Background Decor -->
-          <div class="absolute inset-0 opacity-10 pointer-events-none">
+          <div class="absolute inset-0 opacity-10 pointer-events-none hidden md:block">
             <Snowflake class="absolute top-20 left-20 text-white w-12 h-12 animate-pulse" />
             <Snowflake class="absolute bottom-20 right-20 text-white w-16 h-16 animate-pulse" />
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.4),transparent)]" />
@@ -78,41 +77,44 @@ const scrollNext = () => emblaApi.value?.scrollNext()
           <div class="relative z-10 h-full flex items-center">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
               <div class="flex flex-col lg:flex-row items-center justify-between gap-16">
-                <!-- Text Area -->
-                <div class="text-center lg:text-left flex-1 animate-in slide-in-from-left duration-1000">
-                  <div class="relative inline-block mb-4">
-                    <span class="text-blue-500 font-bold uppercase tracking-[0.5em] text-xs">A Melhor do Setor</span>
-                    <div class="absolute -right-8 top-1/2 w-6 h-0.5 bg-blue-500" />
+                <!-- Text Area (Mobile: Somente o selo 24h simples) -->
+                <div class="text-center lg:text-left flex-1 animate-in slide-in-from-left duration-1000 flex flex-col items-center lg:items-start">
+                  <div class="hidden md:flex flex-col">
+                    <div class="relative inline-block mb-4">
+                      <span class="text-blue-500 font-bold uppercase tracking-[0.5em] text-xs">A Melhor do Setor</span>
+                      <div class="absolute -right-8 top-1/2 w-6 h-0.5 bg-blue-500" />
+                    </div>
+                    <h1 class="text-7xl md:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                      LÍDER
+                    </h1>
+                    <h2 class="text-4xl md:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-2">
+                      REFRIGERAÇÃO
+                    </h2>
                   </div>
-                  <h1 class="text-7xl md:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                    LÍDER
-                  </h1>
-                  <h2 class="text-4xl md:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-2">
-                    REFRIGERAÇÃO
-                  </h2>
-                  <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
-                    <div class="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-2">
-                      <div class="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
-                      <span class="text-white text-[10px] font-black uppercase tracking-widest">Atendimento 24h Disponível</span>
+                  
+                  <div class="mt-4 md:mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
+                    <div class="bg-blue-600/20 md:bg-white/10 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl border border-white/10 flex items-center gap-2">
+                      <div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-blue-400 animate-ping" />
+                      <span class="text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest">Atendimento 24h Disponível</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- CTA Area -->
-                <div class="flex-1 flex flex-col items-center lg:items-end gap-8 animate-in slide-in-from-right duration-1000">
-                  <div class="bg-blue-600/20 backdrop-blur-xl p-8 rounded-[40px] border-l-8 border-blue-500 max-w-md shadow-2xl">
-                    <h3 class="text-xl md:text-2xl font-black text-white uppercase mb-3 leading-tight tracking-tight">
+                <div class="flex-1 flex flex-col items-center lg:items-end gap-6 sm:gap-8 animate-in slide-in-from-right duration-1000 w-full max-w-lg mx-auto lg:mx-0">
+                  <div class="hidden md:block bg-blue-600/20 backdrop-blur-xl p-6 sm:p-8 rounded-[30px] sm:rounded-[40px] border-l-4 sm:border-l-8 border-blue-500 w-full shadow-2xl">
+                    <h3 class="text-lg md:text-2xl font-black text-white uppercase mb-2 sm:mb-3 leading-tight tracking-tight">
                       REFORMAS E MANUTENÇÃO EM BAÚS FRIGORÍFICOS
                     </h3>
-                    <p class="text-blue-100/70 text-sm font-medium leading-relaxed">
+                    <p class="text-blue-100/70 text-[10px] sm:text-sm font-medium leading-relaxed">
                       Especialistas em sistemas Thermo King e Carrier. Peças originais e técnicos certificados.
                     </p>
                   </div>
                   
-                  <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                  <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0">
                     <button 
                       @click="$emit('contact-click')"
-                      class="bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
+                      class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
                     >
                       Solicitar Orçamento
                     </button>
@@ -121,9 +123,9 @@ const scrollNext = () => emblaApi.value?.scrollNext()
                       :href="mapsUrl()"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="inline-flex items-center justify-center gap-3 bg-white text-blue-900 hover:bg-blue-50 font-black px-8 py-4 text-base rounded-2xl shadow-2xl transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest group"
+                      class="inline-flex items-center justify-center gap-3 bg-white text-blue-900 hover:bg-blue-50 font-black px-6 sm:px-8 py-2.5 sm:py-4 text-[10px] sm:text-base rounded-2xl shadow-2xl transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest group"
                     >
-                      <MapPin :size="20" class="text-blue-600 group-hover:bounce" />
+                      <MapPin :size="16" class="text-blue-600 md:w-5 md:h-5" />
                       Como Chegar
                     </a>
                   </div>
@@ -134,7 +136,8 @@ const scrollNext = () => emblaApi.value?.scrollNext()
         </div>
 
         <!-- BANNERS CUSTOMIZADOS -->
-        <div v-for="(banner, idx) in banners" :key="idx" class="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#0f172a]">
+        <div v-for="(banner, idx) in banners" :key="idx" 
+             class="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#0f172a] flex flex-col md:block">
           <!-- Fundo Decorativo Lider Premium (Preenche os black bars) -->
           <div class="absolute inset-0 opacity-20 pointer-events-none">
             <Snowflake class="absolute top-20 left-20 text-white w-12 h-12 animate-pulse transition-opacity" />
@@ -142,9 +145,11 @@ const scrollNext = () => emblaApi.value?.scrollNext()
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.5),transparent)]" />
           </div>
 
-          <div class="absolute inset-0 overflow-hidden flex"
+          <div class="overflow-hidden flex transition-all duration-500"
                :class="{
-                 'p-8 md:p-16 lg:p-24': banner.objectFit !== 'cover',
+                 'relative h-[45%] md:absolute md:inset-0 w-full': banner.objectFit !== 'cover',
+                 'absolute inset-0 w-full h-full': banner.objectFit === 'cover',
+                 'p-4 md:p-16 lg:p-24': banner.objectFit !== 'cover',
                  'items-start justify-start': banner.imagePosition === 'top-left',
                  'items-start justify-center': banner.imagePosition === 'top-center',
                  'items-start justify-end': banner.imagePosition === 'top-right',
@@ -171,7 +176,11 @@ const scrollNext = () => emblaApi.value?.scrollNext()
             />
           </div>
           
-          <div class="relative z-10 h-full flex items-center">
+          <div class="relative z-10 flex items-center transition-all duration-500 shadow-2xl md:shadow-none"
+               :class="{
+                 'h-[55%] md:h-full w-full bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent md:bg-none': banner.objectFit !== 'cover',
+                 'h-full w-full absolute inset-0': banner.objectFit === 'cover'
+               }">
             <div class="w-full h-full flex flex-col justify-center px-6 sm:px-16 lg:px-24"
                  :class="{ 
                     'items-start text-left': !banner.alignment || banner.alignment === 'left',
@@ -186,25 +195,35 @@ const scrollNext = () => emblaApi.value?.scrollNext()
                   'items-center': banner.alignment === 'center',
                   'items-end': banner.alignment === 'right'
                 }">
-                  <div>
+                  <!-- Logotipo Flutuante (Opcional) -->
+                  <div v-if="banner.overlayLogo" 
+                       class="w-32 md:w-48 lg:w-56 h-auto animate-in fade-in slide-in-from-top duration-700">
+                    <img :src="banner.overlayLogo" class="w-full h-auto object-contain drop-shadow-2xl" />
+                  </div>
+
+                  <div class="flex flex-col" :class="{
+                        'items-start': !banner.alignment || banner.alignment === 'left',
+                        'items-center': banner.alignment === 'center',
+                        'items-end': banner.alignment === 'right'
+                  }">
                     <h1 v-if="banner.title1 !== ''" 
-                        class="text-6xl md:text-8xl lg:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
-                        :style="{ fontSize: banner.titleSize ? `calc(${(banner.titleSize/100)} * clamp(3rem, 10vw, 8rem))` : '' }">
+                        class="text-white font-black italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+                        :style="{ fontSize: banner.titleSize ? `calc(${(banner.titleSize/100)} * clamp(1.4rem, 5vw, 8rem))` : '' }">
                       {{ banner.title1 ?? 'Sua Carga' }}
                     </h1>
                     <h2 v-if="banner.title2 !== ''" 
-                        class="text-3xl md:text-5xl lg:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-4 drop-shadow-md"
-                        :style="{ fontSize: banner.subtitleSize ? `calc(${(banner.subtitleSize/100)} * clamp(1.5rem, 5vw, 4rem))` : '' }">
+                        class="font-black text-blue-500 italic leading-none tracking-tighter mt-2 md:mt-4 drop-shadow-md"
+                        :style="{ fontSize: banner.subtitleSize ? `calc(${(banner.subtitleSize/100)} * clamp(0.8rem, 3vw, 4rem))` : '' }">
                       {{ banner.title2 ?? 'Sempre na Temperatura Certa' }}
                     </h2>
                   </div>
-                  <div v-if="banner.buttonText !== ''">
+                  <div v-if="banner.buttonText !== ''" class="mt-6 md:mt-12">
                     <a v-if="banner.buttonAction === 'url'" :href="banner.buttonUrl" target="_blank"
-                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 transition-all uppercase tracking-widest">
+                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest">
                        {{ banner.buttonText ?? 'Falar com Especialista' }}
                     </a>
                     <button v-else @click="$emit('contact-click')"
-                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 transition-all uppercase tracking-widest">
+                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 active:scale-95 transition-all uppercase tracking-widest">
                        {{ banner.buttonText ?? 'Falar com Especialista' }}
                     </button>
                   </div>

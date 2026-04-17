@@ -29,7 +29,9 @@ const navLinks = [
   <nav 
     :class="[
       'fixed top-0 left-0 w-full z-50 transition-all duration-300',
-      isScrolled ? 'bg-mesh-gradient shadow-2xl py-3' : 'bg-transparent py-6'
+      isScrolled 
+        ? 'bg-mesh-gradient shadow-2xl py-3' 
+        : 'bg-transparent md:bg-transparent bg-slate-900/95 backdrop-blur-md py-4 md:py-6 shadow-lg md:shadow-none'
     ]"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import SocialFloatingBar from '../components/SocialFloatingBar.vue'
 import BannerCarousel from '../components/BannerCarousel.vue'
+import SpecialtiesCarousel from '../components/SpecialtiesCarousel.vue'
 import { 
   Truck, Award, ThermometerSnowflake, CheckCircle2, Phone, Mail, 
   MapPin, MessageSquare, ShieldCheck, Clock, Users, Navigation 
@@ -22,6 +23,7 @@ const settings = ref({
   longitude: '',
   banners: [],
   carouselDelay: 6,
+  specialties: [] as any[],
   aboutYears: '15+',
   aboutTitle: 'Excelência em Refrigeração de Transportes',
   aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
@@ -161,20 +163,7 @@ const mapsUrl = computed(() => {
           <div class="w-24 h-2 bg-blue-600 mx-auto rounded-full" />
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div v-for="spec in [
-            { t: 'Baús Frigoríficos', d: 'Reforma completa em estruturas de baús térmicos.', i: Truck },
-            { t: 'Autorizada Oficial', d: 'Representante autorizado Carrier e Thermo Star.', i: Award },
-            { t: 'Thermo King', d: 'Especialistas certificados em sistemática Thermo King.', i: ThermometerSnowflake },
-            { t: 'Logística de Frio', d: 'Soluções integradas para transporte refrigerado.', i: CheckCircle2 }
-          ]" :key="spec.t" class="bg-white dark:bg-slate-900 p-10 rounded-[32px] border border-blue-50 dark:border-slate-800 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all group">
-            <div class="bg-blue-50 dark:bg-slate-800 w-20 h-20 rounded-3xl flex items-center justify-center text-blue-600 mb-8 group-hover:scale-110 transition-transform">
-              <component :is="spec.i" :size="40" />
-            </div>
-            <h3 class="text-xl font-black text-blue-900 dark:text-white mb-4 uppercase tracking-tight">{{ spec.t }}</h3>
-            <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{{ spec.d }}</p>
-          </div>
-        </div>
+        <SpecialtiesCarousel :items="settings.specialties" />
       </div>
     </section>
 
