@@ -95,8 +95,7 @@ const scrollNext = () => emblaApi.value?.scrollNext()
           <div class="h-full bg-white dark:bg-slate-900 p-8 md:p-10 rounded-[40px] border border-blue-50 dark:border-slate-800 shadow-xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center">
             
             <!-- Icon/Brand Logo Container -->
-            <div class="w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-600 mb-8 border border-blue-100/50 dark:border-blue-900/30 group-hover:scale-110 transition-transform shadow-inner overflow-hidden uppercase relative">
-              <div class="absolute top-2 right-2 text-[10px] font-black opacity-20">#{{ index + 1 }}</div>
+            <div class="w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-600 mb-8 border border-blue-100/50 dark:border-blue-900/30 group-hover:scale-110 transition-transform shadow-inner overflow-hidden uppercase">
               <img v-if="spec.logo" :src="spec.logo" class="w-full h-full object-contain p-2" />
               <component v-else :is="spec.icon" :size="40" stroke-width="1.5" />
             </div>

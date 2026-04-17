@@ -554,9 +554,6 @@ const zoomOut = () => cropperRef.value?.zoom(0.8)
 
                    <!-- MODO CARD (Estúdio de Cards dedicado) -->
                    <div v-else class="w-[500px] bg-white dark:bg-slate-900 p-16 rounded-[60px] border border-blue-50 dark:border-slate-800 shadow-4xl flex flex-col items-center text-center relative overflow-hidden">
-                      <div class="absolute top-8 right-12 text-2xl font-black text-blue-500/10 tracking-tighter">
-                        #{{ targetCardIndex >= 0 ? targetCardIndex + 1 : editingIndex + 1 }}
-                      </div>
                       <div class="w-32 h-32 rounded-[32px] bg-blue-50/50 dark:bg-slate-800/50 flex items-center justify-center text-blue-600 mb-10 border border-blue-100/30 dark:border-blue-900/30 overflow-hidden shadow-sm">
                         <img v-if="cropperResultSrc" :src="cropperResultSrc" class="w-full h-full object-contain p-2" />
                         <Package v-else :size="48" />
@@ -674,10 +671,20 @@ const zoomOut = () => cropperRef.value?.zoom(0.8)
                              <div>
                                 <label class="text-[10px] font-black uppercase tracking-widest text-blue-300 block mb-1">Título Grande</label>
                                 <input v-model="customTitle1" type="text" placeholder="Ex: Sua Carga" class="w-full bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold focus:border-blue-500 outline-none" />
+                                <div class="flex justify-between items-center mt-2 px-1">
+                                   <span class="text-[8px] font-black text-slate-500 uppercase">Tamanho</span>
+                                   <span class="text-[10px] font-bold text-blue-400">{{ customTitleSize }}%</span>
+                                </div>
+                                <input type="range" v-model.number="customTitleSize" min="50" max="200" step="5" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                              </div>
                              <div>
                                 <label class="text-[10px] font-black uppercase tracking-widest text-blue-300 block mb-1">Subtítulo Azul</label>
                                 <input v-model="customTitle2" type="text" placeholder="Ex: Sempre na Temperatura Certa" class="w-full bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold focus:border-blue-500 outline-none" />
+                                <div class="flex justify-between items-center mt-2 px-1">
+                                   <span class="text-[8px] font-black text-slate-500 uppercase">Tamanho</span>
+                                   <span class="text-[10px] font-bold text-blue-400">{{ customSubtitleSize }}%</span>
+                                </div>
+                                <input type="range" v-model.number="customSubtitleSize" min="50" max="200" step="5" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                              </div>
                              
                              <!-- Botão e Links -->
