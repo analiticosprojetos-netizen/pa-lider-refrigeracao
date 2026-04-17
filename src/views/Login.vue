@@ -91,7 +91,7 @@ const handleLogin = async () => {
   
   try {
     await authStore.login(identifier.value, password.value)
-    alert(`Bem-vindo, ${authStore.user?.username}!`)
+
     router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message

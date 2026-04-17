@@ -1,19 +1,39 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import emblaCarouselVue from 'embla-carousel-vue'
 import Autoplay from 'embla-carousel-autoplay'
 import { Snowflake, MapPin, ChevronRight, ChevronLeft } from 'lucide-vue-next'
 
 const props = defineProps<{
-  banners?: string[];
+  banners?: any[];
   delay?: number;
 }>()
 
 const emit = defineEmits(['contact-click'])
 
-const [emblaRef, emblaApi] = emblaCarouselVue({ loop: true }, [
+const [emblaRef, emblaApi] = emblaCarouselVue({ loop: true, watchDrag: true }, [
   Autoplay({ delay: (props.delay || 6) * 1000, stopOnInteraction: false })
 ])
+
+// Observa mudanças dinâmicas na array de Banners vinda do Dashboard
+watch(() => props.banners, async () => {
+  await nextTick()
+  if (emblaApi.value) {
+    emblaApi.value.reInit()
+  }
+}, { deep: true })
+
+// Observa mudança dinâmica na velocidade
+watch(() => props.delay, (newDelay) => {
+  if (emblaApi.value) {
+    const plugins = emblaApi.value.plugins()
+    if (plugins.autoplay) {
+      // Atualizar o delay dinamicamente não é suportado oficialmente no fly do embla3+, mas podemos reinjetar via destroy:
+      plugins.autoplay.options.delay = (newDelay || 6) * 1000;
+      emblaApi.value.reInit()
+    }
+  }
+})
 
 const settings = ref({
   address: 'Av. Industrial, 1000 - Setor de Transportes',
@@ -114,36 +134,80 @@ const scrollNext = () => emblaApi.value?.scrollNext()
         </div>
 
         <!-- BANNERS CUSTOMIZADOS -->
-        <div v-for="(banner, idx) in banners" :key="idx" class="embla__slide relative h-full flex-[0_0_100%] min-w-0">
-          <div class="absolute inset-0 overflow-hidden">
+        <div v-for="(banner, idx) in banners" :key="idx" class="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#0f172a]">
+          <!-- Fundo Decorativo Lider Premium (Preenche os black bars) -->
+          <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <Snowflake class="absolute top-20 left-20 text-white w-12 h-12 animate-pulse transition-opacity" />
+            <Snowflake class="absolute bottom-20 right-20 text-blue-300 w-16 h-16 animate-pulse transition-opacity" />
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.5),transparent)]" />
+          </div>
+
+          <div class="absolute inset-0 overflow-hidden flex"
+               :class="{
+                 'p-8 md:p-16 lg:p-24': banner.objectFit !== 'cover',
+                 'items-start justify-start': banner.imagePosition === 'top-left',
+                 'items-start justify-center': banner.imagePosition === 'top-center',
+                 'items-start justify-end': banner.imagePosition === 'top-right',
+                 'items-center justify-start': banner.imagePosition === 'center-left',
+                 'items-center justify-center': !banner.imagePosition || banner.imagePosition === 'center',
+                 'items-center justify-end': banner.imagePosition === 'center-right',
+                 'items-end justify-start': banner.imagePosition === 'bottom-left',
+                 'items-end justify-center': banner.imagePosition === 'bottom-center',
+                 'items-end justify-end': banner.imagePosition === 'bottom-right',
+               }">
             <img 
-              :src="banner" 
+              :src="typeof banner === 'string' ? banner : banner.src" 
               alt="Banner Lider" 
-              class="w-full h-full object-cover transition-transform duration-1000"
+              class="transition-all duration-1000 relative z-10"
+              :class="{
+                'w-full h-full object-cover': !banner.objectFit || banner.objectFit === 'cover',
+                'w-full h-full object-contain': banner.objectFit === 'contain',
+                'object-none': banner.objectFit === 'none'
+              }"
+              :style="{ 
+                opacity: typeof banner === 'string' ? 0.5 : (1 - (banner.overlay / 100)),
+                transform: banner.imageScale ? `scale(${banner.imageScale/100})` : ''
+              }"
             />
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
           </div>
           
           <div class="relative z-10 h-full flex items-center">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <!-- Reutiliza o mesmo conteúdo impactante sobre as imagens customizadas -->
-              <div class="flex flex-col lg:flex-row items-center justify-between gap-16">
-                 <div class="text-center lg:text-left flex-1">
-                  <h1 class="text-7xl md:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-2xl">
-                    Sua Carga
-                  </h1>
-                  <h2 class="text-4xl md:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-2">
-                    Sempre na Temperatura Certa
-                  </h2>
-                </div>
-                <div class="flex-1 flex flex-col items-center lg:items-end gap-8">
-                  <button 
-                    @click="$emit('contact-click')"
-                    class="bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 transition-all uppercase tracking-widest"
-                  >
-                    Falar com Especialista
-                  </button>
-                </div>
+            <div class="w-full h-full flex flex-col justify-center px-6 sm:px-16 lg:px-24"
+                 :class="{ 
+                    'items-start text-left': !banner.alignment || banner.alignment === 'left',
+                    'items-center text-center max-w-7xl mx-auto': banner.alignment === 'center',
+                    'items-end text-right': banner.alignment === 'right'
+                 }">
+              <div 
+                v-if="banner.title1 !== '' || banner.title2 !== '' || banner.buttonText !== ''"
+                class="flex flex-col gap-8 w-full"
+                :class="{
+                  'items-start': !banner.alignment || banner.alignment === 'left',
+                  'items-center': banner.alignment === 'center',
+                  'items-end': banner.alignment === 'right'
+                }">
+                  <div>
+                    <h1 v-if="banner.title1 !== ''" 
+                        class="text-6xl md:text-8xl lg:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+                        :style="{ fontSize: banner.titleSize ? `calc(${(banner.titleSize/100)} * clamp(3rem, 10vw, 8rem))` : '' }">
+                      {{ banner.title1 ?? 'Sua Carga' }}
+                    </h1>
+                    <h2 v-if="banner.title2 !== ''" 
+                        class="text-3xl md:text-5xl lg:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-4 drop-shadow-md"
+                        :style="{ fontSize: banner.subtitleSize ? `calc(${(banner.subtitleSize/100)} * clamp(1.5rem, 5vw, 4rem))` : '' }">
+                      {{ banner.title2 ?? 'Sempre na Temperatura Certa' }}
+                    </h2>
+                  </div>
+                  <div v-if="banner.buttonText !== ''">
+                    <a v-if="banner.buttonAction === 'url'" :href="banner.buttonUrl" target="_blank"
+                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 transition-all uppercase tracking-widest">
+                       {{ banner.buttonText ?? 'Falar com Especialista' }}
+                    </a>
+                    <button v-else @click="$emit('contact-click')"
+                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-black px-8 py-4 text-base rounded-2xl shadow-3xl shadow-blue-600/30 transform hover:scale-105 transition-all uppercase tracking-widest">
+                       {{ banner.buttonText ?? 'Falar com Especialista' }}
+                    </button>
+                  </div>
               </div>
             </div>
           </div>
