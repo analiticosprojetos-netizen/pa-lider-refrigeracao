@@ -27,3 +27,19 @@ export const formatToTitleCase = (text: string): string => {
   
   return formattedWords.join(' ')
 }
+
+/**
+ * Formata um número como moeda brasileira: R$ 1.234,56
+ */
+export const formatBRL = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return 'R$ 0,00'
+  return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+/**
+ * Formata apenas o número sem o prefixo R$
+ */
+export const formatDecimal = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return '0,00'
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}

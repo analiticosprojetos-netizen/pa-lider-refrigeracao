@@ -14,7 +14,26 @@ export class AuthService {
     return new Promise((resolve, reject) => {
       // Mocked Backend Delay
       setTimeout(() => {
-        if ((identifier === 'admin' || identifier === 'admin@lider.com') && password === '1234') {
+        const savedUsersStr = localStorage.getItem('lider_users')
+        let users: UserProfile[] = []
+        
+        if (savedUsersStr) {
+          users = JSON.parse(savedUsersStr)
+        }
+
+        // Garante que o admin padrão seja sempre uma opção se não estiver na lista
+        const adminFound = users.find(u => u.username === 'admin' || u.email === 'admin@lider.com')
+        if (!adminFound) {
+           // Adiciona temporariamente para validação se necessário ou apenas confia na lógica abaixo
+        }
+
+        const found = users.find(u => 
+          (u.username === identifier || u.email === identifier) && 
+          (u.password === password || (!u.password && identifier === 'admin' && password === '1234'))
+        )
+
+        // Caso especial para o admin padrão caso a lista esteja vazia ou inconsistente
+        if (!found && (identifier === 'admin' || identifier === 'admin@lider.com') && password === '1234') {
           resolve({
             token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mocked_token.v1',
             user: {
@@ -31,10 +50,17 @@ export class AuthService {
                 config: { view: true, edit: true, delete: true },
               }
             }
+          })
+          return
+        }
 
+        if (found) {
+          resolve({
+            token: `mock_token_${found.id}`,
+            user: found
           })
         } else {
-          reject(new Error('Credenciais inválidas. Use admin / 1234.'))
+          reject(new Error('Usuário ou senha incorretos.'))
         }
       }, 800)
     })

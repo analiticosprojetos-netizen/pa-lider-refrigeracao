@@ -5,9 +5,11 @@ import {
   MapPin, CheckCircle2, History 
 } from 'lucide-vue-next'
 import { useCustomerStore } from '../stores/customers'
+import { useAuthStore } from '../stores/auth'
 import { formatToTitleCase } from '../utils/textUtils'
 
 const customerStore = useCustomerStore()
+const authStore = useAuthStore()
 const searchQuery = ref('')
 const isNewCustomerModalOpen = ref(false)
 const isEditModalOpen = ref(false)
@@ -74,7 +76,7 @@ const handleDelete = (id: string) => {
              <input v-model="searchQuery" type="text" placeholder="Buscar cliente..." class="w-full pl-12 pr-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-600 text-sm dark:text-white shadow-sm font-bold" />
           </div>
           
-          <button @click="isNewCustomerModalOpen = true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg shadow-blue-500/20 active:scale-95">
+          <button v-if="authStore.hasPermission('clientes', 'edit')" @click="isNewCustomerModalOpen = true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg shadow-blue-500/20 active:scale-95">
              <UserPlus :size="16" /> Novo Cliente
           </button>
        </div>
@@ -118,12 +120,12 @@ const handleDelete = (id: string) => {
                    <td class="px-8 py-6 text-xs font-black text-gray-400 uppercase">
                       {{ customer.createdAt || '---' }}
                    </td>
-                   <td class="px-8 py-6 text-right">
-                      <div class="flex justify-end gap-2">
-                         <button @click="openEditModal(customer)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-blue-600 border border-slate-100 dark:border-slate-700 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                   <td class="px-8 py-6 text-right whitespace-nowrap">
+                      <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button v-if="authStore.hasPermission('clientes', 'edit')" @click="openEditModal(customer)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
                             <Edit3 :size="16" />
                          </button>
-                         <button @click="handleDelete(customer.id)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-red-400 border border-slate-100 dark:border-slate-700 hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                         <button v-if="authStore.hasPermission('clientes', 'delete')" @click="handleDelete(customer.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all">
                             <Trash2 :size="16" />
                          </button>
                       </div>

@@ -473,19 +473,19 @@ const handleSave = async () => {
           <div class="mt-8 space-y-2">
             <div class="flex justify-between items-center text-[10px] font-bold text-blue-100/60 uppercase">
                <span>Total Mão de Obra:</span>
-               <span>R$ {{ servicesValue.toFixed(2) }}</span>
+               <span>R$ {{ servicesValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between items-center text-[10px] font-bold text-blue-100/60 uppercase">
                <span>Total Peças:</span>
-               <span>R$ {{ partsValue.toFixed(2) }}</span>
+               <span>R$ {{ partsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between items-center text-[11px] font-black text-blue-5 uppercase border-t border-blue-800 pt-2">
                <span>Subtotal:</span>
-               <span>R$ {{ subtotal.toFixed(2) }}</span>
+               <span>R$ {{ subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between items-center text-[11px] font-black text-red-300 uppercase">
                <span>Desconto:</span>
-               <span>- R$ {{ (formData.discountValue || 0).toFixed(2) }}</span>
+               <span>- R$ {{ (formData.discountValue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
           </div>
         </div>
@@ -493,7 +493,7 @@ const handleSave = async () => {
         <div class="mt-10">
           <div class="flex justify-between items-end mb-6">
             <h4 class="text-4xl font-black uppercase tracking-tighter">TOTAL:</h4>
-            <p class="text-4xl font-black tracking-tighter text-white">R$ {{ total.toFixed(2) }}</p>
+            <p class="text-4xl font-black tracking-tighter text-white">R\$ {{ total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
           </div>
           
           <div class="space-y-3">

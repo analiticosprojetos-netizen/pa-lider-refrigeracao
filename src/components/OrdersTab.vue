@@ -94,10 +94,10 @@ const handleEstorno = async (orderId: string) => {
     <!-- Sub-Tabs — scroll horizontal no mobile -->
     <div class="bg-white dark:bg-slate-900 p-1 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm flex overflow-x-auto scrollbar-none gap-1">
       <button v-for="st in [
-        { id: 'lista', label: 'Histórico de Orçamentos' },
-        { id: 'novo', label: 'Novo Orçamento' },
-        { id: 'produtividade', label: 'Produtividade' }
-      ]" :key="st.id" @click="currentSubTab = st.id as any" 
+        { id: 'lista', label: 'Histórico de Orçamentos', show: true },
+        { id: 'novo', label: 'Novo Orçamento', show: authStore.hasPermission('orcamentos', 'edit') },
+        { id: 'produtividade', label: 'Produtividade', show: true }
+      ].filter(t => t.show)" :key="st.id" @click="currentSubTab = st.id as any" 
         :class="[
           'px-4 sm:px-6 py-2.5 rounded-lg text-xs font-black uppercase transition-all whitespace-nowrap shrink-0',
           currentSubTab === st.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600'
@@ -139,10 +139,7 @@ const handleEstorno = async (orderId: string) => {
                   <span :class="[getStatusClass(order.status), 'px-3 py-1 rounded-full text-[10px] font-black uppercase border mb-2 inline-block']">
                     {{ order.status }}
                   </span>
-                  <p class="font-black text-blue-900 dark:text-blue-400 text-sm flex items-center gap-2">
-                    #{{ order.id }}
-                    <span v-if="order.origin === 'site' || order.id.startsWith('SITE-')" class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded text-[8px] font-black uppercase tracking-tighter border border-blue-200 dark:border-blue-800">Web Lead</span>
-                  </p>
+                  <p v-if="order.origin === 'site' || order.id.startsWith('SITE-')" class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded text-[8px] font-black uppercase tracking-tighter border border-blue-200 dark:border-blue-800 w-fit">Web Lead</p>
                 </td>
                 <td class="px-6 py-5">
                   <p class="font-black text-slate-800 dark:text-gray-100">{{ order.clientName }}</p>
@@ -153,21 +150,18 @@ const handleEstorno = async (orderId: string) => {
                   <p class="text-[10px] text-blue-600 font-black uppercase">{{ order.equipBrand }} {{ order.equipModel }}</p>
                 </td>
                 <td class="px-6 py-5">
-                  <p class="font-black text-xl text-slate-800 dark:text-white">R$ {{ order.total.toFixed(2) }}</p>
+                  <p class="font-black text-xl text-slate-800 dark:text-white">R$ {{ order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
                 </td>
-                <td class="px-6 py-5 text-right">
-                  <div class="flex justify-end gap-2">
-                    <button v-if="order.status === 'Pendente'" @click="orderStore.changeStatus(order.id, 'Executado')" class="p-2 bg-green-500 text-white rounded-lg shadow-lg shadow-green-500/20 hover:scale-110 transition-all" title="Executar">
-                      <CheckCircle2 :size="16" />
+                <td class="px-6 py-5 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button @click="openDetails(order)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all" title="Ver Detalhes">
+                      <Eye :size="16" />
                     </button>
-                    <button v-if="order.status === 'Executado' && authStore.user?.role === 'ADMIN'" @click="handleEstorno(order.id)" class="p-2 bg-slate-500 text-white rounded-lg shadow-lg shadow-slate-500/20 hover:scale-110 transition-all" title="Estornar">
-                      <RotateCcw :size="16" />
-                    </button>
-                    <button @click="startEdit(order)" class="p-2 bg-amber-500 text-white rounded-lg shadow-lg shadow-amber-500/20 hover:scale-110 transition-all" title="Editar">
+                    <button v-if="authStore.hasPermission('orcamentos', 'edit')" @click="startEdit(order)" class="p-3 bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all" title="Editar">
                       <Pencil :size="16" />
                     </button>
-                    <button @click="openDetails(order)" class="p-2 bg-blue-600 text-white rounded-lg shadow-lg shadow-blue-500/20 hover:scale-110 transition-all" title="Ver Detalhes">
-                      <Eye :size="16" />
+                    <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Executado'" @click="handleEstorno(order.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-600 hover:text-white transition-all" title="Estornar">
+                      <RotateCcw :size="16" />
                     </button>
                   </div>
                 </td>
@@ -199,7 +193,6 @@ const handleEstorno = async (orderId: string) => {
                 </span>
                 <span v-if="order.origin === 'site' || order.id.startsWith('SITE-')" class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded text-[8px] font-black uppercase border border-blue-200 dark:border-blue-800">Web</span>
               </div>
-              <p class="font-black text-blue-600 text-xs">#{{ order.id }}</p>
             </div>
             <div>
               <p class="font-black text-slate-800 dark:text-gray-100 text-base">{{ order.clientName }}</p>
@@ -212,23 +205,16 @@ const handleEstorno = async (orderId: string) => {
               </div>
               <p class="font-black text-lg text-slate-800 dark:text-white">R$ {{ order.total.toFixed(2) }}</p>
             </div>
-            <div class="flex gap-1.5 pt-1 border-t border-gray-100 dark:border-slate-800">
-              <button v-if="order.status === 'Pendente'" @click="orderStore.changeStatus(order.id, 'Executado')" 
-                class="flex-1 py-2 bg-green-500 text-white rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all">
-                <CheckCircle2 :size="12" /> Executar
-              </button>
-              <button v-if="order.status === 'Executado' && authStore.user?.role === 'ADMIN'" @click="handleEstorno(order.id)" 
-                class="flex-1 py-2 bg-slate-500 text-white rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all">
-                <RotateCcw :size="12" /> Estornar
-              </button>
-              <button @click="startEdit(order)" 
-                class="flex-1 py-2 bg-amber-500 text-white rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all">
-                <Pencil :size="12" /> Editar
-              </button>
-              <button @click="openDetails(order)" 
-                class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all">
-                <Eye :size="12" /> Detalhes
-              </button>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t dark:border-slate-800">
+               <button @click="openDetails(order)" class="p-2.5 bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                 <Eye :size="14" /> Detalhes
+               </button>
+               <button v-if="authStore.hasPermission('orcamentos', 'edit')" @click="startEdit(order)" class="p-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                 <Pencil :size="14" /> Editar
+               </button>
+               <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Executado'" @click="handleEstorno(order.id)" class="p-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                 <RotateCcw :size="14" /> Estornar
+               </button>
             </div>
           </div>
         </div>

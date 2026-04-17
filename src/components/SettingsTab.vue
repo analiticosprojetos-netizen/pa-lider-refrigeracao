@@ -7,17 +7,28 @@ import InstitutionalSettings from './InstitutionalSettings.vue'
 import BannerSettings from './BannerSettings.vue'
 import BusinessRulesSettings from './BusinessRulesSettings.vue'
 import UserAdminSettings from './UserAdminSettings.vue'
+import AuditTab from './AuditTab.vue'
 import { useAuthStore } from '../stores/auth'
+import { computed } from 'vue'
+import { ClipboardList } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const currentSubTab = ref('institucional')
 
-const subTabs = [
-  { id: 'institucional', name: 'Site e Institucional', icon: Globe },
-  { id: 'banners', name: 'Banners', icon: Camera },
-  { id: 'regras', name: 'Regras de Negócio', icon: AlertTriangle },
-  { id: 'usuarios', name: 'Gestão de Usuários e Permissões', icon: Users },
-]
+const subTabs = computed(() => {
+  const tabs = [
+    { id: 'institucional', name: 'Site e Institucional', icon: Globe },
+    { id: 'banners', name: 'Banners', icon: Camera },
+    { id: 'regras', name: 'Regras de Negócio', icon: AlertTriangle },
+    { id: 'usuarios', name: 'Gestão de Usuários e Permissões', icon: Users }
+  ]
+  
+  if (authStore.user?.role === 'ADMIN' || authStore.user?.role === 'CEO') {
+    tabs.push({ id: 'auditoria', name: 'Auditoria', icon: ClipboardList })
+  }
+  
+  return tabs
+})
 </script>
 
 <template>
@@ -40,6 +51,7 @@ const subTabs = [
        <BannerSettings v-if="currentSubTab === 'banners'" />
        <BusinessRulesSettings v-if="currentSubTab === 'regras'" />
        <UserAdminSettings v-if="currentSubTab === 'usuarios'" />
+       <AuditTab v-if="currentSubTab === 'auditoria'" />
     </div>
   </div>
 </template>

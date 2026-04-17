@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { OrderService, type ServiceOrder } from '../services/OrderService'
 import { useInventoryStore } from './inventory'
 import { useFinanceStore } from './finances'
+import { useAuditStore } from './audit'
 
 export const useOrderStore = defineStore('orders', () => {
   const orders = ref<ServiceOrder[]>([])
@@ -23,6 +24,12 @@ export const useOrderStore = defineStore('orders', () => {
     const newOrder = await OrderService.createOrder(data)
     orders.value.unshift(newOrder)
     localStorage.setItem('lider_orders', JSON.stringify(orders.value))
+    
+    useAuditStore().addLog(
+      'Orçamentos', 
+      'CRIOU', 
+      `Gerou orçamento para o cliente ${data.clientName} no valor de R$ ${data.total}`
+    )
   }
 
   const changeStatus = async (orderId: string, status: 'Executado' | 'Cancelado' | 'Pendente') => {
@@ -80,14 +87,27 @@ export const useOrderStore = defineStore('orders', () => {
     }
 
     localStorage.setItem('lider_orders', JSON.stringify(orders.value))
+    
+    useAuditStore().addLog(
+      'Orçamentos', 
+      'EDITOU', 
+      `Alterou o status do orçamento do cliente ${order.clientName} de ${oldStatus} para ${status}`
+    )
   }
 
   const updateOrder = async (orderId: string, data: any) => {
     const idx = orders.value.findIndex(o => o.id === orderId)
     if (idx === -1) return
     
+    
     orders.value[idx] = { ...orders.value[idx], ...data }
     localStorage.setItem('lider_orders', JSON.stringify(orders.value))
+    
+    useAuditStore().addLog(
+      'Orçamentos', 
+      'EDITOU', 
+      `Modificou dados do orçamento do cliente ${orders.value[idx].clientName}`
+    )
   }
 
   return {

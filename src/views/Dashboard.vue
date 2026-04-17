@@ -35,6 +35,22 @@ const goalSettings = ref({
   target: 5000
 })
 
+const FULL_PERMISSIONS = {
+  estoque: { view: true, edit: true, delete: true },
+  orcamentos: { view: true, edit: true, delete: true },
+  clientes: { view: true, edit: true, delete: true },
+  historico: { view: true, edit: true, delete: true },
+  financeiro: { view: true, edit: true, delete: true },
+  config: { view: true, edit: true, delete: true },
+}
+
+const getUserStatus = (user: any) => {
+  if (user.id === authStore.user?.id) {
+    return { color: 'bg-green-400', animation: 'animate-pulse', label: 'Conectado', active: true }
+  }
+  return { color: '', animation: '', label: user.role === 'ADMIN' ? 'Administrador' : 'Técnico(a)', active: false }
+}
+
 const openProfileModal = () => {
   if (!authStore.user) return
   profileForm.value = {
@@ -97,16 +113,13 @@ const handleAvatarUpload = () => {
 const tabs = computed(() => {
   const base = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-    { id: 'estoque', name: 'Estoque', icon: Package },
-    { id: 'orcamentos', name: 'Orçamentos', icon: FileText },
-    { id: 'clientes', name: 'Clientes', icon: Users },
   ]
   
-  if (authStore.hasPermission('financeiro', 'view')) {
-    base.push({ id: 'financeiro', name: 'Financeiro', icon: Landmark })
-  }
-  
-  base.push({ id: 'config', name: 'Sistema', icon: Settings })
+  if (authStore.hasPermission('estoque', 'view')) base.push({ id: 'estoque', name: 'Estoque', icon: Package })
+  if (authStore.hasPermission('orcamentos', 'view')) base.push({ id: 'orcamentos', name: 'Orçamentos', icon: FileText })
+  if (authStore.hasPermission('clientes', 'view')) base.push({ id: 'clientes', name: 'Clientes', icon: Users })
+  if (authStore.hasPermission('financeiro', 'view')) base.push({ id: 'financeiro', name: 'Financeiro', icon: Landmark })
+  if (authStore.hasPermission('config', 'view')) base.push({ id: 'config', name: 'Sistema', icon: Settings })
   
   return base
 })
@@ -120,6 +133,18 @@ onMounted(async () => {
   const savedUsers = localStorage.getItem('lider_users')
   if (savedUsers) {
      technicalTeam.value = JSON.parse(savedUsers)
+  } else {
+    // Inicializa a lista de usuários com o admin se estiver vazia
+    const adminUser = {
+      id: '1',
+      username: 'admin',
+      email: 'admin@lider.com',
+      role: 'ADMIN',
+      permissions: FULL_PERMISSIONS,
+      avatarUrl: ''
+    }
+    technicalTeam.value = [adminUser]
+    localStorage.setItem('lider_users', JSON.stringify(technicalTeam.value))
   }
 
   const savedSettings = localStorage.getItem('lider_site_settings')
@@ -323,11 +348,11 @@ const goalProgress = computed(() => {
           <!-- Stats Grid -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div v-for="stat in [
-              { t: 'Pedidos Hoje', v: homeStats.osToday, i: FileText, c: 'blue' },
-              { t: 'Estoque Alerta', v: homeStats.lowStock, i: Package, c: 'amber' },
-              { t: 'Receita Total', v: 'R$ ' + homeStats.revenueMonth.toFixed(2), i: Landmark, c: 'green' },
-              { t: 'Saldo Caixa', v: 'R$ ' + homeStats.profit.toFixed(2), i: ShieldCheck, c: 'indigo' }
-            ]" :key="stat.t" class="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-lg border border-blue-50 dark:border-slate-800 flex items-center gap-4">
+              { t: 'Pedidos Hoje', v: homeStats.osToday, i: FileText, c: 'blue', show: true },
+              { t: 'Estoque Alerta', v: homeStats.lowStock, i: Package, c: 'amber', show: true },
+              { t: 'Receita Total', v: 'R$ ' + homeStats.revenueMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), i: Landmark, c: 'green', show: authStore.hasFinanceSubPerm('viewCards') },
+              { t: 'Saldo Caixa', v: 'R$ ' + homeStats.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), i: ShieldCheck, c: 'indigo', show: authStore.hasFinanceSubPerm('viewCards') }
+            ].filter(s => s.show)" :key="stat.t" class="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-lg border border-blue-50 dark:border-slate-800 flex items-center gap-4">
               <div :class="['p-3 rounded-xl bg-'+stat.c+'-50 dark:bg-'+stat.c+'-900/10 text-'+stat.c+'-500 shrink-0']">
                 <component :is="stat.i" :size="20" />
               </div>
@@ -368,9 +393,9 @@ const goalProgress = computed(() => {
                     </div>
                     <div class="min-w-0">
                       <p class="text-sm font-black truncate text-blue-50 group-hover:text-white transition-colors">{{ user.username }}</p>
-                      <p class="text-[10px] opacity-70 font-bold text-blue-200 truncate">{{ user.role === 'ADMIN' ? 'Administrador' : 'Técnico(a)' }}</p>
+                      <p class="text-[10px] opacity-70 font-bold text-blue-200 truncate">{{ getUserStatus(user).label }}</p>
                     </div>
-                    <div class="ml-auto h-2.5 w-2.5 rounded-full bg-green-400 shrink-0 shadow-[0_0_12px_rgba(74,222,128,0.8)] animate-pulse"></div>
+                    <div v-if="getUserStatus(user).active" :class="['ml-auto h-2.5 w-2.5 rounded-full shrink-0 shadow-lg', getUserStatus(user).color, getUserStatus(user).animation]"></div>
                   </div>
                 </div>
               </div>
@@ -383,8 +408,8 @@ const goalProgress = computed(() => {
                   <div class="h-full bg-yellow-400 rounded-full transition-all duration-1000" :style="{ width: `${goalProgress.value}%` }"></div>
                 </div>
                 <div class="flex justify-between text-[9px] font-bold opacity-50 px-1">
-                  <span>{{ (goalSettings.type === 'valor' || goalSettings.type === 'orcamento') ? 'R$ ' + goalProgress.current.toFixed(2) : goalProgress.current + ' un' }}</span>
-                  <span>Alvo: {{ (goalSettings.type === 'valor' || goalSettings.type === 'orcamento') ? 'R$ ' + goalProgress.target.toFixed(2) : goalProgress.target + ' un' }}</span>
+                  <span>{{ (goalSettings.type === 'valor' || goalSettings.type === 'orcamento') ? 'R$ ' + goalProgress.current.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : goalProgress.current + ' un' }}</span>
+                  <span>Alvo: {{ (goalSettings.type === 'valor' || goalSettings.type === 'orcamento') ? 'R$ ' + goalProgress.target.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : goalProgress.target + ' un' }}</span>
                 </div>
               </div>
             </div>
@@ -413,14 +438,7 @@ const goalProgress = computed(() => {
 
         <!-- Tab Sistema -->
         <div v-show="currentTab === 'config'" class="animate-in fade-in duration-500">
-          <template v-if="authStore.user.role === 'ADMIN'">
-            <SettingsTab />
-          </template>
-          <div v-else class="bg-white dark:bg-slate-900 rounded-[32px] p-12 sm:p-20 text-center border-2 border-dashed border-gray-100 dark:border-slate-800">
-            <AlertTriangle :size="48" class="text-amber-500 mx-auto mb-6 opacity-30" />
-            <h3 class="text-lg sm:text-2xl font-black text-gray-400 uppercase tracking-widest">Acesso Restrito</h3>
-            <p class="text-gray-500 mt-2 text-sm">Você não possui as permissões necessárias.</p>
-          </div>
+          <SettingsTab />
         </div>
 
       </div>

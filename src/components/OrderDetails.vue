@@ -48,7 +48,7 @@ const handleExportPDF = () => {
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
             <h2 class="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2">
-              Orçamento #{{ order.id }}
+              Orçamento
             </h2>
             <p class="text-xs text-gray-500 flex items-center gap-1 mt-1">
               <Calendar :size="12" /> Gerado em: {{ order.date }}
@@ -192,15 +192,15 @@ const handleExportPDF = () => {
                   <td class="px-6 py-4 font-bold">{{ s.description }}</td>
                   <td class="px-6 py-4 text-xs opacity-60">Mão de Obra</td>
                   <td class="px-6 py-4 text-center">{{ s.qty }}</td>
-                  <td class="px-6 py-4 text-right font-medium">R$ {{ s.value.toFixed(2) }}</td>
-                  <td class="px-6 py-4 text-right font-black">R$ {{ (s.qty * s.value).toFixed(2) }}</td>
+                  <td class="px-6 py-4 text-right font-medium">R$ {{ s.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="px-6 py-4 text-right font-black">R$ {{ (s.qty * s.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                 </tr>
                 <tr v-for="p in order.parts" :key="p.id" class="dark:text-slate-300">
                   <td class="px-6 py-4 font-bold">{{ p.description }}</td>
                   <td class="px-6 py-4 text-xs opacity-60">Peça / Insumo</td>
                   <td class="px-6 py-4 text-center">{{ p.qty }}</td>
-                  <td class="px-6 py-4 text-right font-medium">R$ {{ p.value.toFixed(2) }}</td>
-                  <td class="px-6 py-4 text-right font-black">R$ {{ (p.qty * p.value).toFixed(2) }}</td>
+                  <td class="px-6 py-4 text-right font-medium">R$ {{ p.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="px-6 py-4 text-right font-black">R$ {{ (p.qty * p.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -229,27 +229,27 @@ const handleExportPDF = () => {
           <div class="bg-blue-900 text-white p-8 rounded-3xl space-y-3 shadow-2xl shadow-blue-900/20">
             <div class="flex justify-between text-sm opacity-70">
               <span>Mão de Obra Total:</span>
-              <span>R$ {{ servicesTotal.toFixed(2) }}</span>
+              <span>R$ {{ servicesTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between text-sm opacity-70">
               <span>Peças Total:</span>
-              <span>R$ {{ partsTotal.toFixed(2) }}</span>
+              <span>R$ {{ partsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between text-sm opacity-70">
               <span>Deslocamento:</span>
-              <span>R$ {{ order.travelValue?.toFixed(2) || '0.00' }}</span>
+              <span>R$ {{ order.travelValue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0.00' }}</span>
             </div>
             <div class="flex justify-between text-lg font-bold border-t border-blue-800/50 pt-3">
               <span>Subtotal:</span>
-              <span>R$ {{ subtotal.toFixed(2) }}</span>
+              <span>R$ {{ subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div v-if="order.discountValue > 0" class="flex justify-between text-sm text-red-300 font-bold">
               <span class="flex items-center gap-1"><Percent :size="14" /> Desconto ({{ order.discountPercent.toFixed(1) }}%)</span>
-              <span>- R$ {{ order.discountValue.toFixed(2) }}</span>
+              <span>- R$ {{ order.discountValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="flex justify-between text-3xl font-black pt-3 border-t border-blue-800">
               <span class="text-yellow-400">TOTAL:</span>
-              <span class="text-yellow-400">R$ {{ order.total.toFixed(2) }}</span>
+              <span class="text-yellow-400">R$ {{ order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
             </div>
           </div>
         </div>

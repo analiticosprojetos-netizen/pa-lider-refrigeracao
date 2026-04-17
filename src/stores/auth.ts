@@ -17,6 +17,20 @@ export interface RolePermissions {
   config: Permission;
 }
 
+export interface FinanceSubPerms {
+  viewCards: boolean;
+  createEntry: boolean;
+  createExpense: boolean;
+  viewHistory: boolean;
+}
+
+export const DEFAULT_FINANCE_SUB_PERMS: FinanceSubPerms = {
+  viewCards: true,
+  createEntry: true,
+  createExpense: true,
+  viewHistory: true,
+}
+
 export interface UserProfile {
   id: string;
   username: string;
@@ -24,6 +38,7 @@ export interface UserProfile {
   password?: string;
   role: string;
   permissions: RolePermissions;
+  financeSubPerms?: FinanceSubPerms;
 }
 
 
@@ -64,11 +79,23 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value.permissions[tab]?.[action] || false;
   };
 
+  const hasFinanceSubPerm = (perm: keyof FinanceSubPerms) => {
+    if (!user.value) return false;
+    if (user.value.role === 'ADMIN') return true;
+    // Se nem tem permissão de ver o financeiro, não tem sub-perm
+    if (!user.value.permissions.financeiro?.view) return false;
+    // Se não tem sub-perms definidas, assume todas ativas por padrão
+    const subPerms = user.value.financeSubPerms
+    if (!subPerms) return true;
+    return subPerms[perm];
+  };
+
   return {
     token,
     user,
     login,
     logout,
-    hasPermission
+    hasPermission,
+    hasFinanceSubPerm
   }
 })

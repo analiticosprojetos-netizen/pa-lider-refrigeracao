@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { InventoryService, type Part, type Movement } from '../services/InventoryService'
 import { useAuthStore } from './auth'
+import { useAuditStore } from './audit'
 
 export const useInventoryStore = defineStore('inventory', () => {
   const parts = ref<Part[]>([])
@@ -37,6 +38,12 @@ export const useInventoryStore = defineStore('inventory', () => {
     // Save mock to localStorage to persist state
     localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
     localStorage.setItem('lider_movements', JSON.stringify(movements.value))
+    
+    useAuditStore().addLog(
+      'Estoque', 
+      'CRIOU', 
+      `Cadastrou nova peça: ${name} (Qtd: ${quantity})`
+    )
   }
 
   const registerMovementToPart = async (partId: string, amount: number, type: 'entrada' | 'saida' | 'correcao') => {
@@ -68,6 +75,12 @@ export const useInventoryStore = defineStore('inventory', () => {
 
     localStorage.setItem('lider_inventory', JSON.stringify(parts.value));
     localStorage.setItem('lider_movements', JSON.stringify(movements.value));
+    
+    useAuditStore().addLog(
+      'Estoque', 
+      'EDITOU', 
+      `Registrou ${type} de ${amount} para a peça ${p.name}`
+    )
   };
 
 
@@ -81,6 +94,26 @@ export const useInventoryStore = defineStore('inventory', () => {
     if (idx !== -1) {
       parts.value[idx] = { ...parts.value[idx], ...partData }
       localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
+      
+      useAuditStore().addLog(
+        'Estoque', 
+        'EDITOU', 
+        `Modificou dados da peça: ${parts.value[idx].name}`
+      )
+    }
+  }
+
+  const deletePart = async (id: string) => {
+    const part = parts.value.find(p => p.id === id)
+    parts.value = parts.value.filter(p => p.id !== id)
+    localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
+    
+    if (part) {
+      useAuditStore().addLog(
+        'Estoque', 
+        'EXCLUIU', 
+        `Removeu a peça do sistema: ${part.name}`
+      )
     }
   }
 
@@ -95,6 +128,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     lowStockCount,
     totalEntradas,
     totalSaidas,
-    updatePart
+    updatePart,
+    deletePart
   }
 })

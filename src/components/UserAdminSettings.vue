@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { 
   Shield, UserPlus, Trash2, X, Briefcase, Plus, Save, Edit2, Eye, Camera, KeyRound, User
 } from 'lucide-vue-next'
-import { useAuthStore, type UserProfile, type RolePermissions } from '../stores/auth'
+import { useAuthStore, type UserProfile, type RolePermissions, type FinanceSubPerms, DEFAULT_FINANCE_SUB_PERMS } from '../stores/auth'
+import { useAuditStore } from '../stores/audit'
 
 const authStore = useAuthStore()
 const users = ref<UserProfile[]>([])
@@ -84,6 +85,13 @@ const handleAddUser = () => {
   }
   users.value.push(user)
   saveUsers()
+  
+  useAuditStore().addLog(
+    'Sistema',
+    'CRIOU',
+    `Cadastrou novo usuário: ${user.username} (${user.role})`
+  )
+  
   newUser.value = { username: '', email: '', password: '', role: 'ANALISTA' }
 }
 
@@ -110,6 +118,12 @@ const handleSaveEdit = () => {
     users.value[idx].password = editForm.value.password
   }
   saveUsers()
+  
+  useAuditStore().addLog(
+    'Sistema',
+    'EDITOU',
+    `Alterou dados do usuário: ${editForm.value.username}`
+  )
 
   // Atualiza sessão se for o usuário logado
   if (authStore.user && authStore.user.id === editingUser.value.id) {
@@ -128,13 +142,57 @@ const togglePermission = (userId: string, tab: keyof RolePermissions, action: 'v
   // ADMIN sempre mantém todas as permissões
   if (!user || user.role === 'ADMIN') return
   user.permissions[tab][action] = !user.permissions[tab][action]
+  // Se tirar o view do financeiro, reseta as sub-permissões
+  if (tab === 'financeiro' && action === 'view' && !user.permissions.financeiro.view) {
+    user.financeSubPerms = { viewCards: false, createEntry: false, createExpense: false, viewHistory: false }
+  }
+  // Se ativar o view do financeiro e não tem sub-perms, inicializa com tudo ativo
+  if (tab === 'financeiro' && action === 'view' && user.permissions.financeiro.view && !user.financeSubPerms) {
+    user.financeSubPerms = { ...DEFAULT_FINANCE_SUB_PERMS }
+  }
   saveUsers()
+  
+  useAuditStore().addLog(
+    'Sistema',
+    'EDITOU',
+    `Alterou permissão básica de ${action} na aba ${tab} para o usuário: ${user.username}`
+  )
+}
+
+const toggleFinanceSubPerm = (userId: string, perm: keyof FinanceSubPerms) => {
+  const user = users.value.find(u => u.id === userId)
+  if (!user || user.role === 'ADMIN') return
+  if (!user.financeSubPerms) user.financeSubPerms = { ...DEFAULT_FINANCE_SUB_PERMS }
+  user.financeSubPerms[perm] = !user.financeSubPerms[perm]
+  saveUsers()
+  
+  useAuditStore().addLog(
+    'Sistema',
+    'EDITOU',
+    `Alterou sub-permissão financeira de ${perm} para o usuário: ${user.username}`
+  )
+  
+  // Atualizar o localStorage do usuário logado se for ele mesmo
+  const liderUser = JSON.parse(localStorage.getItem('lider_user') || '{}')
+  if (liderUser.id === userId) {
+    liderUser.financeSubPerms = user.financeSubPerms
+    localStorage.setItem('lider_user', JSON.stringify(liderUser))
+  }
 }
 
 const deleteUser = (id: string) => {
+  const user = users.value.find(u => u.id === id)
   if (confirm('Deseja excluir este usuário?')) {
     users.value = users.value.filter(u => u.id !== id)
     saveUsers()
+    
+    if (user) {
+      useAuditStore().addLog(
+        'Sistema',
+        'EXCLUIU',
+        `Excluiu o usuário: ${user.username} do sistema`
+      )
+    }
   }
 }
 </script>
@@ -256,6 +314,43 @@ const deleteUser = (id: string) => {
         </table>
       </div>
     </div>
+
+      <!-- Painel de Sub-Permissões Financeiras -->
+      <div v-if="users.some(u => u.permissions.financeiro?.view && u.role !== 'ADMIN')" class="bg-white dark:bg-slate-900 rounded-3xl border border-blue-50 dark:border-slate-800 shadow-xl overflow-hidden">
+        <div class="p-8 border-b dark:border-slate-800 bg-blue-50/30 dark:bg-slate-800/20">
+          <div class="flex items-center gap-3">
+            <Shield class="text-blue-600" :size="18" />
+            <h3 class="text-base font-black text-blue-900 dark:text-white">Sub-Permissões do Módulo Financeiro</h3>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Defina o que cada usuário pode fazer dentro da aba Financeiro e no Dashboard</p>
+        </div>
+        <div class="p-6 space-y-3">
+          <div v-for="u in users.filter(u => u.permissions.financeiro?.view && u.role !== 'ADMIN')" :key="'fp-'+u.id"
+            class="flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-slate-950 px-5 py-4 rounded-2xl border border-gray-100 dark:border-slate-800">
+            <div class="flex items-center gap-2 w-36 shrink-0">
+              <div class="h-7 w-7 rounded-lg overflow-hidden bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                <img v-if="(u as any).avatarUrl" :src="(u as any).avatarUrl" class="w-full h-full object-cover" />
+                <span v-else class="font-black text-blue-600 text-xs">{{ u.username.charAt(0).toUpperCase() }}</span>
+              </div>
+              <span class="font-black text-xs text-blue-900 dark:text-white truncate">{{ u.username }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="[key, label] in [['viewCards', 'Ver Cards'], ['createEntry', 'Lançar Entrada'], ['createExpense', 'Lançar Saída'], ['viewHistory', 'Ver Histórico']]"
+                :key="key"
+                @click="toggleFinanceSubPerm(u.id, key as keyof FinanceSubPerms)"
+                :class="[
+                  'px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all',
+                  (u.financeSubPerms ?? DEFAULT_FINANCE_SUB_PERMS)[key as keyof FinanceSubPerms]
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-gray-400 border-gray-200 dark:border-slate-700'
+                ]">
+                {{ label }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     <!-- Modal Editar Usuário -->
     <div v-if="isEditModalOpen" class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">

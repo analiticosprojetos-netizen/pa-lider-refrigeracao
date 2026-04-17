@@ -82,7 +82,7 @@ const handleUpdatePart = async () => {
 
 const handleDeletePart = (id: string) => {
   if (confirm('Deseja realmente excluir esta peça?')) {
-    // inventoryStore.deletePart(id) // Implementar se necessário ou apenas ocultar
+    inventoryStore.deletePart(id)
   }
 }
 </script>
@@ -93,7 +93,7 @@ const handleDeletePart = (id: string) => {
     <div class="flex items-center justify-between">
        <h2 class="text-3xl font-black text-blue-900 dark:text-white tracking-tight">Gestão de Estoque</h2>
        
-       <button @click="isNewPartModalOpen = true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg shadow-blue-500/30 active:scale-95">
+       <button v-if="authStore.hasPermission('estoque', 'edit')" @click="isNewPartModalOpen = true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg shadow-blue-500/30 active:scale-95">
           <PlusCircle :size="16" /> Nova Peça
        </button>
     </div>
@@ -188,19 +188,21 @@ const handleDeletePart = (id: string) => {
                    </td>
                    <td class="px-8 py-6">
                       <p class="font-black text-slate-800 dark:text-gray-100 text-base">{{ part.name }}</p>
-                      <p class="text-[10px] text-blue-600 font-bold uppercase mt-0.5">REF: {{ part.id.slice(0, 8).toUpperCase() }}</p>
                    </td>
                    <td class="px-8 py-6 text-center">
-                      <div class="inline-flex items-center gap-4 bg-gray-50 dark:bg-slate-950 px-4 py-2 rounded-2xl border border-gray-100 dark:border-slate-800">
+                      <div v-if="authStore.hasPermission('estoque', 'edit')" class="inline-flex items-center gap-4 bg-gray-50 dark:bg-slate-950 px-4 py-2 rounded-2xl border border-gray-100 dark:border-slate-800">
                          <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'saida')" class="text-red-400 hover:text-red-600 transition-colors"><Minus :size="18" /></button>
                          <span class="text-xl font-black dark:text-white w-8 text-center">{{ part.quantity }}</span>
                          <button @click="inventoryStore.registerMovementToPart(part.id, 1, 'entrada')" class="text-green-400 hover:text-green-600 transition-colors"><Plus :size="18" /></button>
                       </div>
+                      <div v-else class="text-xl font-black text-slate-800 dark:text-white">
+                        {{ part.quantity }}
+                      </div>
                    </td>
                    <td class="px-8 py-6 text-right">
                       <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button @click="openEditModal(part)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit3 :size="16" /></button>
-                         <button @click="handleDeletePart(part.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 :size="16" /></button>
+                         <button v-if="authStore.hasPermission('estoque', 'edit')" @click="openEditModal(part)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit3 :size="16" /></button>
+                         <button v-if="authStore.hasPermission('estoque', 'delete')" @click="handleDeletePart(part.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 :size="16" /></button>
                       </div>
                    </td>
                 </tr>
