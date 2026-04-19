@@ -68,9 +68,9 @@ const scrollNext = () => emblaApi.value?.scrollNext()
         
         <!-- BANNER 1: OFICIAL (Design Lider) -->
         <div class="embla__slide relative h-full flex-[0_0_100%] min-w-0 bg-[#0f172a] overflow-hidden">
-          <div class="absolute inset-0 opacity-10 pointer-events-none hidden md:block">
-            <Snowflake class="absolute top-20 left-20 text-white w-12 h-12 animate-pulse" />
-            <Snowflake class="absolute bottom-20 right-20 text-white w-16 h-16 animate-pulse" />
+          <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <Snowflake class="absolute top-10 left-10 text-white w-8 h-8 md:w-12 md:h-12 animate-pulse" />
+            <Snowflake class="absolute bottom-10 right-10 text-white w-10 h-10 md:w-16 md:h-16 animate-pulse" />
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.4),transparent)]" />
           </div>
 
@@ -79,15 +79,15 @@ const scrollNext = () => emblaApi.value?.scrollNext()
               <div class="flex flex-col lg:flex-row items-center justify-between gap-16">
                 <!-- Text Area (Mobile: Somente o selo 24h simples) -->
                 <div class="text-center lg:text-left flex-1 animate-in slide-in-from-left duration-1000 flex flex-col items-center lg:items-start">
-                  <div class="hidden md:flex flex-col">
-                    <div class="relative inline-block mb-4">
-                      <span class="text-blue-500 font-bold uppercase tracking-[0.5em] text-xs">A Melhor do Setor</span>
-                      <div class="absolute -right-8 top-1/2 w-6 h-0.5 bg-blue-500" />
+                  <div class="flex flex-col">
+                    <div class="relative inline-block mb-2 md:mb-4">
+                      <span class="text-blue-500 font-bold uppercase tracking-[0.5em] text-[8px] md:text-xs">A Melhor do Setor</span>
+                      <div class="absolute -right-6 md:-right-8 top-1/2 w-4 md:w-6 h-0.5 bg-blue-500" />
                     </div>
-                    <h1 class="text-7xl md:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    <h1 class="text-5xl sm:text-7xl md:text-9xl font-black text-white italic leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                       LÍDER
                     </h1>
-                    <h2 class="text-4xl md:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-2">
+                    <h2 class="text-2xl sm:text-4xl md:text-6xl font-black text-blue-500 italic leading-none tracking-tighter mt-1 md:mt-2">
                       REFRIGERAÇÃO
                     </h2>
                   </div>
@@ -102,11 +102,11 @@ const scrollNext = () => emblaApi.value?.scrollNext()
 
                 <!-- CTA Area -->
                 <div class="flex-1 flex flex-col items-center lg:items-end gap-6 sm:gap-8 animate-in slide-in-from-right duration-1000 w-full max-w-lg mx-auto lg:mx-0">
-                  <div class="hidden md:block bg-blue-600/20 backdrop-blur-xl p-6 sm:p-8 rounded-[30px] sm:rounded-[40px] border-l-4 sm:border-l-8 border-blue-500 w-full shadow-2xl">
-                    <h3 class="text-lg md:text-2xl font-black text-white uppercase mb-2 sm:mb-3 leading-tight tracking-tight">
+                  <div class="bg-blue-600/10 backdrop-blur-xl p-5 sm:p-8 rounded-[24px] sm:rounded-[40px] border-l-4 sm:border-l-8 border-blue-500 w-full shadow-2xl">
+                    <h3 class="text-sm md:text-2xl font-black text-white uppercase mb-1.5 sm:mb-3 leading-tight tracking-tight">
                       REFORMAS E MANUTENÇÃO EM BAÚS FRIGORÍFICOS
                     </h3>
-                    <p class="text-blue-100/70 text-[10px] sm:text-sm font-medium leading-relaxed">
+                    <p class="text-blue-100/60 text-[9px] sm:text-sm font-medium leading-relaxed">
                       Especialistas em sistemas Thermo King e Carrier. Peças originais e técnicos certificados.
                     </p>
                   </div>
