@@ -11,11 +11,12 @@ import FinanceTab from '../components/FinanceTab.vue'
 import OrdersTab from '../components/OrdersTab.vue'
 import InventoryTab from '../components/InventoryTab.vue'
 import SettingsTab from '../components/SettingsTab.vue'
+import TrechoTab from '../components/TrechoTab.vue'
 
 import { 
   Snowflake, ShieldCheck, LogOut, Loader2, LayoutDashboard, Package, 
   FileText, Users, Landmark, Settings, Moon, Sun, 
-  AlertTriangle, BarChart3, Camera, KeyRound, User, X, Save, Menu
+  AlertTriangle, BarChart3, Camera, KeyRound, User, X, Save, Menu, Route
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -111,6 +112,10 @@ const handleAvatarUpload = () => {
 }
 
 const tabs = computed(() => {
+  if (authStore.user?.role === 'MOTORISTA') {
+    return [{ id: 'trecho', name: 'Trecho', icon: Route }]
+  }
+
   const base = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
   ]
@@ -119,6 +124,7 @@ const tabs = computed(() => {
   if (authStore.hasPermission('orcamentos', 'view')) base.push({ id: 'orcamentos', name: 'Orçamentos', icon: FileText })
   if (authStore.hasPermission('clientes', 'view')) base.push({ id: 'clientes', name: 'Clientes', icon: Users })
   if (authStore.hasPermission('financeiro', 'view')) base.push({ id: 'financeiro', name: 'Financeiro', icon: Landmark })
+  base.push({ id: 'trecho', name: 'Trecho', icon: Route })
   if (authStore.hasPermission('config', 'view')) base.push({ id: 'config', name: 'Sistema', icon: Settings })
   
   return base
@@ -128,6 +134,11 @@ onMounted(async () => {
   if (!authStore.user) {
     router.push('/login')
     return
+  }
+
+  // Redirecionamento automático para Motoristas
+  if (authStore.user.role === 'MOTORISTA') {
+    currentTab.value = 'trecho'
   }
   
   const savedUsers = localStorage.getItem('lider_users')
@@ -439,6 +450,11 @@ const goalProgress = computed(() => {
         <!-- Tab Sistema -->
         <div v-show="currentTab === 'config'" class="animate-in fade-in duration-500">
           <SettingsTab />
+        </div>
+
+        <!-- Tab Trecho -->
+        <div v-show="currentTab === 'trecho'" class="animate-in fade-in duration-500">
+          <TrechoTab />
         </div>
 
       </div>

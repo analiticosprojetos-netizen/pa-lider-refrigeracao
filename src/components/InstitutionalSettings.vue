@@ -20,7 +20,8 @@ const settings = ref({
   aboutYears: '15+',
   aboutTitle: 'Excelência em Refrigeração de Transportes',
   aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
-  aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
+  aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
+  loginBackground: ''
 })
 
 onMounted(() => {
@@ -36,7 +37,7 @@ const save = () => {
   alert('Configurações salvas com sucesso!')
 }
 
-const handleFileUpload = (type: 'logo' | 'aboutImage') => {
+const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
@@ -178,7 +179,7 @@ const handleFileUpload = (type: 'logo' | 'aboutImage') => {
                      <Camera v-else :size="32" />
                   </div>
                   <div>
-                     <p class="text-xs font-black text-blue-900 dark:text-white uppercase">Alterar Foto</p>
+                     <p class="text-xs font-black text-blue-900 dark:text-white uppercase">Alterar Foto Sobre</p>
                      <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Esta imagem aparece ao lado do texto institucional na página inicial.</p>
                   </div>
                </div>
@@ -198,6 +199,23 @@ const handleFileUpload = (type: 'logo' | 'aboutImage') => {
             <div class="space-y-1.5">
                <label class="text-[10px] font-black text-gray-900 dark:text-gray-400 uppercase tracking-widest pl-1">Descrição / História</label>
                <textarea v-model="settings.aboutDescription" rows="8" class="w-full px-6 py-5 rounded-3xl bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-bold text-sm dark:text-white transition-all resize-none leading-relaxed"></textarea>
+            </div>
+
+            <!-- Divisor e Fundo do Login (Separado em baixo) -->
+            <div class="pt-10 border-t dark:border-slate-800">
+               <div class="space-y-3">
+                  <label class="text-[10px] font-black text-blue-900 dark:text-gray-400 uppercase tracking-widest pl-1">IMAGEM DE FUNDO DO LOGIN (TELA DE ENTRADA)</label>
+                  <div @click="handleFileUpload('loginBackground')" class="p-8 bg-blue-50/10 dark:bg-slate-950/40 border-2 border-dashed border-blue-100/50 dark:border-slate-800 rounded-[28px] flex items-center gap-6 cursor-pointer group hover:border-blue-400 transition-all shadow-sm">
+                     <div class="w-32 h-20 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border dark:border-slate-800 flex items-center justify-center text-gray-300 group-hover:text-blue-500 overflow-hidden">
+                        <img v-if="settings.loginBackground" :src="settings.loginBackground" class="w-full h-full object-cover" />
+                        <Camera v-else :size="32" />
+                     </div>
+                     <div>
+                        <p class="text-xs font-black text-blue-900 dark:text-white uppercase transition-colors group-hover:text-blue-600">Fundo da Tela de Login</p>
+                        <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Personalize a imagem que aparece no fundo da página de login.</p>
+                     </div>
+                  </div>
+               </div>
             </div>
          </div>
       </div>

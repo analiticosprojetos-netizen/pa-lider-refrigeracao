@@ -8,7 +8,7 @@ import { useAuditStore } from '../stores/audit'
 
 const authStore = useAuthStore()
 const users = ref<UserProfile[]>([])
-const roles = ref<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA'])
+const roles = ref<string[]>(['ADMIN', 'CEO', 'DIRETOR', 'GERENTE', 'ANALISTA', 'MOTORISTA'])
 const newRoleName = ref('')
 const newUser = ref({ username: '', email: '', password: '', role: 'ANALISTA' })
 

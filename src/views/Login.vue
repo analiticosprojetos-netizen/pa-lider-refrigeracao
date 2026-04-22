@@ -1,12 +1,18 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-blue-50 dark:bg-slate-950 p-4 transition-colors">
-    <div class="absolute top-8 left-8">
-      <router-link to="/" class="flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 transition">
+  <div 
+    class="min-h-screen flex items-center justify-center p-4 transition-all duration-1000 bg-cover bg-center bg-no-repeat relative"
+    :style="{ backgroundImage: `url(${loginBg})` }"
+  >
+    <!-- Overlay para garantir legibilidade -->
+    <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]"></div>
+
+    <div class="absolute top-8 left-8 z-10">
+      <router-link to="/" class="flex items-center gap-2 text-sm font-black text-white hover:text-blue-200 transition drop-shadow-lg uppercase tracking-widest">
         <ArrowLeft class="h-4 w-4" /> Voltar ao site
       </router-link>
     </div>
     
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 shadow-xl border border-blue-100 dark:border-slate-800 rounded-xl overflow-hidden">
+    <div class="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl border border-white/20 dark:border-slate-800 rounded-3xl overflow-hidden z-10 animate-in zoom-in-95 duration-500">
       <!-- Header do Card -->
       <div class="p-6 text-center space-y-2 border-b border-gray-100 dark:border-slate-800">
         <div class="flex justify-center mb-4">
@@ -72,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { Snowflake, Lock, User, ArrowLeft, HelpCircle, Loader2 } from 'lucide-vue-next'
@@ -84,6 +90,17 @@ const identifier = ref('admin')
 const password = ref('1234')
 const isLoading = ref(false)
 const error = ref('')
+const loginBg = ref('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80')
+
+onMounted(() => {
+  const saved = localStorage.getItem('lider_site_settings')
+  if (saved) {
+    const settings = JSON.parse(saved)
+    if (settings.loginBackground) {
+      loginBg.value = settings.loginBackground
+    }
+  }
+})
 
 const handleLogin = async () => {
   error.value = ''
