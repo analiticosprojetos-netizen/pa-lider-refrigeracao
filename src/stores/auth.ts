@@ -15,6 +15,19 @@ export interface RolePermissions {
   historico: Permission;
   financeiro: Permission;
   config: Permission;
+  trecho: Permission;
+}
+
+export interface TrechoSubPerms {
+  viewAgenciamento: boolean;
+  viewMotorista: boolean;
+  viewRelatorios: boolean;
+}
+
+export const DEFAULT_TRECHO_SUB_PERMS: TrechoSubPerms = {
+  viewAgenciamento: true,
+  viewMotorista: true,
+  viewRelatorios: false,
 }
 
 export interface FinanceSubPerms {
@@ -39,6 +52,7 @@ export interface UserProfile {
   role: string;
   permissions: RolePermissions;
   financeSubPerms?: FinanceSubPerms;
+  trechoSubPerms?: TrechoSubPerms;
 }
 
 
@@ -82,11 +96,18 @@ export const useAuthStore = defineStore('auth', () => {
   const hasFinanceSubPerm = (perm: keyof FinanceSubPerms) => {
     if (!user.value) return false;
     if (user.value.role === 'ADMIN') return true;
-    // Se nem tem permissão de ver o financeiro, não tem sub-perm
     if (!user.value.permissions.financeiro?.view) return false;
-    // Se não tem sub-perms definidas, assume todas ativas por padrão
-    const subPerms = user.value.financeSubPerms
+    const subPerms = user.value.financeSubPerms;
     if (!subPerms) return true;
+    return subPerms[perm];
+  };
+
+  const hasTrechoSubPerm = (perm: keyof TrechoSubPerms) => {
+    if (!user.value) return false;
+    if (user.value.role === 'ADMIN') return true;
+    if (!user.value.permissions.trecho?.view) return false;
+    const subPerms = user.value.trechoSubPerms;
+    if (!subPerms) return DEFAULT_TRECHO_SUB_PERMS[perm];
     return subPerms[perm];
   };
 
@@ -96,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     hasPermission,
-    hasFinanceSubPerm
+    hasFinanceSubPerm,
+    hasTrechoSubPerm
   }
 })

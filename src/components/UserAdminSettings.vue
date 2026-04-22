@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { 
   Shield, UserPlus, Trash2, X, Briefcase, Plus, Save, Edit2, Eye, Camera, KeyRound, User
 } from 'lucide-vue-next'
-import { useAuthStore, type UserProfile, type RolePermissions, type FinanceSubPerms, DEFAULT_FINANCE_SUB_PERMS } from '../stores/auth'
+import { useAuthStore, type UserProfile, type RolePermissions, type FinanceSubPerms, DEFAULT_FINANCE_SUB_PERMS, type TrechoSubPerms, DEFAULT_TRECHO_SUB_PERMS } from '../stores/auth'
 import { useAuditStore } from '../stores/audit'
 
 const authStore = useAuthStore()
@@ -24,6 +24,7 @@ const DEFAULT_PERMISSIONS: RolePermissions = {
   historico: { view: true, edit: false, delete: false },
   financeiro: { view: false, edit: false, delete: false },
   config: { view: false, edit: false, delete: false },
+  trecho: { view: true, edit: false, delete: false },
 }
 
 const FULL_PERMISSIONS: RolePermissions = {
@@ -33,6 +34,7 @@ const FULL_PERMISSIONS: RolePermissions = {
   historico: { view: true, edit: true, delete: true },
   financeiro: { view: true, edit: true, delete: true },
   config: { view: true, edit: true, delete: true },
+  trecho: { view: true, edit: true, delete: true },
 }
 
 onMounted(() => {
@@ -150,6 +152,10 @@ const togglePermission = (userId: string, tab: keyof RolePermissions, action: 'v
   if (tab === 'financeiro' && action === 'view' && user.permissions.financeiro.view && !user.financeSubPerms) {
     user.financeSubPerms = { ...DEFAULT_FINANCE_SUB_PERMS }
   }
+  // Se ativar o view do trecho e não tem sub-perms, inicializa
+  if (tab === 'trecho' && action === 'view' && user.permissions.trecho.view && !user.trechoSubPerms) {
+    user.trechoSubPerms = { ...DEFAULT_TRECHO_SUB_PERMS }
+  }
   saveUsers()
   
   useAuditStore().addLog(
@@ -176,6 +182,26 @@ const toggleFinanceSubPerm = (userId: string, perm: keyof FinanceSubPerms) => {
   const liderUser = JSON.parse(localStorage.getItem('lider_user') || '{}')
   if (liderUser.id === userId) {
     liderUser.financeSubPerms = user.financeSubPerms
+    localStorage.setItem('lider_user', JSON.stringify(liderUser))
+  }
+}
+
+const toggleTrechoSubPerm = (userId: string, perm: keyof TrechoSubPerms) => {
+  const user = users.value.find(u => u.id === userId)
+  if (!user || user.role === 'ADMIN') return
+  if (!user.trechoSubPerms) user.trechoSubPerms = { ...DEFAULT_TRECHO_SUB_PERMS }
+  user.trechoSubPerms[perm] = !user.trechoSubPerms[perm]
+  saveUsers()
+  
+  useAuditStore().addLog(
+    'Sistema',
+    'EDITOU',
+    `Alterou sub-permissão de trecho de ${perm} para o usuário: ${user.username}`
+  )
+
+  const liderUser = JSON.parse(localStorage.getItem('lider_user') || '{}')
+  if (liderUser.id === userId) {
+    liderUser.trechoSubPerms = user.trechoSubPerms
     localStorage.setItem('lider_user', JSON.stringify(liderUser))
   }
 }
@@ -261,14 +287,14 @@ const deleteUser = (id: string) => {
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-gray-50 dark:bg-slate-800 text-[10px] font-black uppercase text-gray-500 border-b dark:border-slate-700">
-              <th class="px-6 py-4">Usuário</th>
-              <th v-for="t in ['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'config']" :key="t" class="px-6 py-4 text-center">{{ t }}</th>
-              <th class="px-6 py-4 text-right">Ações</th>
+              <th class="px-4 py-4">Usuário</th>
+              <th v-for="t in ['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'trecho', 'config']" :key="t" class="px-2 py-4 text-center">{{ t }}</th>
+              <th class="px-4 py-4 text-right">Ações</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
             <tr v-for="u in users" :key="u.id" class="dark:text-slate-300 hover:bg-blue-50/10 dark:hover:bg-slate-800/10 transition-colors">
-              <td class="px-6 py-4">
+              <td class="px-4 py-4">
                 <!-- Avatar + Info -->
                 <div class="flex items-center gap-3">
                   <div class="h-10 w-10 rounded-xl overflow-hidden bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
@@ -282,7 +308,7 @@ const deleteUser = (id: string) => {
                   </div>
                 </div>
               </td>
-              <td v-for="tab in (['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'config'] as const)" :key="tab" class="px-6 py-4">
+              <td v-for="tab in (['estoque', 'orcamentos', 'clientes', 'historico', 'financeiro', 'trecho', 'config'] as const)" :key="tab" class="px-2 py-4">
                 <div class="flex gap-1 justify-center">
                   <button v-for="a in (['view', 'edit', 'delete'] as const)" :key="a" @click="togglePermission(u.id, tab, a)"
                     :disabled="u.role === 'ADMIN'"
@@ -297,7 +323,7 @@ const deleteUser = (id: string) => {
                   </button>
                 </div>
               </td>
-              <td class="px-6 py-4 text-right">
+              <td class="px-4 py-4 text-right">
                 <div class="flex justify-end gap-2">
                   <!-- Editar — disponível para TODOS os usuários incluindo ADMIN -->
                   <button @click="openEditModal(u)" class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 border border-blue-100 dark:border-blue-800 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
@@ -342,6 +368,43 @@ const deleteUser = (id: string) => {
                 :class="[
                   'px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all',
                   (u.financeSubPerms ?? DEFAULT_FINANCE_SUB_PERMS)[key as keyof FinanceSubPerms]
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-gray-400 border-gray-200 dark:border-slate-700'
+                ]">
+                {{ label }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de Sub-Permissões de Trecho -->
+      <div v-if="users.some(u => u.permissions.trecho?.view && u.role !== 'ADMIN')" class="bg-white dark:bg-slate-900 rounded-3xl border border-blue-50 dark:border-slate-800 shadow-xl overflow-hidden">
+        <div class="p-8 border-b dark:border-slate-800 bg-blue-50/30 dark:bg-slate-800/20">
+          <div class="flex items-center gap-3">
+            <Route class="text-blue-600" :size="18" />
+            <h3 class="text-base font-black text-blue-900 dark:text-white">Sub-Permissões do Módulo Trecho</h3>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Defina quais abas do Simulador de Trecho cada usuário pode acessar</p>
+        </div>
+        <div class="p-6 space-y-3">
+          <div v-for="u in users.filter(u => u.permissions.trecho?.view && u.role !== 'ADMIN')" :key="'tp-'+u.id"
+            class="flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-slate-950 px-5 py-4 rounded-2xl border border-gray-100 dark:border-slate-800">
+            <div class="flex items-center gap-2 w-36 shrink-0">
+              <div class="h-7 w-7 rounded-lg overflow-hidden bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                <img v-if="(u as any).avatarUrl" :src="(u as any).avatarUrl" class="w-full h-full object-cover" />
+                <span v-else class="font-black text-blue-600 text-xs">{{ u.username.charAt(0).toUpperCase() }}</span>
+              </div>
+              <span class="font-black text-xs text-blue-900 dark:text-white truncate">{{ u.username }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="[key, label] in [['viewAgenciamento', 'Agenciamento'], ['viewMotorista', 'Motorista'], ['viewRelatorios', 'Relatórios']]"
+                :key="key"
+                @click="toggleTrechoSubPerm(u.id, key as keyof TrechoSubPerms)"
+                :class="[
+                  'px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all',
+                  (u.trechoSubPerms ?? DEFAULT_TRECHO_SUB_PERMS)[key as keyof TrechoSubPerms]
                     ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-gray-400 border-gray-200 dark:border-slate-700'
                 ]">

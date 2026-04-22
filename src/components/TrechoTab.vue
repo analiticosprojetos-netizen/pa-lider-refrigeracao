@@ -13,7 +13,7 @@ import { exportViagemToExcel, generateViagemPDF, exportTableToCSV, exportTableTo
 
 // ---- Estado ---------------------------------------------------------------
 const authStore = useAuthStore()
-const currentSubTab = ref<'motorista' | 'agenciamento' | 'relatorios'>(authStore.user?.role === 'MOTORISTA' ? 'motorista' : 'agenciamento')
+const currentSubTab = ref<'motorista' | 'agenciamento' | 'relatorios'>('agenciamento')
 const origemInput = ref('')
 const destinoInput = ref('')
 const origemCoords = ref<{ lat: number; lng: number } | null>(null)
@@ -734,6 +734,19 @@ onMounted(async () => {
   carregarFrota()
   window.addEventListener('storage', carregarFrota)
 
+  // Ajusta aba inicial baseada em permissões
+  if (authStore.user) {
+    if (authStore.user.role === 'ADMIN') {
+      currentSubTab.value = 'agenciamento'
+    } else {
+      if (authStore.hasTrechoSubPerm('viewAgenciamento')) {
+        currentSubTab.value = 'agenciamento'
+      } else if (authStore.hasTrechoSubPerm('viewMotorista')) {
+        currentSubTab.value = 'motorista'
+      }
+    }
+  }
+
   await nextTick()
   await inicializarMapa()
 })
@@ -751,13 +764,13 @@ const fmtKm = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 
   <div class="animate-in fade-in duration-500 flex flex-col gap-6 pb-12">
     <!-- Sub-Abas Navigation -->
     <div class="flex flex-wrap items-center justify-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-[20px] shadow-sm border border-gray-100 dark:border-slate-800 w-full lg:w-fit">
-      <button @click="currentSubTab = 'agenciamento'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'agenciamento' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
+      <button v-if="authStore.hasTrechoSubPerm('viewAgenciamento')" @click="currentSubTab = 'agenciamento'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'agenciamento' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
         <Calculator :size="14" /> Agenciamento
       </button>
-      <button @click="currentSubTab = 'motorista'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'motorista' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
+      <button v-if="authStore.hasTrechoSubPerm('viewMotorista')" @click="currentSubTab = 'motorista'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'motorista' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
         <UserCheck :size="14" /> Motorista
       </button>
-      <button v-if="authStore.user?.role === 'ADMIN'" @click="currentSubTab = 'relatorios'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'relatorios' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
+      <button v-if="authStore.hasTrechoSubPerm('viewRelatorios')" @click="currentSubTab = 'relatorios'" :class="['flex-1 sm:flex-none justify-center px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2', currentSubTab === 'relatorios' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800']">
         <Table :size="14" /> Relatórios
       </button>
     </div>
