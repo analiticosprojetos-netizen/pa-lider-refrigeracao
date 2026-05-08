@@ -11,44 +11,28 @@ export interface Customer {
   createdAt?: string;
 }
 
+import { apiFetch } from '../utils/api'
+
 export class CustomerService {
-  /**
-   * GET /api/customers
-   */
   static async getCustomers(): Promise<Customer[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem('lider_customers');
-        resolve(data ? JSON.parse(data) : []);
-      }, 500);
-    });
+    const response = await apiFetch('/customers');
+    return response.data;
   }
 
-  /**
-   * POST /api/customers
-   */
   static async addCustomer(customer: Omit<Customer, 'id' | 'createdAt'>): Promise<Customer> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newCustomer: Customer = {
-          ...customer,
-          id: Math.random().toString(36).substr(2, 9),
-          createdAt: new Date().toLocaleDateString()
-        };
-        resolve(newCustomer);
-      }, 400);
+    const response = await apiFetch('/customers', {
+      method: 'POST',
+      body: JSON.stringify(customer)
     });
+    return response.data;
   }
 
-  /**
-   * PUT /api/customers/:id
-   */
   static async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ id, ...updates } as Customer);
-      }, 400);
+    const response = await apiFetch(`/customers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
     });
+    return response.data;
   }
 }
 

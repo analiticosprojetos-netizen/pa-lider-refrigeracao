@@ -30,6 +30,13 @@ const abrirModalEdicao = (v: Veiculo) => {
   mostrarModalEdicao.value = true
 }
 
+const maskPlaca = (e: Event) => {
+  let val = (e.target as HTMLInputElement).value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (val.length > 7) val = val.slice(0, 7)
+  if (val.length > 3) val = val.substring(0, 3) + '-' + val.substring(3)
+  novoVeiculo.value.placa = val
+}
+
 const maskPlacaEdicao = (e: Event) => {
   let val = (e.target as HTMLInputElement).value.toUpperCase().replace(/[^A-Z0-9]/g, '')
   if (val.length > 7) val = val.slice(0, 7)
@@ -37,7 +44,40 @@ const maskPlacaEdicao = (e: Event) => {
   formEdicao.value.placa = val
 }
 
-const salvarEdicao = () => {
+import { SettingsService } from '../services/SettingsService'
+
+import { FleetService } from '../services/FleetService'
+
+onMounted(async () => {
+  try {
+    const settingsData = await SettingsService.getSettings();
+    siteSettings.value.maxDiscountWarning = settingsData.maxDiscountWarning || 10
+    siteSettings.value.maxDiscountDanger = settingsData.maxDiscountDanger || 20
+    siteSettings.value.goalType = settingsData.goalType || 'valor'
+    siteSettings.value.goalTarget = Number(settingsData.goalTarget) || 5000
+
+    const fleetData = await FleetService.getAll();
+    frota.value = fleetData;
+  } catch (err) {
+    console.error('Erro ao carregar dados:', err);
+  }
+})
+
+const saveRules = async () => {
+  try {
+    await SettingsService.updateSettings({
+      maxDiscountWarning: siteSettings.value.maxDiscountWarning,
+      maxDiscountDanger: siteSettings.value.maxDiscountDanger,
+      goalType: siteSettings.value.goalType,
+      goalTarget: siteSettings.value.goalTarget
+    });
+    alert('Regras de negócio aplicadas com sucesso no banco!');
+  } catch (err: any) {
+    alert('Erro ao salvar no banco: ' + err.message);
+  }
+}
+
+const salvarEdicao = async () => {
   if (!veiculoEmEdicao.value) return
   
   const placaRegex = /^[A-Z]{3}-[A-Z0-9]{4}$/
@@ -46,47 +86,17 @@ const salvarEdicao = () => {
     return
   }
 
-  const idx = frota.value.findIndex(v => v.id === veiculoEmEdicao.value!.id)
-  if (idx !== -1) {
-    frota.value[idx] = { ...veiculoEmEdicao.value, ...formEdicao.value }
-    localStorage.setItem('lider_frota', JSON.stringify(frota.value))
-    window.dispatchEvent(new Event('storage'))
+  try {
+    await FleetService.update(veiculoEmEdicao.value.id, formEdicao.value);
+    const fleetData = await FleetService.getAll();
+    frota.value = fleetData;
+    mostrarModalEdicao.value = false;
+  } catch (err: any) {
+    alert('Erro ao editar veículo: ' + err.message);
   }
-  
-  mostrarModalEdicao.value = false
 }
 
-const maskPlaca = (e: Event) => {
-  let val = (e.target as HTMLInputElement).value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-  if (val.length > 7) val = val.slice(0, 7)
-  if (val.length > 3) val = val.substring(0, 3) + '-' + val.substring(3)
-  novoVeiculo.value.placa = val
-}
-
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const parsed = JSON.parse(saved)
-    siteSettings.value.maxDiscountWarning = parsed.maxDiscountWarning || 10
-    siteSettings.value.maxDiscountDanger = parsed.maxDiscountDanger || 20
-    siteSettings.value.goalType = parsed.goalType || 'valor'
-    siteSettings.value.goalTarget = parsed.goalTarget || 5000
-  }
-
-  const savedFrota = localStorage.getItem('lider_frota')
-  if (savedFrota) {
-    frota.value = JSON.parse(savedFrota)
-  }
-})
-
-const saveRules = () => {
-  localStorage.setItem('lider_site_settings', JSON.stringify(siteSettings.value))
-  localStorage.setItem('lider_frota', JSON.stringify(frota.value))
-  window.dispatchEvent(new Event('storage'))
-  alert('Regras de negócio e Frota aplicadas com sucesso!')
-}
-
-const adicionarVeiculo = () => {
+const adicionarVeiculo = async () => {
   const placaRegex = /^[A-Z]{3}-[A-Z0-9]{4}$/
   if (!placaRegex.test(novoVeiculo.value.placa)) {
     alert('Placa inválida. Use o formato correto (ex: ABC-1234).')
@@ -97,22 +107,32 @@ const adicionarVeiculo = () => {
     return
   }
 
-  frota.value.push({
-    id: Date.now().toString(),
-    placa: novoVeiculo.value.placa,
-    modelo: novoVeiculo.value.modelo,
-    consumo: novoVeiculo.value.consumo
-  })
-
-  novoVeiculo.value = { placa: '', modelo: '', consumo: null }
-  localStorage.setItem('lider_frota', JSON.stringify(frota.value))
-  window.dispatchEvent(new Event('storage'))
+  try {
+    await FleetService.create({
+      id: Date.now().toString(),
+      placa: novoVeiculo.value.placa,
+      modelo: novoVeiculo.value.modelo,
+      consumo: novoVeiculo.value.consumo
+    });
+    
+    const fleetData = await FleetService.getAll();
+    frota.value = fleetData;
+    novoVeiculo.value = { placa: '', modelo: '', consumo: null };
+  } catch (err: any) {
+    alert('Erro ao adicionar veículo: ' + err.message);
+  }
 }
 
-const removerVeiculo = (id: string) => {
-  frota.value = frota.value.filter(v => v.id !== id)
-  localStorage.setItem('lider_frota', JSON.stringify(frota.value))
-  window.dispatchEvent(new Event('storage'))
+const removerVeiculo = async (id: string) => {
+  if (confirm('Deseja excluir este veículo?')) {
+    try {
+      await FleetService.delete(id);
+      const fleetData = await FleetService.getAll();
+      frota.value = fleetData;
+    } catch (err: any) {
+      alert('Erro ao remover veículo: ' + err.message);
+    }
+  }
 }
 </script>
 

@@ -95,59 +95,36 @@ export interface ServiceOrder {
   report?: string;
 }
 
+import { apiFetch } from '../utils/api'
+
 export class OrderService {
   static async getOrders(): Promise<ServiceOrder[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem('lider_orders');
-        resolve(data ? JSON.parse(data) : []);
-      }, 700);
-    });
+    const response = await apiFetch('/orders');
+    return response.data;
   }
 
   static async createOrder(order: Omit<ServiceOrder, 'id' | 'createdAt' | 'status' | 'date'>): Promise<ServiceOrder> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const now = new Date();
-        const datePrefix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-        
-        // Simulação de busca do próximo sequencial
-        const savedOrders = JSON.parse(localStorage.getItem('lider_orders') || '[]');
-        const todayOrders = savedOrders.filter((o: any) => o.id.toString().startsWith(datePrefix));
-        
-        let nextNum = 1;
-        if (todayOrders.length > 0) {
-          const nums = todayOrders.map((o: any) => {
-            const parts = o.id.split(' - ');
-            return parts.length > 1 ? parseInt(parts[1]) : 0;
-          }).filter((n: any) => !isNaN(n));
-          nextNum = Math.max(0, ...nums) + 1;
-        }
-
-        const newOrder: ServiceOrder = {
-          ...order,
-          id: `${datePrefix} - ${nextNum}`,
-          date: now.toLocaleString(),
-          status: 'Pendente',
-          createdAt: now.toISOString()
-        };
-        resolve(newOrder);
-      }, 500);
+    const response = await apiFetch('/orders', {
+      method: 'POST',
+      body: JSON.stringify(order)
     });
+    return response.data;
   }
 
   static async updateOrder(order: ServiceOrder): Promise<ServiceOrder> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(order);
-      }, 500);
+    const response = await apiFetch(`/orders/${order.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(order)
     });
+    return response.data;
   }
 
   static async updateOrderStatus(id: string, status: 'Executado' | 'Cancelado' | 'Pendente'): Promise<boolean> {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(true), 400);
+    const response = await apiFetch(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
     });
+    return response.success;
   }
 }
 

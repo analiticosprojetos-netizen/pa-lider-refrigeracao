@@ -5,78 +5,40 @@
  */
 
 import type { UserProfile } from '../stores/auth'
+import { apiFetch } from '../utils/api'
 
 export class AuthService {
-  /**
-   * Simula o endpoint POST /api/auth/login
-   */
   static async login(identifier: string, password: string): Promise<{ token: string; user: UserProfile }> {
-    return new Promise((resolve, reject) => {
-      // Mocked Backend Delay
-      setTimeout(() => {
-        const savedUsersStr = localStorage.getItem('lider_users')
-        let users: UserProfile[] = []
-        
-        if (savedUsersStr) {
-          users = JSON.parse(savedUsersStr)
-        }
-
-        // Garante que o admin padrão seja sempre uma opção se não estiver na lista
-        const adminFound = users.find(u => u.username === 'admin' || u.email === 'admin@lider.com')
-        if (!adminFound) {
-           // Adiciona temporariamente para validação se necessário ou apenas confia na lógica abaixo
-        }
-
-        const found = users.find(u => 
-          (u.username === identifier || u.email === identifier) && 
-          (u.password === password || (!u.password && identifier === 'admin' && password === '1234'))
-        )
-
-        // Caso especial para o admin padrão caso a lista esteja vazia ou inconsistente
-        if (!found && (identifier === 'admin' || identifier === 'admin@lider.com') && password === '1234') {
-          resolve({
-            token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mocked_token.v1',
-            user: {
-              id: '1',
-              username: 'admin',
-              email: 'admin@lider.com',
-              role: 'ADMIN',
-              permissions: {
-                estoque: { view: true, edit: true, delete: true },
-                orcamentos: { view: true, edit: true, delete: true },
-                clientes: { view: true, edit: true, delete: true },
-                historico: { view: true, edit: true, delete: true },
-                financeiro: { view: true, edit: true, delete: true },
-                config: { view: true, edit: true, delete: true },
-              }
-            }
-          })
-          return
-        }
-
-        if (found) {
-          resolve({
-            token: `mock_token_${found.id}`,
-            user: found
-          })
-        } else {
-          reject(new Error('Usuário ou senha incorretos.'))
-        }
-      }, 800)
-    })
+    try {
+      const response = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: identifier, password })
+      });
+      return response.data;
+    } catch (err: any) {
+      throw new Error(err.message || 'Erro ao realizar login')
+    }
   }
 
-  /**
-   * Simula obtenção do perfil logado (Me)
-   * GET /api/auth/me
-   */
   static async getMe(): Promise<{ user: UserProfile }> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const stored = localStorage.getItem('lider_user')
-        if (stored) return resolve({ user: JSON.parse(stored) })
-        resolve({ user: null as any })
-      }, 300)
-    })
+    try {
+      const response = await apiFetch('/auth/me');
+      return { user: response.data };
+    } catch (err) {
+      return { user: null as any };
+    }
+  }
+
+  static async updateProfile(data: any): Promise<any> {
+    const response = await apiFetch('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  }
+
+  static async getUsers(): Promise<any[]> {
+    const response = await apiFetch('/auth/users');
+    return response.data;
   }
 }

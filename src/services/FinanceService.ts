@@ -8,32 +8,19 @@ export interface Transaction {
   orderId?: string
 }
 
+import { apiFetch } from '../utils/api'
+
 export class FinanceService {
-  /**
-   * GET /api/finances
-   */
   static async getTransactions(): Promise<Transaction[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem('lider_transactions')
-        resolve(data ? JSON.parse(data) : [])
-      }, 600)
-    })
+    const response = await apiFetch('/finances');
+    return response.data;
   }
 
-  /**
-   * POST /api/finances
-   */
   static async addTransaction(trx: Omit<Transaction, 'id' | 'date'>): Promise<Transaction> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newTrx: Transaction = {
-          ...trx,
-          id: 'uuid-trx-' + Date.now(),
-          date: new Date().toISOString()
-        }
-        resolve(newTrx)
-      }, 400)
-    })
+    const response = await apiFetch('/finances', {
+      method: 'POST',
+      body: JSON.stringify(trx)
+    });
+    return response.data;
   }
 }

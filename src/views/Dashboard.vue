@@ -12,6 +12,8 @@ import OrdersTab from '../components/OrdersTab.vue'
 import InventoryTab from '../components/InventoryTab.vue'
 import SettingsTab from '../components/SettingsTab.vue'
 import TrechoTab from '../components/TrechoTab.vue'
+import { SettingsService } from '../services/SettingsService'
+import { AuthService } from '../services/AuthService'
 
 import { 
   Snowflake, ShieldCheck, LogOut, Loader2, LayoutDashboard, Package, 
@@ -63,29 +65,29 @@ const openProfileModal = () => {
   isProfileModalOpen.value = true
 }
 
-const saveProfile = () => {
+import { AuthService } from '../services/AuthService'
+
+const saveProfile = async () => {
   if (!authStore.user) return
-  authStore.user.username = profileForm.value.username
-  authStore.user.email = profileForm.value.email
-  ;(authStore.user as any).avatarUrl = profileForm.value.avatarUrl
+  
+  try {
+    const updatedUser = await AuthService.updateProfile({
+      username: profileForm.value.username,
+      email: profileForm.value.email,
+      password: profileForm.value.password || undefined,
+      avatarUrl: profileForm.value.avatarUrl
+    });
 
-  // Atualiza também na lista de usuários
-  const savedUsers = localStorage.getItem('lider_users')
-  if (savedUsers) {
-    const users = JSON.parse(savedUsers)
-    const idx = users.findIndex((u: any) => u.id === authStore.user!.id)
-    if (idx !== -1) {
-      users[idx].username = profileForm.value.username
-      users[idx].email = profileForm.value.email
-      users[idx].avatarUrl = profileForm.value.avatarUrl
-      if (profileForm.value.password) users[idx].password = profileForm.value.password
-      localStorage.setItem('lider_users', JSON.stringify(users))
-    }
+    authStore.user = updatedUser;
+    
+    // Atualiza localmente o cache do usuário logado
+    localStorage.setItem('lider_user', JSON.stringify(updatedUser));
+    
+    isProfileModalOpen.value = false;
+    alert('Perfil atualizado com sucesso!');
+  } catch (err: any) {
+    alert('Erro ao salvar perfil: ' + err.message);
   }
-
-  localStorage.setItem('lider_user', JSON.stringify(authStore.user))
-  isProfileModalOpen.value = false
-  alert('Perfil atualizado com sucesso!')
 }
 
 const handleAvatarUpload = () => {
@@ -140,30 +142,16 @@ onMounted(async () => {
   if (authStore.user.role === 'MOTORISTA') {
     currentTab.value = 'trecho'
   }
-  
-  const savedUsers = localStorage.getItem('lider_users')
-  if (savedUsers) {
-     technicalTeam.value = JSON.parse(savedUsers)
-  } else {
-    // Inicializa a lista de usuários com o admin se estiver vazia
-    const adminUser = {
-      id: '1',
-      username: 'admin',
-      email: 'admin@lider.com',
-      role: 'ADMIN',
-      permissions: FULL_PERMISSIONS,
-      avatarUrl: ''
-    }
-    technicalTeam.value = [adminUser]
-    localStorage.setItem('lider_users', JSON.stringify(technicalTeam.value))
+  try {
+    const users = await AuthService.getUsers()
+    technicalTeam.value = users
+  } catch (err) {
+    console.error('Erro ao carregar equipe técnica:', err)
   }
 
-  const savedSettings = localStorage.getItem('lider_site_settings')
-  if (savedSettings) {
-    const parsed = JSON.parse(savedSettings)
-    goalSettings.value.type = parsed.goalType || 'valor'
-    goalSettings.value.target = parsed.goalTarget || 5000
-  }
+  const settingsData = await SettingsService.getSettings()
+  goalSettings.value.type = settingsData.goalType || 'valor'
+  goalSettings.value.target = Number(settingsData.goalTarget) || 5000
 
   await Promise.all([
     inventoryStore.loadStock(),

@@ -8,10 +8,23 @@ import { useAuditStore } from '../stores/audit'
 
 const auditStore = useAuditStore()
 
+import { SettingsService } from '../services/SettingsService'
+
 const settings = ref({
   banners: [] as any[],
   specialties: [] as any[],
   carouselDelay: 6
+})
+
+onMounted(async () => {
+  try {
+    const data = await SettingsService.getSettings();
+    settings.value.banners = data.banners || [];
+    settings.value.specialties = data.specialties || [];
+    settings.value.carouselDelay = data.carouselDelay || 6;
+  } catch (err) {
+    console.error('Erro ao carregar banners:', err);
+  }
 })
 
 const activeConfigTab = ref('banners') // 'banners' | 'specialties'
@@ -73,34 +86,6 @@ const resetBannerForm = () => {
   customType.value = 'Serviço'
   editingIndex.value = -1
 }
-
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const parsed = JSON.parse(saved)
-    if (parsed.banners && parsed.banners.length > 0) {
-      if (typeof parsed.banners[0] === 'string') {
-         settings.value.banners = parsed.banners.map((b: string) => ({ src: b, overlay: 60, objectFit: 'cover' }))
-      } else {
-         settings.value.banners = parsed.banners.map((b: any) => ({ ...b, objectFit: b.objectFit || 'cover' }))
-      }
-    }
-    settings.value.carouselDelay = parsed.carouselDelay || 6
-    if (parsed.specialties && Array.isArray(parsed.specialties)) {
-      settings.value.specialties = parsed.specialties
-    } else {
-      // Default specialties if none exist
-      settings.value.specialties = [
-        { title: 'Thermo King', desc: 'Referência mundial em refrigeração. Técnicos treinados e certificados pela marca.', iconName: 'Thermometer', type: 'Autorizada', logo: '' },
-        { title: 'Carrier', desc: 'Representante autorizado. Peças originais e suporte especializado Carrier Transicold.', iconName: 'Award', type: 'Autorizada', logo: '' },
-        { title: 'Frigo King', desc: 'Equipamentos robustos para logística de perecíveis. Atendimento técnica oficial.', iconName: 'ShieldCheck', type: 'Autorizada', logo: '' },
-        { title: 'Thermo Star', desc: 'Soluções em refrigeração para transporte. Manutenção técnica autorizada de fábrica.', iconName: 'Snowflake', type: 'Autorizada', logo: '' },
-        { title: 'Baús Frigoríficos', desc: 'Reforma completa e isolamento térmico de alta performance para baús frigoríficos.', iconName: 'Truck', type: 'Serviço', logo: '' },
-        { title: 'Logística de Frio', desc: 'Gestão completa da cadeia de frio, garantindo a integridade térmica da sua carga.', iconName: 'CheckCircle2', type: 'Serviço', logo: '' }
-      ]
-    }
-  }
-})
 
 const triggerFileSelect = () => {
   editingIndex.value = -1 
@@ -352,18 +337,19 @@ const reorderSpecialty = (oldIndex: number, newPos: number) => {
   auditStore.addLog("Sistema", "REORDENOU", `Especialidade movida da posição ${oldIndex + 1} para ${targetIdx + 1}`)
 }
 
-const save = () => {
-  const saved = localStorage.getItem('lider_site_settings')
-  const current = saved ? JSON.parse(saved) : {}
-  localStorage.setItem('lider_site_settings', JSON.stringify({
-    ...current,
-    banners: settings.value.banners,
-    specialties: settings.value.specialties,
-    carouselDelay: settings.value.carouselDelay
-  }))
-  
-  auditStore.addLog("Sistema", "EDITOU", `Configurações master de banners salvas. Total: ${settings.value.banners.length} banners.`)
-  alert('Configurações de banners salvas com sucesso!')
+const save = async () => {
+  try {
+    await SettingsService.updateSettings({
+      banners: settings.value.banners,
+      specialties: settings.value.specialties,
+      carouselDelay: settings.value.carouselDelay
+    });
+    
+    auditStore.addLog("Sistema", "EDITOU", `Configurações master de banners salvas no banco. Total: ${settings.value.banners.length} banners.`)
+    alert('Configurações salvas no banco de dados com sucesso!')
+  } catch (err: any) {
+    alert('Erro ao salvar no banco: ' + err.message);
+  }
 }
 
 const zoomIn = () => cropperRef.value?.zoom(1.2)

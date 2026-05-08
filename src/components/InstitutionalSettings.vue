@@ -24,17 +24,28 @@ const settings = ref({
   loginBackground: ''
 })
 
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const parsed = JSON.parse(saved)
-    Object.assign(settings.value, parsed)
+import { SettingsService } from '../services/SettingsService'
+
+onMounted(async () => {
+  try {
+    const data = await SettingsService.getSettings();
+    if (data) {
+      // Mescla os dados do banco, ignorando campos nulos
+      const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== null));
+      Object.assign(settings.value, cleanData);
+    }
+  } catch (err) {
+    console.error('Erro ao carregar configurações institucionais:', err);
   }
 })
 
-const save = () => {
-  localStorage.setItem('lider_site_settings', JSON.stringify(settings.value))
-  alert('Configurações salvas com sucesso!')
+const save = async () => {
+  try {
+    await SettingsService.updateSettings(settings.value);
+    alert('Configurações institucionais salvas no banco com sucesso!');
+  } catch (err: any) {
+    alert('Erro ao salvar no banco: ' + err.message);
+  }
 }
 
 const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
