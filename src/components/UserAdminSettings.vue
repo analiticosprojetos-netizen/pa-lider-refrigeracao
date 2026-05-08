@@ -5,6 +5,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore, type UserProfile, type RolePermissions, type FinanceSubPerms, DEFAULT_FINANCE_SUB_PERMS, type TrechoSubPerms, DEFAULT_TRECHO_SUB_PERMS } from '../stores/auth'
 import { useAuditStore } from '../stores/audit'
+import { UserService } from '../services/UserService'
 
 const authStore = useAuthStore()
 const users = ref<UserProfile[]>([])
@@ -37,65 +38,61 @@ const FULL_PERMISSIONS: RolePermissions = {
   trecho: { view: true, edit: true, delete: true },
 }
 
-onMounted(() => {
-  const savedUsers = localStorage.getItem('lider_users')
-  if (savedUsers) {
-    users.value = JSON.parse(savedUsers)
-  } else {
-    const admin: UserProfile = {
-      id: '1',
-      username: 'admin',
-      email: 'admin@lider.com',
-      password: '1234',
-      role: 'ADMIN',
-      permissions: FULL_PERMISSIONS,
-      avatarUrl: ''
-    } as any
-    users.value = [admin]
-    localStorage.setItem('lider_users', JSON.stringify(users.value))
+onMounted(async () => {
+  try {
+    users.value = await UserService.getAll()
+    roles.value = await UserService.getRoles()
+  } catch (e) {
+    console.error('Erro ao carregar usuários/cargos:', e)
   }
-  const savedRoles = localStorage.getItem('lider_roles')
-  if (savedRoles) roles.value = JSON.parse(savedRoles)
 })
 
-const saveUsers = () => {
-  localStorage.setItem('lider_users', JSON.stringify(users.value))
-}
 
-const saveRoles = () => {
-  localStorage.setItem('lider_roles', JSON.stringify(roles.value))
-}
+// Funções de salvamento local removidas pois agora salvamos via API individualmente
 
-const handleAddRole = () => {
+
+const handleAddRole = async () => {
   if (!newRoleName.value) return
   const upper = newRoleName.value.toUpperCase()
   if (roles.value.includes(upper)) return alert('Cargo já existe')
-  roles.value.push(upper)
-  saveRoles()
-  newRoleName.value = ''
+  
+  try {
+    const newRole = await UserService.createRole(upper)
+    roles.value.push(newRole)
+    newRoleName.value = ''
+  } catch (e) {
+    alert('Erro ao criar cargo')
+  }
 }
 
-const handleAddUser = () => {
+
+const handleAddUser = async () => {
   if (!newUser.value.username || !newUser.value.email) return
-  const user: UserProfile = {
-    id: Math.random().toString(36).substr(2, 9),
+  
+  const userPayload = {
     username: newUser.value.username,
     email: newUser.value.email,
     password: newUser.value.password,
     role: newUser.value.role,
     permissions: (newUser.value.role === 'ADMIN' || newUser.value.role === 'CEO') ? FULL_PERMISSIONS : DEFAULT_PERMISSIONS
   }
-  users.value.push(user)
-  saveUsers()
-  
-  useAuditStore().addLog(
-    'Sistema',
-    'CRIOU',
-    `Cadastrou novo usuário: ${user.username} (${user.role})`
-  )
-  
-  newUser.value = { username: '', email: '', password: '', role: 'ANALISTA' }
+
+  try {
+    const user = await UserService.create(userPayload)
+    users.value.push(user)
+    
+    useAuditStore().addLog(
+      'Sistema',
+      'CRIOU',
+      `Cadastrou novo usuário: ${user.username} (${user.role})`
+    )
+    
+    newUser.value = { username: '', email: '', password: '', role: 'ANALISTA' }
+  } catch (e) {
+    alert('Erro ao criar usuário')
+  }
 }
+
 
 const openEditModal = (user: any) => {
   editingUser.value = user
@@ -108,119 +105,147 @@ const openEditModal = (user: any) => {
   isEditModalOpen.value = true
 }
 
-const handleSaveEdit = () => {
+const handleSaveEdit = async () => {
   if (!editingUser.value) return
   const idx = users.value.findIndex(u => u.id === editingUser.value!.id)
   if (idx === -1) return
 
-  users.value[idx].username = editForm.value.username
-  users.value[idx].email = editForm.value.email
-  ;(users.value[idx] as any).avatarUrl = editForm.value.avatarUrl
+  const updates: any = {
+    username: editForm.value.username,
+    email: editForm.value.email,
+    avatarUrl: editForm.value.avatarUrl
+  }
   if (editForm.value.password) {
-    users.value[idx].password = editForm.value.password
-  }
-  saveUsers()
-  
-  useAuditStore().addLog(
-    'Sistema',
-    'EDITOU',
-    `Alterou dados do usuário: ${editForm.value.username}`
-  )
-
-  // Atualiza sessão se for o usuário logado
-  if (authStore.user && authStore.user.id === editingUser.value.id) {
-    authStore.user.username = editForm.value.username
-    authStore.user.email = editForm.value.email
-    ;(authStore.user as any).avatarUrl = editForm.value.avatarUrl
-    localStorage.setItem('lider_user', JSON.stringify(authStore.user))
+    updates.password = editForm.value.password
   }
 
-  isEditModalOpen.value = false
-  alert('Usuário atualizado com sucesso!')
+  try {
+    const updatedUser = await UserService.update(editingUser.value.id, updates)
+    users.value[idx] = updatedUser
+
+    // Atualiza sessão se for o usuário logado
+    if (authStore.user && authStore.user.id === editingUser.value.id) {
+      Object.assign(authStore.user, updatedUser)
+    }
+
+    useAuditStore().addLog(
+      'Sistema',
+      'EDITOU',
+      `Alterou dados do usuário: ${editForm.value.username}`
+    )
+
+    isEditModalOpen.value = false
+    alert('Usuário atualizado com sucesso!')
+  } catch (e) {
+    alert('Erro ao atualizar usuário')
+  }
 }
 
-const togglePermission = (userId: string, tab: keyof RolePermissions, action: 'view' | 'edit' | 'delete') => {
+
+const togglePermission = async (userId: string, tab: keyof RolePermissions, action: 'view' | 'edit' | 'delete') => {
   const user = users.value.find(u => u.id === userId)
-  // ADMIN sempre mantém todas as permissões
   if (!user || user.role === 'ADMIN') return
+  
   user.permissions[tab][action] = !user.permissions[tab][action]
-  // Se tirar o view do financeiro, reseta as sub-permissões
+  
+  // Lógica de reset/init de sub-perms
   if (tab === 'financeiro' && action === 'view' && !user.permissions.financeiro.view) {
     user.financeSubPerms = { viewCards: false, createEntry: false, createExpense: false, viewHistory: false }
   }
-  // Se ativar o view do financeiro e não tem sub-perms, inicializa com tudo ativo
   if (tab === 'financeiro' && action === 'view' && user.permissions.financeiro.view && !user.financeSubPerms) {
     user.financeSubPerms = { ...DEFAULT_FINANCE_SUB_PERMS }
   }
-  // Se ativar o view do trecho e não tem sub-perms, inicializa
   if (tab === 'trecho' && action === 'view' && user.permissions.trecho.view && !user.trechoSubPerms) {
     user.trechoSubPerms = { ...DEFAULT_TRECHO_SUB_PERMS }
   }
-  saveUsers()
-  
-  useAuditStore().addLog(
-    'Sistema',
-    'EDITOU',
-    `Alterou permissão básica de ${action} na aba ${tab} para o usuário: ${user.username}`
-  )
+
+  try {
+    await UserService.update(userId, { 
+      permissions: user.permissions,
+      financeSubPerms: user.financeSubPerms,
+      trechoSubPerms: user.trechoSubPerms
+    })
+    
+    useAuditStore().addLog(
+      'Sistema',
+      'EDITOU',
+      `Alterou permissão básica de ${action} na aba ${tab} para o usuário: ${user.username}`
+    )
+  } catch (e) {
+    alert('Erro ao atualizar permissões')
+  }
 }
 
-const toggleFinanceSubPerm = (userId: string, perm: keyof FinanceSubPerms) => {
+
+const toggleFinanceSubPerm = async (userId: string, perm: keyof FinanceSubPerms) => {
   const user = users.value.find(u => u.id === userId)
   if (!user || user.role === 'ADMIN') return
   if (!user.financeSubPerms) user.financeSubPerms = { ...DEFAULT_FINANCE_SUB_PERMS }
   user.financeSubPerms[perm] = !user.financeSubPerms[perm]
-  saveUsers()
   
-  useAuditStore().addLog(
-    'Sistema',
-    'EDITOU',
-    `Alterou sub-permissão financeira de ${perm} para o usuário: ${user.username}`
-  )
-  
-  // Atualizar o localStorage do usuário logado se for ele mesmo
-  const liderUser = JSON.parse(localStorage.getItem('lider_user') || '{}')
-  if (liderUser.id === userId) {
-    liderUser.financeSubPerms = user.financeSubPerms
-    localStorage.setItem('lider_user', JSON.stringify(liderUser))
+  try {
+    await UserService.update(userId, { financeSubPerms: user.financeSubPerms })
+    
+    useAuditStore().addLog(
+      'Sistema',
+      'EDITOU',
+      `Alterou sub-permissão financeira de ${perm} para o usuário: ${user.username}`
+    )
+    
+    // Atualiza sessão se for ele mesmo
+    if (authStore.user && authStore.user.id === userId) {
+      authStore.user.financeSubPerms = user.financeSubPerms
+    }
+  } catch (e) {
+    alert('Erro ao atualizar sub-permissão')
   }
 }
 
-const toggleTrechoSubPerm = (userId: string, perm: keyof TrechoSubPerms) => {
+
+const toggleTrechoSubPerm = async (userId: string, perm: keyof TrechoSubPerms) => {
   const user = users.value.find(u => u.id === userId)
   if (!user || user.role === 'ADMIN') return
   if (!user.trechoSubPerms) user.trechoSubPerms = { ...DEFAULT_TRECHO_SUB_PERMS }
   user.trechoSubPerms[perm] = !user.trechoSubPerms[perm]
-  saveUsers()
   
-  useAuditStore().addLog(
-    'Sistema',
-    'EDITOU',
-    `Alterou sub-permissão de trecho de ${perm} para o usuário: ${user.username}`
-  )
+  try {
+    await UserService.update(userId, { trechoSubPerms: user.trechoSubPerms })
+    
+    useAuditStore().addLog(
+      'Sistema',
+      'EDITOU',
+      `Alterou sub-permissão de trecho de ${perm} para o usuário: ${user.username}`
+    )
 
-  const liderUser = JSON.parse(localStorage.getItem('lider_user') || '{}')
-  if (liderUser.id === userId) {
-    liderUser.trechoSubPerms = user.trechoSubPerms
-    localStorage.setItem('lider_user', JSON.stringify(liderUser))
+    if (authStore.user && authStore.user.id === userId) {
+      authStore.user.trechoSubPerms = user.trechoSubPerms
+    }
+  } catch (e) {
+    alert('Erro ao atualizar sub-permissão')
   }
 }
 
-const deleteUser = (id: string) => {
+
+const deleteUser = async (id: string) => {
   const user = users.value.find(u => u.id === id)
   if (confirm('Deseja excluir este usuário?')) {
-    users.value = users.value.filter(u => u.id !== id)
-    saveUsers()
-    
-    if (user) {
-      useAuditStore().addLog(
-        'Sistema',
-        'EXCLUIU',
-        `Excluiu o usuário: ${user.username} do sistema`
-      )
+    try {
+      await UserService.delete(id)
+      users.value = users.value.filter(u => u.id !== id)
+      
+      if (user) {
+        useAuditStore().addLog(
+          'Sistema',
+          'EXCLUIU',
+          `Excluiu o usuário: ${user.username} do sistema`
+        )
+      }
+    } catch (e) {
+      alert('Erro ao excluir usuário')
     }
   }
 }
+
 </script>
 
 <template>

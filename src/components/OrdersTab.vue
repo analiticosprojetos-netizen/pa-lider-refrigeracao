@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { 
-  FileText, Search, PlusCircle, CheckCircle2, History, Eye, Pencil, RotateCcw
+  FileText, Search, PlusCircle, CheckCircle2, History, Eye, Pencil, RotateCcw, Trash2
 } from 'lucide-vue-next'
 import { useOrderStore } from '../stores/orders'
 import { useAuthStore } from '../stores/auth'
@@ -66,9 +66,22 @@ const startEdit = (order: any) => {
   currentSubTab.value = 'novo'
 }
 
+const handleExecute = async (orderId: string) => {
+  if (confirm('Deseja executar este orçamento? As peças serão abatidas automaticamente do estoque e o valor será lançado no financeiro.')) {
+    await orderStore.changeStatus(orderId, 'Executado')
+  }
+}
+
 const handleEstorno = async (orderId: string) => {
-  if (confirm('Deseja estornar este orçamento? As peças retornarão automaticamente ao estoque físico.')) {
+  if (confirm('Deseja estornar este orçamento? As peças retornarão automaticamente ao estoque físico e o status voltará para Pendente.')) {
     await orderStore.changeStatus(orderId, 'Pendente')
+  }
+}
+
+
+const handleDelete = async (orderId: string) => {
+  if (confirm('Tem certeza que deseja excluir permanentemente este orçamento? Esta ação não pode ser desfeita.')) {
+    await orderStore.deleteOrder(orderId)
   }
 }
 </script>
@@ -160,11 +173,18 @@ const handleEstorno = async (orderId: string) => {
                     <button v-if="authStore.hasPermission('orcamentos', 'edit')" @click="startEdit(order)" class="p-3 bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all" title="Editar">
                       <Pencil :size="16" />
                     </button>
-                    <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Executado'" @click="handleEstorno(order.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-600 hover:text-white transition-all" title="Estornar">
+                    <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Pendente'" @click="handleExecute(order.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-600 hover:text-white transition-all" title="Executar Orçamento">
+                      <CheckCircle2 :size="16" />
+                    </button>
+                    <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Executado'" @click="handleEstorno(order.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-600 hover:text-white transition-all" title="Estornar para Pendente">
                       <RotateCcw :size="16" />
+                    </button>
+                    <button v-if="authStore.hasPermission('orcamentos', 'delete')" @click="handleDelete(order.id)" class="p-3 bg-slate-100 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all" title="Excluir">
+                      <Trash2 :size="16" />
                     </button>
                   </div>
                 </td>
+
               </tr>
               <tr v-if="filteredOrders.length === 0">
                 <td colspan="5" class="px-6 py-16 text-center">
@@ -212,10 +232,17 @@ const handleEstorno = async (orderId: string) => {
                <button v-if="authStore.hasPermission('orcamentos', 'edit')" @click="startEdit(order)" class="p-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
                  <Pencil :size="14" /> Editar
                </button>
+               <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Pendente'" @click="handleExecute(order.id)" class="p-2.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                 <CheckCircle2 :size="14" /> Executar
+               </button>
                <button v-if="authStore.hasPermission('orcamentos', 'edit') && order.status === 'Executado'" @click="handleEstorno(order.id)" class="p-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
                  <RotateCcw :size="14" /> Estornar
                </button>
+               <button v-if="authStore.hasPermission('orcamentos', 'delete')" @click="handleDelete(order.id)" class="p-2.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                 <Trash2 :size="14" /> Excluir
+               </button>
             </div>
+
           </div>
         </div>
       </div>
@@ -237,7 +264,9 @@ const handleEstorno = async (orderId: string) => {
       :order="selectedOrder" 
       :isOpen="isDetailsOpen" 
       @close="isDetailsOpen = false; selectedOrder = null" 
+      @edit="(order) => { isDetailsOpen = false; selectedOrder = null; startEdit(order) }"
     />
+
   </div>
 </template>
 

@@ -126,5 +126,12 @@ export class OrderService {
     });
     return response.success;
   }
+
+  static async deleteOrder(id: string): Promise<boolean> {
+    const response = await apiFetch(`/orders/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    return response.success;
+  }
 }
 

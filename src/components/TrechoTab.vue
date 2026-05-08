@@ -10,6 +10,8 @@ import { detectarPedagios, calcularCombustivel, type PedagioEncontrado } from '.
 import type { ResultadoPedagios } from '../services/pedagioService'
 import { useAuthStore } from '../stores/auth'
 import { exportViagemToExcel, generateViagemPDF, exportTableToCSV, exportTableToExcel, exportTableToPDF } from '../utils/exportUtils'
+import { TravelService, type Trip, type Simulation } from '../services/TravelService'
+import { FleetService } from '../services/FleetService'
 
 // ---- Estado ---------------------------------------------------------------
 const authStore = useAuthStore()
@@ -39,24 +41,22 @@ const kmFinal = ref<number | null>(null)
 const mostrarRelatorio = ref(false)
 const relatorioDados = ref<any>(null)
 
-const viagemAtiva = ref(localStorage.getItem('viagem_ativa') === 'true')
-const viagemDados = ref(
-  localStorage.getItem('viagem_dados') 
-    ? JSON.parse(localStorage.getItem('viagem_dados') as string)
-    : {
-        origem: '',
-        destino: '',
-        placa: '',
-        kmInicial: 0,
-        distancia: 0,
-        eventos: [] as any[]
-      }
-)
+const viagemAtiva = ref(false)
+const viagemDados = ref<any>({
+  id: '',
+  origem: '',
+  destino: '',
+  placa: '',
+  km_inicial: 0,
+  distancia: 0,
+  eventos: [] as any[]
+})
 
 // Estados Aba Relatórios
 const tipoRelatorio = ref<'viagens' | 'simulacoes'>('simulacoes')
-const historicoViagens = ref<any[]>(JSON.parse(localStorage.getItem('historico_viagens') || '[]'))
-const historicoSimulacoes = ref<any[]>(JSON.parse(localStorage.getItem('historico_simulacoes') || '[]'))
+const historicoViagens = ref<Trip[]>([])
+const historicoSimulacoes = ref<Simulation[]>([])
+
 const searchQuery = ref('')
 
 const relatorioViagemSelecionado = ref<any>(null)
@@ -65,14 +65,14 @@ const relatorioSimulacaoSelecionado = ref<any>(null)
 // Frota
 const frota = ref<any[]>([])
 
-const carregarFrota = () => {
-  const savedFrota = localStorage.getItem('lider_frota')
-  if (savedFrota) {
-    frota.value = JSON.parse(savedFrota)
-  } else {
-    frota.value = []
+const carregarFrota = async () => {
+  try {
+    frota.value = await FleetService.getAll()
+  } catch (e) {
+    console.error('Erro ao carregar frota:', e)
   }
 }
+
 
 // Recarregar frota ao trocar de aba interna
 watch(currentSubTab, () => {
@@ -123,10 +123,19 @@ function registrarDespesa() {
   despesaForm.value = { descricao: '', valor: null, valorDisplay: '' }
 }
 
-function persistirViagem() {
-  localStorage.setItem('viagem_ativa', viagemAtiva.value.toString())
-  localStorage.setItem('viagem_dados', JSON.stringify(viagemDados.value))
+async function persistirViagem() {
+  if (viagemDados.value.id) {
+    try {
+      await TravelService.updateTrip(viagemDados.value.id, {
+        eventos: viagemDados.value.eventos,
+        status: viagemAtiva.value ? 'ativa' : 'finalizada'
+      })
+    } catch (e) {
+      console.error('Erro ao persistir viagem no banco:', e)
+    }
+  }
 }
+
 
 function encerrarViagem() {
   mostrarModalEncerramento.value = true
@@ -139,7 +148,7 @@ function confirmarEncerramento() {
     return
   }
 
-  const kmTotal = kmFinal.value - (viagemDados.value.kmInicial || 0)
+  const kmTotal = kmFinal.value - (viagemDados.value.km_inicial || 0)
   
   let totalLitros = 0
   let custoCombustivel = 0
@@ -174,7 +183,7 @@ function confirmarEncerramento() {
     custoTotalViagem,
     custoPorKm,
     mediaKmPorLitro,
-    kmInicial: viagemDados.value.kmInicial,
+    km_inicial: viagemDados.value.km_inicial,
     kmFinal: kmFinal.value,
     dataFim: new Date().toISOString()
   }
@@ -191,15 +200,18 @@ function confirmarEncerramento() {
   persistirViagem()
 }
 
-function fecharRelatorio() {
-  if (relatorioDados.value) {
-    const historico = JSON.parse(localStorage.getItem('historico_viagens') || '[]')
-    historico.unshift(relatorioDados.value)
-    localStorage.setItem('historico_viagens', JSON.stringify(historico))
+async function fecharRelatorio() {
+  // O relatório já foi salvo em confirmarEncerramento() via persistirViagem()
+  // Mas vamos atualizar o histórico local
+  try {
+    historicoViagens.value = await TravelService.getTrips()
+  } catch (e) {
+    console.error(e)
   }
 
+
   mostrarRelatorio.value = false
-  viagemDados.value = { origem: '', destino: '', placa: '', kmInicial: 0, distancia: 0, eventos: [] }
+  viagemDados.value = { origem: '', destino: '', placa: '', km_inicial: 0, distancia: 0, eventos: [] }
   kmInicial.value = null
   kmFinal.value = null
   origemInput.value = ''
@@ -269,19 +281,22 @@ async function iniciarViagem() {
     
     if (calculado.value) {
       clearTimeout(safetyTimeout) // Limpa o timeout se deu certo
-      viagemAtiva.value = true
-      viagemDados.value = {
+      const newTrip = await TravelService.createTrip({
         origem: origemInput.value,
         destino: destinoInput.value,
         placa: placaVeiculo.value,
-        kmInicial: kmInicial.value,
+        km_inicial: kmInicial.value,
         distancia: distanciaKm.value,
+        user_name: authStore.user?.username || 'Sistema',
         eventos: [
           { tipo: 'inicio', data: new Date().toISOString(), desc: `Viagem iniciada de ${origemInput.value} para ${destinoInput.value}` }
         ]
-      }
-      persistirViagem()
+      })
+      
+      viagemAtiva.value = true
+      viagemDados.value = newTrip
     }
+
   } catch (e) {
     console.error('Erro ao iniciar viagem:', e)
     erroMsg.value = 'Erro de conexão com o servidor de rotas. Use o KM Manual abaixo.'
@@ -307,19 +322,23 @@ function iniciarViagemManual() {
   }
 
   erroMsg.value = ''
-  viagemAtiva.value = true
-  viagemDados.value = {
+  
+  TravelService.createTrip({
     origem: origemInput.value || 'Origem Manual',
     destino: destinoInput.value || 'Destino Manual',
     placa: placaVeiculo.value,
-    kmInicial: kmInicial.value,
+    km_inicial: kmInicial.value,
     distancia: distanciaManual.value,
+    user_name: authStore.user?.username || 'Sistema',
     eventos: [
       { tipo: 'inicio', data: new Date().toISOString(), desc: `Viagem iniciada manualmente (Estimativa: ${distanciaManual.value} km)` }
     ]
-  }
-  persistirViagem()
+  }).then(newTrip => {
+    viagemAtiva.value = true
+    viagemDados.value = newTrip
+  })
 }
+
 
 // Função genérica para formatar moeda
 function formatarCampoMoeda(value: string) {
@@ -637,30 +656,35 @@ async function calcular() {
   }
 }
 
-function salvarSimulacao() {
+async function salvarSimulacao() {
   if (!calculado.value) return
   
-  const sim = {
-    id: Date.now().toString(),
+  const sim: Partial<Simulation> = {
     data: new Date().toISOString(),
+    user_name: authStore.user?.username || 'Sistema',
     origem: origemInput.value,
     destino: destinoInput.value,
-    distanciaKm: distanciaKm.value,
-    duracaoMin: duracaoMin.value,
+    distancia_km: distanciaKm.value,
+    duracao_min: duracaoMin.value,
     consumo: consumo.value,
-    precoDiesel: precoDiesel.value,
-    custoCombustivel: custoCombustivel.value,
-    totalPedagios: totalPedagios.value,
-    valorFrete: valorFrete.value,
-    custoTotal: custoTotal.value,
-    lucro: analise.value.lucro,
-    margem: analise.value.margem,
-    custoPorKm: analise.value.custoPorKm
+    preco_diesel: precoDiesel.value,
+    custo_combustivel: custoCombustivel.value,
+    total_pedagios: totalPedagios.value,
+    valor_frete: valorFrete.value || 0,
+    custo_total: custoTotal.value,
+    lucro: analise.value?.lucro || 0,
+    margem: analise.value?.margem || 0,
+    custo_por_km: analise.value?.custo_por_km || 0
   }
   
-  historicoSimulacoes.value.unshift(sim)
-  localStorage.setItem('historico_simulacoes', JSON.stringify(historicoSimulacoes.value))
-  alert('Simulação salva com sucesso!')
+  try {
+    const savedSim = await TravelService.createSimulation(sim)
+    historicoSimulacoes.value.unshift(savedSim)
+    alert('Simulação salva com sucesso!')
+  } catch (e) {
+    console.error(e)
+    alert('Erro ao salvar simulação.')
+  }
 }
 
 // ---- Relatórios (Filtros e Exportação) ----
@@ -732,7 +756,21 @@ function limpar() {
 
 onMounted(async () => {
   carregarFrota()
-  window.addEventListener('storage', carregarFrota)
+  
+  // Carregar dados do backend
+  try {
+    const active = await TravelService.getActiveTrip()
+    if (active) {
+      viagemAtiva.value = true
+      viagemDados.value = active
+    }
+    
+    historicoViagens.value = await TravelService.getTrips()
+    historicoSimulacoes.value = await TravelService.getSimulations()
+  } catch (e) {
+    console.error('Erro ao carregar dados de trecho:', e)
+  }
+
 
   // Ajusta aba inicial baseada em permissões
   if (authStore.user) {

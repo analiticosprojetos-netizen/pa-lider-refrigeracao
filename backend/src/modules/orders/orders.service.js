@@ -2,7 +2,18 @@ const db = require('../../config/db');
 
 const getOrders = async () => {
   const [rows] = await db.execute('SELECT * FROM service_orders ORDER BY createdAt DESC');
-  return rows;
+  return rows.map(row => ({
+    ...row,
+    services: row.services || [],
+    parts: row.parts || [],
+    total: Number(row.total),
+    subtotal: Number(row.subtotal),
+    partsValue: Number(row.partsValue),
+    servicesValue: Number(row.servicesValue),
+    travelValue: Number(row.travelValue),
+    discountValue: Number(row.discountValue),
+    discountPercent: Number(row.discountPercent)
+  }));
 };
 
 const createOrder = async (orderData) => {
@@ -22,9 +33,9 @@ const createOrder = async (orderData) => {
   let nextNum = 1;
   if (lastOrders.length > 0) {
     const lastId = lastOrders[0].id;
-    const parts = lastId.split(' - ');
-    if (parts.length > 1) {
-      nextNum = parseInt(parts[1]) + 1;
+    const partsArr = lastId.split(' - ');
+    if (partsArr.length > 1) {
+      nextNum = parseInt(partsArr[1]) + 1;
     }
   }
   
@@ -46,21 +57,29 @@ const createOrder = async (orderData) => {
       id, date || null, clientName || null, document || null, phone || null, email || null, plate || null, vehicleModel || null, equipBrand || null, equipModel || null,
       serviceType || null, problem || null, diagnosis || null, startTime || null, endTime || null, travelValue || 0, discountPercent || 0, discountValue || 0,
       warranty || null, technician || null, observations || null, status || 'Pendente', 
-      services ? JSON.stringify(services) : null, 
-      parts ? JSON.stringify(parts) : null, 
+      services ? JSON.stringify(services) : '[]', 
+      parts ? JSON.stringify(parts) : '[]', 
       partsValue || 0, servicesValue || 0, subtotal || 0, total || 0, origin || null, report || null
     ]
   );
 
   const [rows] = await db.execute('SELECT * FROM service_orders WHERE id = ?', [id]);
-  return rows[0];
+  const row = rows[0];
+  return {
+    ...row,
+    services: row.services || [],
+    parts: row.parts || [],
+    total: Number(row.total)
+  };
 };
 
 const updateOrder = async (id, updates) => {
   const fields = [];
   const values = [];
 
+  console.log(`[DEBUG] Updating order ${id} with:`, updates);
   for (const [key, value] of Object.entries(updates)) {
+
     if (key !== 'id' && key !== 'createdAt') {
       fields.push(`${key} = ?`);
       if (key === 'services' || key === 'parts') {
@@ -78,7 +97,13 @@ const updateOrder = async (id, updates) => {
   }
 
   const [rows] = await db.execute('SELECT * FROM service_orders WHERE id = ?', [id]);
-  return rows[0];
+  const row = rows[0];
+  return {
+    ...row,
+    services: row.services || [],
+    parts: row.parts || [],
+    total: Number(row.total)
+  };
 };
 
 const updateOrderStatus = async (id, status) => {
@@ -98,9 +123,15 @@ const updateOrderStatus = async (id, status) => {
   return true;
 };
 
+const deleteOrder = async (id) => {
+  await db.execute('DELETE FROM service_orders WHERE id = ?', [id]);
+  return true;
+};
+
 module.exports = {
   getOrders,
   createOrder,
   updateOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  deleteOrder
 };

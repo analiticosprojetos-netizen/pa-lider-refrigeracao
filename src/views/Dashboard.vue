@@ -5,6 +5,8 @@ import { useAuthStore } from '../stores/auth'
 import { useInventoryStore } from '../stores/inventory'
 import { useOrderStore } from '../stores/orders'
 import { useFinanceStore } from '../stores/finances'
+import { useSettingsStore } from '../stores/settings'
+
 
 import CustomersTab from '../components/CustomersTab.vue'
 import FinanceTab from '../components/FinanceTab.vue'
@@ -14,6 +16,8 @@ import SettingsTab from '../components/SettingsTab.vue'
 import TrechoTab from '../components/TrechoTab.vue'
 import { SettingsService } from '../services/SettingsService'
 import { AuthService } from '../services/AuthService'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 import { 
   Snowflake, ShieldCheck, LogOut, Loader2, LayoutDashboard, Package, 
@@ -26,12 +30,12 @@ const authStore = useAuthStore()
 const inventoryStore = useInventoryStore()
 const orderStore = useOrderStore()
 const financeStore = useFinanceStore()
+const settingsStore = useSettingsStore()
+
 
 const currentTab = ref('dashboard')
 const isSidebarOpen = ref(true)
 const isDarkMode = ref(false)
-const isProfileModalOpen = ref(false)
-const profileForm = ref({ username: '', email: '', password: '', avatarUrl: '' })
 const technicalTeam = ref<any[]>([])
 const goalSettings = ref({
   type: 'valor',
@@ -54,18 +58,57 @@ const getUserStatus = (user: any) => {
   return { color: '', animation: '', label: user.role === 'ADMIN' ? 'Administrador' : 'Técnico(a)', active: false }
 }
 
+const isProfileModalOpen = ref(false)
+const profileForm = ref({ username: '', email: '', password: '', avatarUrl: '' })
+
+// Cropper States
+const isAvatarCropperOpen = ref(false)
+const rawAvatarImage = ref('')
+const cropperRef = ref<any>(null)
+
 const openProfileModal = () => {
-  if (!authStore.user) return
-  profileForm.value = {
-    username: authStore.user.username,
-    email: authStore.user.email,
+  profileForm.value = { 
+    username: authStore.user?.username || '', 
+    email: authStore.user?.email || '', 
     password: '',
-    avatarUrl: (authStore.user as any).avatarUrl || ''
+    avatarUrl: (authStore.user as any)?.avatarUrl || ''
   }
   isProfileModalOpen.value = true
 }
 
-import { AuthService } from '../services/AuthService'
+const triggerAvatarUpload = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0]
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        alert('A imagem é muito grande. Escolha uma imagem de até 3MB.')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        rawAvatarImage.value = ev.target?.result as string
+        isAvatarCropperOpen.value = true
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+  input.click()
+}
+
+const applyAvatarCrop = () => {
+  const { canvas } = cropperRef.value.getResult()
+  if (canvas) {
+    profileForm.value.avatarUrl = canvas.toDataURL()
+    isAvatarCropperOpen.value = false
+  }
+}
+
+const removeAvatar = () => {
+  profileForm.value.avatarUrl = ''
+}
 
 const saveProfile = async () => {
   if (!authStore.user) return
@@ -80,37 +123,15 @@ const saveProfile = async () => {
 
     authStore.user = updatedUser;
     
-    // Atualiza localmente o cache do usuário logado
-    localStorage.setItem('lider_user', JSON.stringify(updatedUser));
+    // Atualiza localmente o cache do usuário logado (token já está no cookie/localStorage se necessário)
+    // No nosso caso, o authStore já gerencia isso.
+
     
     isProfileModalOpen.value = false;
     alert('Perfil atualizado com sucesso!');
   } catch (err: any) {
     alert('Erro ao salvar perfil: ' + err.message);
   }
-}
-
-const handleAvatarUpload = () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.onchange = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (file) {
-      if (file.size > 3 * 1024 * 1024) {
-        alert('A imagem é muito grande. Escolha uma imagem de até 3MB.')
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        if (ev.target?.result) {
-          profileForm.value.avatarUrl = ev.target.result as string
-        }
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-  input.click()
 }
 
 const tabs = computed(() => {
@@ -149,9 +170,10 @@ onMounted(async () => {
     console.error('Erro ao carregar equipe técnica:', err)
   }
 
-  const settingsData = await SettingsService.getSettings()
+  const settingsData = await settingsStore.loadSettings()
   goalSettings.value.type = settingsData.goalType || 'valor'
   goalSettings.value.target = Number(settingsData.goalTarget) || 5000
+
 
   await Promise.all([
     inventoryStore.loadStock(),
@@ -168,14 +190,12 @@ const logout = () => {
 // Recarrega configurações sempre que voltar para a aba dashboard
 watch(currentTab, (newTab) => {
   if (newTab === 'dashboard') {
-    const savedSettings = localStorage.getItem('lider_site_settings')
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      goalSettings.value.type = parsed.goalType || 'valor'
-      goalSettings.value.target = parsed.goalTarget || 5000
-    }
+    const s = settingsStore.settings
+    goalSettings.value.type = s.goalType || 'valor'
+    goalSettings.value.target = s.goalTarget || 5000
   }
 })
+
 
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
@@ -190,8 +210,9 @@ const homeStats = computed(() => {
   return {
     osToday: orderStore.orders.filter(o => o.date === new Date().toLocaleDateString()).length,
     lowStock: inventoryStore.lowStockCount,
-    revenueMonth: financeStore.totalReceitas,
-    profit: financeStore.saldo
+    revenueMonth: Number(financeStore.totalReceitas),
+    profit: Number(financeStore.saldo)
+
   }
 })
 
@@ -217,7 +238,8 @@ const goalProgress = computed(() => {
         const d = new Date(t.date)
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear
       })
-      .reduce((acc, t) => acc + t.amount, 0)
+      .reduce((acc, t) => acc + Number(t.amount), 0)
+
   } else if (goalSettings.value.type === 'orcamento') {
     // Soma valor dos orçamentos fechados (Executados) no mês atual
     currentAmount = orderStore.orders
@@ -226,7 +248,8 @@ const goalProgress = computed(() => {
         const d = new Date(o.executedAt!)
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear
       })
-      .reduce((acc, o) => acc + o.total, 0)
+      .reduce((acc, o) => acc + Number(o.total), 0)
+
   } else if (goalSettings.value.type === 'produtividade') {
     // Conta O.S. Executadas no mês atual
     currentAmount = orderStore.orders
@@ -287,8 +310,8 @@ const goalProgress = computed(() => {
       <!-- Avatar sidebar também clicável -->
       <div class="p-4 border-t border-gray-100 dark:border-slate-800 overflow-hidden">
         <div @click="openProfileModal" :class="[isSidebarOpen ? 'p-4 justify-start' : 'p-2 justify-center', 'bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center gap-3 mb-4 border border-gray-100 dark:border-slate-800 cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-all group']">
-          <div class="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 overflow-hidden">
-            <img v-if="(authStore.user as any).avatarUrl" :src="(authStore.user as any).avatarUrl" class="w-full h-full object-cover" />
+          <div class="h-10 w-10 rounded-xl bg-white dark:bg-white flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-slate-800">
+            <img v-if="(authStore.user as any).avatarUrl" :src="(authStore.user as any).avatarUrl" class="w-full h-full object-contain p-0.5" />
             <ShieldCheck v-else class="w-6 h-6 text-blue-600" />
           </div>
           <div v-if="isSidebarOpen" class="overflow-hidden min-w-0">
@@ -328,9 +351,9 @@ const goalProgress = computed(() => {
             <Moon v-else :size="18" />
           </button>
           <!-- Avatar clicável — abre modal de perfil -->
-          <button @click="openProfileModal" class="h-9 w-9 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-500/20 hover:ring-4 hover:ring-blue-300 dark:hover:ring-blue-700 transition-all shrink-0">
-            <img v-if="(authStore.user as any).avatarUrl" :src="(authStore.user as any).avatarUrl" class="w-full h-full object-cover" />
-            <span v-else>{{ authStore.user.username.charAt(0).toUpperCase() }}</span>
+          <button @click="openProfileModal" class="h-9 w-9 rounded-full overflow-hidden bg-white flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-500/20 hover:ring-4 hover:ring-blue-300 dark:hover:ring-blue-700 transition-all shrink-0 border border-gray-100">
+            <img v-if="(authStore.user as any).avatarUrl" :src="(authStore.user as any).avatarUrl" class="w-full h-full object-contain p-1" />
+            <span v-else class="text-blue-600">{{ authStore.user.username.charAt(0).toUpperCase() }}</span>
           </button>
           <!-- Botão Sair — só no mobile, canto direito após o avatar -->
           <button @click="logout" class="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-100 dark:border-red-900/30 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 dark:hover:bg-red-900/10 transition-all active:scale-95">
@@ -386,8 +409,8 @@ const goalProgress = computed(() => {
                 <h3 class="text-lg sm:text-xl font-black mb-4">Equipe Técnica</h3>
                 <div class="space-y-3">
                   <div v-for="user in technicalTeam" :key="user.id" class="flex items-center gap-3 p-3 bg-white/10 rounded-2xl border border-white/5 group hover:bg-white/20 transition-all">
-                    <div class="h-10 w-10 overflow-hidden rounded-xl bg-indigo-500 relative flex items-center justify-center font-black text-white shrink-0 shadow-inner">
-                      <img v-if="user.avatarUrl" :src="user.avatarUrl" class="w-full h-full object-cover" />
+                    <div class="h-10 w-10 overflow-hidden rounded-xl bg-white relative flex items-center justify-center font-black text-blue-600 shrink-0 shadow-inner border border-white/10">
+                      <img v-if="user.avatarUrl" :src="user.avatarUrl" class="w-full h-full object-contain p-1" />
                       <span v-else>{{ user.username.charAt(0).toUpperCase() }}</span>
                     </div>
                     <div class="min-w-0">
@@ -493,19 +516,47 @@ const goalProgress = computed(() => {
         <div class="p-10 space-y-6">
           <!-- Preview Avatar -->
           <div class="flex items-center gap-6">
-            <div class="h-20 w-20 rounded-2xl overflow-hidden bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border-4 border-blue-100 dark:border-blue-900/30">
-              <img v-if="profileForm.avatarUrl" :src="profileForm.avatarUrl" class="w-full h-full object-cover" />
+            <div class="h-20 w-20 rounded-2xl overflow-hidden bg-white flex items-center justify-center shrink-0 border-4 border-blue-50 dark:border-slate-800 shadow-inner">
+              <img v-if="profileForm.avatarUrl" :src="profileForm.avatarUrl" class="w-full h-full object-contain p-1" />
               <span v-else class="font-black text-blue-600 dark:text-blue-400 text-3xl">{{ profileForm.username?.charAt(0).toUpperCase() || authStore.user.username.charAt(0).toUpperCase() }}</span>
             </div>
             <div class="flex-1 space-y-2">
                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                  <Camera :size="11" /> Foto de Perfil
                </label>
-               <button @click="handleAvatarUpload" class="w-full px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 hover:border-blue-400 dark:hover:border-blue-600 hover:text-blue-500 transition-all font-bold text-xs dark:text-white">
-                 <Camera :size="16" /> Procurar Imagem Local...
-               </button>
+               <div class="flex gap-2">
+                 <button @click="triggerAvatarUpload" class="flex-1 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 hover:border-blue-400 dark:hover:border-blue-600 hover:text-blue-500 transition-all font-bold text-[10px] dark:text-white uppercase tracking-tight">
+                   <Camera :size="14" /> Alterar Foto
+                 </button>
+                 <button v-if="profileForm.avatarUrl" @click="removeAvatar" class="px-4 py-3 flex items-center justify-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 transition-all">
+                   <X :size="16" />
+                 </button>
+               </div>
             </div>
           </div>
+
+    <!-- Modal do Cropper -->
+    <div v-if="isAvatarCropperOpen" class="fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-xl overflow-hidden shadow-3xl">
+        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+          <h3 class="font-black text-blue-900 dark:text-white uppercase tracking-tight">Ajustar Foto</h3>
+          <button @click="isAvatarCropperOpen = false" class="text-gray-400 hover:text-red-500 transition-colors"><X :size="20" /></button>
+        </div>
+        <div class="p-6 bg-slate-100 dark:bg-slate-950">
+          <Cropper
+            ref="cropperRef"
+            class="h-[400px] w-full"
+            :src="rawAvatarImage"
+          />
+        </div>
+        <div class="p-6 flex justify-end gap-3">
+          <button @click="isAvatarCropperOpen = false" class="px-6 py-3 font-black text-gray-400 uppercase text-xs">Cancelar</button>
+          <button @click="applyAvatarCrop" class="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/30 transition-all">
+            Confirmar Ajuste
+          </button>
+        </div>
+      </div>
+    </div>
 
           <!-- Nome -->
           <div class="space-y-1.5">

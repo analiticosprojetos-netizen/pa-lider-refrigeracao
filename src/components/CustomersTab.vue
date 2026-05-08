@@ -2,7 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { 
   Users, UserPlus, Search, Edit3, Trash2, X, Mail, Phone, FileText, 
-  MapPin, CheckCircle2, History 
+  MapPin, CheckCircle2, History, MessageCircle
+
 } from 'lucide-vue-next'
 import { useCustomerStore } from '../stores/customers'
 import { useAuthStore } from '../stores/auth'
@@ -62,6 +63,20 @@ const handleDelete = (id: string) => {
     customerStore.deleteCustomer(id)
   }
 }
+
+const openWhatsApp = (phone: string) => {
+  if (!phone) return
+  const cleanPhone = phone.replace(/\D/g, '')
+  const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone
+  window.open(`https://wa.me/${finalPhone}`, '_blank')
+}
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return '---'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('pt-BR')
+}
+
 </script>
 
 <template>
@@ -111,15 +126,20 @@ const handleDelete = (id: string) => {
                    <td class="px-8 py-6 text-sm font-bold text-gray-500 dark:text-gray-400">
                       {{ customer.document || '---' }}
                    </td>
-                   <td class="px-8 py-6 text-sm font-bold text-gray-600 dark:text-gray-300">
-                      {{ customer.phone }}
-                   </td>
+                    <td class="px-8 py-6">
+                       <div class="flex items-center gap-2">
+                          <span class="text-sm font-bold text-gray-600 dark:text-gray-300">{{ customer.phone }}</span>
+                          <button v-if="customer.phone" @click="openWhatsApp(customer.phone)" class="p-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm" title="Conversar no WhatsApp">
+                             <MessageCircle :size="14" />
+                          </button>
+                       </div>
+                    </td>
                    <td class="px-8 py-6 text-sm font-bold text-gray-400">
                       {{ customer.email }}
                    </td>
-                   <td class="px-8 py-6 text-xs font-black text-gray-400 uppercase">
-                      {{ customer.createdAt || '---' }}
-                   </td>
+                    <td class="px-8 py-6 text-xs font-black text-gray-400 uppercase">
+                       {{ formatDate(customer.created_at) }}
+                    </td>
                    <td class="px-8 py-6 text-right whitespace-nowrap">
                       <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button v-if="authStore.hasPermission('clientes', 'edit')" @click="openEditModal(customer)" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all">

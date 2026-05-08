@@ -78,29 +78,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { Snowflake, Lock, User, ArrowLeft, HelpCircle, Loader2 } from 'lucide-vue-next'
 
+import { useSettingsStore } from '../stores/settings'
+
 const router = useRouter()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 
 const identifier = ref('admin')
 const password = ref('1234')
 const isLoading = ref(false)
 const error = ref('')
-const loginBg = ref('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80')
+const loginBg = computed(() => settingsStore.settings.loginBackground || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80')
 
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const settings = JSON.parse(saved)
-    if (settings.loginBackground) {
-      loginBg.value = settings.loginBackground
-    }
-  }
+onMounted(async () => {
+  await settingsStore.loadSettings()
 })
+
 
 const handleLogin = async () => {
   error.value = ''

@@ -11,24 +11,14 @@ import {
   MapPin, MessageSquare, ShieldCheck, Clock, Users, Navigation 
 } from 'lucide-vue-next'
 
-const router = useRouter()
+import { useSettingsStore } from '../stores/settings'
+import { useOrderStore } from '../stores/orders'
 
-const settings = ref({
-  companyName: 'LIDER REFRIGERAÇÃO',
-  whatsapp: '(11) 99999-9999',
-  email: 'contato@liderefrigeracao.com.br',
-  address: 'Av. Industrial, 1000 - Setor de Transportes',
-  googleMapsUrl: '',
-  latitude: '',
-  longitude: '',
-  banners: [],
-  carouselDelay: 6,
-  specialties: [] as any[],
-  aboutYears: '15+',
-  aboutTitle: 'Excelência em Refrigeração de Transportes',
-  aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
-  aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80'
-})
+const router = useRouter()
+const settingsStore = useSettingsStore()
+const orderStore = useOrderStore()
+
+const settings = computed(() => settingsStore.settings)
 
 const contactForm = ref({
   name: '',
@@ -37,9 +27,8 @@ const contactForm = ref({
   message: ''
 })
 
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) Object.assign(settings.value, JSON.parse(saved))
+onMounted(async () => {
+  await settingsStore.loadSettings()
 })
 
 const formatPhone = (e: any) => {
@@ -59,9 +48,6 @@ const formatPhone = (e: any) => {
 const handleContactSubmit = async () => {
   // Lógica de Captura de Lead (Salva como O.S. Pendente no Sistema)
   const newLead = {
-    id: `SITE-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-    date: new Date().toLocaleDateString('pt-BR'),
-    status: 'Pendente',
     clientName: contactForm.value.name,
     phone: contactForm.value.phone,
     plate: 'SITE',
@@ -70,17 +56,19 @@ const handleContactSubmit = async () => {
     origin: 'site',
     total: 0,
     parts: [],
-    labor: []
+    services: []
   }
 
-  const savedOrders = localStorage.getItem('lider_orders')
-  const orders = savedOrders ? JSON.parse(savedOrders) : []
-  orders.unshift(newLead)
-  localStorage.setItem('lider_orders', JSON.stringify(orders))
-
-  alert('Mensagem enviada com sucesso! Nossa equipe entrará em contato em breve.')
-  contactForm.value = { name: '', phone: '', subject: '', message: '' }
+  try {
+    await orderStore.createOrder(newLead)
+    alert('Mensagem enviada com sucesso! Nossa equipe entrará em contato em breve.')
+    contactForm.value = { name: '', phone: '', subject: '', message: '' }
+  } catch (e) {
+    console.error(e)
+    alert('Erro ao enviar mensagem. Tente novamente.')
+  }
 }
+
 
 const scrollToContact = () => {
   document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })

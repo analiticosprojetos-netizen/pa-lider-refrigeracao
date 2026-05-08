@@ -78,10 +78,72 @@ const getUsers = async (req, res, next) => {
   }
 };
 
+const createUser = async (req, res, next) => {
+  try {
+    const user = await authService.createUser(req.body);
+    res.status(201).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateUser = async (req, res, next) => {
+  try {
+    const user = await authService.updateUser(req.params.id, req.body);
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteUser = async (req, res, next) => {
+  try {
+    await authService.deleteUser(req.params.id);
+    res.status(200).json({ success: true, message: 'Usuário excluído com sucesso' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRoles = async (req, res, next) => {
+  try {
+    const roles = await authService.getRoles();
+    res.status(200).json({ success: true, data: roles });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createRole = async (req, res, next) => {
+  try {
+    const role = await authService.createRole(req.body.name);
+    res.status(201).json({ success: true, data: role });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteRole = async (req, res, next) => {
+  try {
+    await authService.deleteRole(req.params.name);
+    res.status(200).json({ success: true, message: 'Cargo excluído com sucesso' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   logout,
   getMe,
   updateProfile,
-  getUsers
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  getRoles,
+  createRole,
+  deleteRole
 };
+
+

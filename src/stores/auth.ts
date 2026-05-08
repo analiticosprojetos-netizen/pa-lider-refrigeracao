@@ -87,6 +87,23 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('lider_user')
   }
 
+  const checkSession = async () => {
+    if (!token.value) return false
+    try {
+      const response = await AuthService.getMe()
+      if (response.user) {
+        user.value = response.user
+        localStorage.setItem('lider_user', JSON.stringify(response.user))
+        return true
+      }
+      return false
+    } catch (err) {
+      logout()
+      return false
+    }
+  }
+
+
   const hasPermission = (tab: keyof RolePermissions, action: keyof Permission) => {
     if (!user.value) return false;
     if (user.value.role === 'ADMIN') return true;

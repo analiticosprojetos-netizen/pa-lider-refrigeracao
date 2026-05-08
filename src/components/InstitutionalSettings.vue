@@ -29,11 +29,11 @@ import { SettingsService } from '../services/SettingsService'
 onMounted(async () => {
   try {
     const data = await SettingsService.getSettings();
-    if (data) {
-      // Mescla os dados do banco, ignorando campos nulos
-      const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== null));
-      Object.assign(settings.value, cleanData);
-    }
+      if (data) {
+        // Mescla os dados do banco, ignorando campos nulos
+        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== null));
+        Object.assign(settings.value, cleanData);
+      }
   } catch (err) {
     console.error('Erro ao carregar configurações institucionais:', err);
   }

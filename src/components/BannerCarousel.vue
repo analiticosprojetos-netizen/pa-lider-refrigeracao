@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { computed, watch, nextTick } from 'vue'
 import emblaCarouselVue from 'embla-carousel-vue'
 import Autoplay from 'embla-carousel-autoplay'
 import { Snowflake, MapPin, ChevronRight, ChevronLeft } from 'lucide-vue-next'
+import { useSettingsStore } from '../stores/settings'
+
 
 const props = defineProps<{
   banners?: any[];
@@ -10,13 +12,17 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(['contact-click'])
+const settingsStore = useSettingsStore()
 
 const [emblaRef, emblaApi] = emblaCarouselVue({ loop: true, watchDrag: true }, [
   Autoplay({ delay: (props.delay || 6) * 1000, stopOnInteraction: false })
 ])
 
+const currentBanners = computed(() => props.banners?.length > 0 ? props.banners : settingsStore.settings.banners)
+const currentDelay = computed(() => props.delay || settingsStore.settings.carouselDelay || 6)
+
 // Observa mudanças dinâmicas na array de Banners vinda do Dashboard
-watch(() => props.banners, async () => {
+watch(currentBanners, async () => {
   await nextTick()
   if (emblaApi.value) {
     emblaApi.value.reInit()
@@ -24,41 +30,26 @@ watch(() => props.banners, async () => {
 }, { deep: true })
 
 // Observa mudança dinâmica na velocidade
-watch(() => props.delay, (newDelay) => {
+watch(currentDelay, (newDelay) => {
   if (emblaApi.value) {
     const plugins = emblaApi.value.plugins()
     if (plugins.autoplay) {
-      // Atualizar o delay dinamicamente não é suportado oficialmente no fly do embla3+, mas podemos reinjetar via destroy:
       plugins.autoplay.options.delay = (newDelay || 6) * 1000;
       emblaApi.value.reInit()
     }
   }
 })
 
-const settings = ref({
-  address: 'Av. Industrial, 1000 - Setor de Transportes',
-  latitude: '',
-  longitude: ''
-})
-
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const parsed = JSON.parse(saved)
-    settings.value.address = parsed.address || settings.value.address
-    settings.value.latitude = parsed.latitude || ''
-    settings.value.longitude = parsed.longitude || ''
-  }
-})
-
 const mapsUrl = () => {
-  return (settings.value.latitude && settings.value.longitude)
-    ? `https://www.google.com/maps/search/?api=1&query=${settings.value.latitude},${settings.value.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.value.address)}`
+  const s = settingsStore.settings
+  return (s.latitude && s.longitude)
+    ? `https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`
 }
 
 const scrollPrev = () => emblaApi.value?.scrollPrev()
 const scrollNext = () => emblaApi.value?.scrollNext()
+
 </script>
 
 <template>

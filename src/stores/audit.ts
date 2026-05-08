@@ -1,33 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAuthStore } from './auth'
-
-export interface AuditLog {
-  id: string
-  timestamp: string // ISO string para facilitar exibição/ordenação
-  user: string
-  action: 'CRIOU' | 'EDITOU' | 'EXCLUIU' | 'SISTEMA'
-  module: string
-  details: string
-}
+import { AuditService, type AuditLog } from '../services/AuditService'
 
 export const useAuditStore = defineStore('audit', () => {
   const logs = ref<AuditLog[]>([])
+  const isLoading = ref(false)
 
-  // Inicializa os dados salvos no localStorage
-  const loadLogs = () => {
-    const saved = localStorage.getItem('lider_audit_logs')
-    if (saved) {
-      try {
-        logs.value = JSON.parse(saved)
-      } catch (e) {
-        console.error('Falha ao parsear logs de auditoria:', e)
-      }
+  // Inicializa os dados do servidor
+  const loadLogs = async () => {
+    isLoading.value = true
+    try {
+      logs.value = await AuditService.getLogs()
+    } catch (e) {
+      console.error('Falha ao carregar logs de auditoria:', e)
+    } finally {
+      isLoading.value = false
     }
   }
 
-  // Registra um novo evento no sistema
-  const addLog = (
+  // Registra um novo evento no sistema (agora envia para o backend)
+  const addLog = async (
     module: string, 
     action: AuditLog['action'], 
     details: string,
@@ -36,28 +29,31 @@ export const useAuditStore = defineStore('audit', () => {
     const authStore = useAuthStore()
     const currentUser = forcedUsername || authStore.user?.username || 'Sistema'
 
-    const newLog: AuditLog = {
-      id: crypto.randomUUID ? crypto.randomUUID() : 'log-' + Date.now() + Math.random().toString(36).substr(2, 5),
-      timestamp: new Date().toISOString(),
+    const newLogData: Omit<AuditLog, 'id' | 'timestamp'> = {
       user: currentUser,
       action,
       module,
       details
     }
 
-    logs.value.unshift(newLog) // Insere no topo
-
-    // Limita o histórico a 2000 registros para evitar travamento da performance no localStorage
-    if (logs.value.length > 2000) {
-      logs.value = logs.value.slice(0, 2000)
+    try {
+      const savedLog = await AuditService.addLog(newLogData)
+      logs.value.unshift(savedLog) // Insere no topo para UI
+      
+      // Limita o histórico local para performance da UI
+      if (logs.value.length > 2000) {
+        logs.value = logs.value.slice(0, 2000)
+      }
+    } catch (e) {
+      console.error('Erro ao salvar log de auditoria no servidor:', e)
     }
-
-    localStorage.setItem('lider_audit_logs', JSON.stringify(logs.value))
   }
 
   return {
     logs,
+    isLoading,
     loadLogs,
     addLog
   }
 })
+

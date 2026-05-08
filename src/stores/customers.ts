@@ -19,7 +19,6 @@ export const useCustomerStore = defineStore('customers', () => {
   const createCustomer = async (data: Omit<Customer, 'id' | 'createdAt'>) => {
     const newCustomer = await CustomerService.addCustomer(data)
     customers.value.unshift(newCustomer)
-    localStorage.setItem('lider_customers', JSON.stringify(customers.value))
     
     useAuditStore().addLog(
       'Clientes', 
@@ -32,7 +31,6 @@ export const useCustomerStore = defineStore('customers', () => {
     const idx = customers.value.findIndex(c => c.id === id)
     if (idx !== -1) {
       customers.value[idx] = { ...customers.value[idx], ...customerData }
-      localStorage.setItem('lider_customers', JSON.stringify(customers.value))
       
       useAuditStore().addLog(
         'Clientes', 
@@ -45,7 +43,6 @@ export const useCustomerStore = defineStore('customers', () => {
   const deleteCustomer = (id: string) => {
     const customer = customers.value.find(c => c.id === id)
     customers.value = customers.value.filter(c => c.id !== id)
-    localStorage.setItem('lider_customers', JSON.stringify(customers.value))
     
     if (customer) {
        useAuditStore().addLog(

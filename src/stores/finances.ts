@@ -11,7 +11,9 @@ export const useFinanceStore = defineStore('finances', () => {
   const loadFinances = async () => {
     isLoading.value = true
     try {
-      transactions.value = await FinanceService.getTransactions()
+      const data = await FinanceService.getTransactions()
+      transactions.value = data.map(t => ({ ...t, amount: Number(t.amount) }))
+
     } finally {
       isLoading.value = false
     }
@@ -19,8 +21,8 @@ export const useFinanceStore = defineStore('finances', () => {
 
   const createTransaction = async (data: Omit<Transaction, 'id' | 'date'>): Promise<Transaction> => {
     const newTrx = await FinanceService.addTransaction(data)
-    transactions.value.unshift(newTrx)
-    localStorage.setItem('lider_transactions', JSON.stringify(transactions.value))
+    const formattedTrx = { ...newTrx, amount: Number(newTrx.amount) }
+    transactions.value.unshift(formattedTrx)
     
     useAuditStore().addLog(
       'Financeiro', 
@@ -28,13 +30,13 @@ export const useFinanceStore = defineStore('finances', () => {
       `Lançou ${data.type} de R$ ${data.amount} na categoria ${data.category}`
     )
     
-    return newTrx
+    return formattedTrx
+
   }
 
   const deleteTransaction = (id: string) => {
     const trx = transactions.value.find(t => t.id === id)
     transactions.value = transactions.value.filter(t => t.id !== id)
-    localStorage.setItem('lider_transactions', JSON.stringify(transactions.value))
     
     if (trx) {
       useAuditStore().addLog(
@@ -49,7 +51,6 @@ export const useFinanceStore = defineStore('finances', () => {
     const idx = transactions.value.findIndex(t => t.id === id)
     if (idx !== -1) {
       transactions.value[idx] = { ...transactions.value[idx], ...data }
-      localStorage.setItem('lider_transactions', JSON.stringify(transactions.value))
       
       useAuditStore().addLog(
         'Financeiro', 
@@ -62,13 +63,15 @@ export const useFinanceStore = defineStore('finances', () => {
   const totalReceitas = computed(() => {
     return transactions.value
       .filter(t => t.type === 'receita')
-      .reduce((acc, t) => acc + t.amount, 0)
+      .reduce((acc, t) => acc + Number(t.amount), 0)
+
   })
 
   const totalDespesas = computed(() => {
     return transactions.value
       .filter(t => t.type === 'despesa')
-      .reduce((acc, t) => acc + t.amount, 0)
+      .reduce((acc, t) => acc + Number(t.amount), 0)
+
   })
 
   const saldo = computed(() => totalReceitas.value - totalDespesas.value)

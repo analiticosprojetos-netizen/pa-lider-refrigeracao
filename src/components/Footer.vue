@@ -1,20 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { Snowflake, MapPin, Phone, Mail, Instagram, Facebook, Settings } from 'lucide-vue-next'
+import { useSettingsStore } from '../stores/settings'
 
-const settings = ref({
-  companyName: 'LIDER REFRIGERAÇÃO',
-  whatsapp: '(11) 99999-9999',
-  email: 'contato@liderefrigeracao.com.br',
-  address: 'Av. Industrial, 1000 - Setor de Transportes',
-  instagram: '#',
-  facebook: '#'
-})
-
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) Object.assign(settings.value, JSON.parse(saved))
-})
+const settingsStore = useSettingsStore()
+const settings = computed(() => settingsStore.settings)
 </script>
 
 <template>

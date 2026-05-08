@@ -35,10 +35,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     })
     movements.value.unshift(newMov)
 
-    // Save mock to localStorage to persist state
-    localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
-    localStorage.setItem('lider_movements', JSON.stringify(movements.value))
-    
     useAuditStore().addLog(
       'Estoque', 
       'CRIOU', 
@@ -69,13 +65,9 @@ export const useInventoryStore = defineStore('inventory', () => {
       quantity: type === 'correcao' ? (updatedQty - p.quantity) : amount,
       type,
       user: authStore.user?.username || 'Sistema',
-      note: type === 'entrada' ? 'Entrada manual' : type === 'saida' ? 'Saída manual' : 'Correção de inventário'
     });
     movements.value.unshift(newMov);
 
-    localStorage.setItem('lider_inventory', JSON.stringify(parts.value));
-    localStorage.setItem('lider_movements', JSON.stringify(movements.value));
-    
     useAuditStore().addLog(
       'Estoque', 
       'EDITOU', 
@@ -93,7 +85,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     const idx = parts.value.findIndex(p => p.id === id)
     if (idx !== -1) {
       parts.value[idx] = { ...parts.value[idx], ...partData }
-      localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
       
       useAuditStore().addLog(
         'Estoque', 
@@ -106,7 +97,6 @@ export const useInventoryStore = defineStore('inventory', () => {
   const deletePart = async (id: string) => {
     const part = parts.value.find(p => p.id === id)
     parts.value = parts.value.filter(p => p.id !== id)
-    localStorage.setItem('lider_inventory', JSON.stringify(parts.value))
     
     if (part) {
       useAuditStore().addLog(

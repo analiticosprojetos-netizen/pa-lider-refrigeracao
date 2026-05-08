@@ -37,9 +37,19 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
+const deleteOrder = async (req, res, next) => {
+  try {
+    await orderService.deleteOrder(req.params.id);
+    res.status(200).json({ success: true, data: { message: 'Orçamento excluído com sucesso' } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getOrders,
   createOrder,
   updateOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  deleteOrder
 };

@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { MessageCircle, Instagram, Facebook } from 'lucide-vue-next'
+import { useSettingsStore } from '../stores/settings'
 
-const settings = ref({
-  whatsapp: '5511999999999',
-  instagram: 'https://instagram.com/liderrefrigeracao',
-  facebook: 'https://facebook.com/liderrefrigeracao'
-})
-
-onMounted(() => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) Object.assign(settings.value, JSON.parse(saved))
-})
+const settingsStore = useSettingsStore()
+const settings = computed(() => settingsStore.settings)
 
 const whatsappUrl = computed(() => {
   const number = settings.value.whatsapp.replace(/\D/g, '')

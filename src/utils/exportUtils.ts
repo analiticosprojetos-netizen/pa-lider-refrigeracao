@@ -22,158 +22,281 @@ const buildPDFDoc = (order: any, settings: any) => {
   const phone = settings.whatsapp || "(11) 99999-9999"
   const address = settings.address || "Av. Industrial, 1000 - Setor de Transportes"
 
-  const formatDateTime = (isoString: string) => {
-    if (!isoString) return 'N/A'
+  const formatDateTime = (dateStr: string) => {
+    if (!dateStr) return 'Agendar'
     try {
-      if (isoString.includes('/')) return isoString // Already formatted
-      return format(parseISO(isoString), 'dd/MM/yyyy')
+      // Se for YYYY-MM-DD
+      const parts = dateStr.split('T')[0].split('-')
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`
+      }
+      // Fallback para outros formatos
+      return format(parseISO(dateStr), 'dd/MM/yyyy')
     } catch (e) {
-      return isoString
+      return dateStr
     }
   }
+
 
   const doc = new jsPDF()
   
-  // Header em Degradê (Simulando o bg-mesh-gradient do site)
-  const r1 = 29, g1 = 78, b1 = 216 // #1d4ed8
-  const r2 = 30, g2 = 27, b2 = 75  // #1e1b4b
-  
-  for (let i = 0; i <= 210; i += 0.5) {
-    const ratio = i / 210
-    const r = Math.floor(r1 + (r2 - r1) * ratio)
-    const g = Math.floor(g1 + (g2 - g1) * ratio)
-    const b = Math.floor(b1 + (b2 - b1) * ratio)
-    doc.setFillColor(r, g, b)
-    doc.rect(i, 0, 0.6, 45, "F")
-  }
-  
+  // --- HEADER (CLEAN STYLE) ---
   if (logo) {
     try {
-      doc.addImage(logo, 'PNG', 15, 8, 30, 30)
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(18)
-      doc.setFont("helvetica", "bold")
-      doc.text(companyName.toUpperCase(), 50, 22)
-      doc.setFontSize(8)
-      doc.setFont("helvetica", "normal")
-      doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 50, 30)
-    } catch (e) {
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(22)
-      doc.setFont("helvetica", "bold")
-      doc.text(companyName.toUpperCase(), 15, 22)
-    }
-  } else {
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(22)
-    doc.setFont("helvetica", "bold")
-    doc.text(companyName.toUpperCase(), 15, 22)
-    doc.setFontSize(9)
-    doc.setFont("helvetica", "normal")
-    doc.text("MANUTENÇÃO PREVENTIVA E CORRETIVA EM BAÚS FRIGORÍFICOS", 15, 30)
+      const imgProps = doc.getImageProperties(logo)
+      const ratio = imgProps.width / imgProps.height
+      const targetH = 18
+      const targetW = targetH * ratio
+      doc.addImage(logo, 'PNG', 15, 10, targetW, targetH)
+    } catch (e) {}
   }
-  
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(8)
-  doc.text(`CNPJ: ${cnpj}`, 195, 20, { align: 'right' })
-  doc.text(email, 195, 25, { align: 'right' })
-  doc.text(phone, 195, 30, { align: 'right' })
 
+  doc.setTextColor(26, 54, 93) // Azul Escuro
   doc.setFontSize(16)
   doc.setFont("helvetica", "bold")
-  doc.text(`ORÇAMENTO #${String(order.id).toUpperCase()}`, 195, 40, { align: 'right' })
+  doc.text("Orçamento", 15, 32)
+  
+  doc.setFontSize(7)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(150, 150, 150)
+  const orderDate = order.date || format(new Date(), 'dd/MM/yyyy')
+  doc.text(`Gerado em: ${orderDate}`, 15, 36)
 
-  // Dados Client
+  // Info Empresa (Canto Direito)
+  doc.setTextColor(100, 100, 100)
+  doc.setFontSize(8)
+  doc.text(companyName.toUpperCase(), 195, 12, { align: 'right' })
+  doc.text(`CNPJ: ${cnpj}`, 195, 16, { align: 'right' })
+  doc.text(phone, 195, 20, { align: 'right' })
+  doc.text(email, 195, 24, { align: 'right' })
+
+  doc.setDrawColor(240, 240, 240)
+  doc.line(15, 42, 195, 42)
+
+  // --- CARDS ROW 1 (CLIENTE E VEÍCULO) ---
+  // Card Cliente
+  doc.setFillColor(252, 252, 252)
+  doc.roundedRect(15, 48, 85, 35, 3, 3, "F")
+  doc.setDrawColor(230, 230, 230)
+  doc.roundedRect(15, 48, 85, 35, 3, 3, "D")
+  
   doc.setTextColor(26, 54, 93)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "bold")
+  doc.text("DADOS DO CLIENTE", 20, 53)
+  
+  doc.setTextColor(0, 0, 0)
   doc.setFontSize(11)
-  doc.setFont("helvetica", "bold")
-  doc.text("DADOS DO CLIENTE", 15, 55)
-  doc.setDrawColor(220, 220, 220)
-  doc.line(15, 57, 195, 57)
-  
-  doc.setTextColor(0, 0, 0)
+  doc.text(order.clientName, 20, 61)
+  doc.setFontSize(9)
   doc.setFont("helvetica", "normal")
-  doc.setFontSize(10)
-  doc.text(`Cliente: ${order.clientName}`, 15, 65)
-  doc.text(`CPF/CNPJ: ${order.document || 'N/A'}`, 15, 70)
-  doc.text(`Telefone: ${order.phone || 'N/A'}`, 110, 65)
-  doc.text(`Email: ${order.email || 'N/A'}`, 110, 70)
+  doc.setTextColor(100, 100, 100)
+  doc.text(`Doc: ${order.document || 'N/A'}`, 20, 67)
+  doc.text(`Tel: ${order.phone || 'N/A'}`, 20, 72)
+  doc.text(`Email: ${order.email || 'N/A'}`, 20, 77)
 
-  // Veículo
+  // Card Veículo
+  doc.setFillColor(252, 252, 252)
+  doc.roundedRect(110, 48, 85, 35, 3, 3, "F")
+  doc.setDrawColor(230, 230, 230)
+  doc.roundedRect(110, 48, 85, 35, 3, 3, "D")
+
+  doc.setTextColor(26, 54, 93)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "bold")
+  doc.text("VEÍCULO E EQUIPAMENTO", 115, 53)
+
+  doc.setTextColor(0, 0, 0)
+  doc.setFontSize(11)
+  doc.text(order.plate, 115, 61)
+  doc.setFontSize(10)
+  doc.setTextColor(59, 130, 246) // Azul claro
+  doc.text(order.vehicleModel, 115, 67)
+  
+  doc.setFontSize(9)
+  doc.setTextColor(100, 100, 100)
+  doc.setFont("helvetica", "bold")
+  doc.text("EQUIPAMENTO", 115, 73)
+  doc.setFont("helvetica", "normal")
+  doc.text(`${order.equipBrand} ${order.equipModel}`, 115, 78)
+
+  // --- CARDS ROW 2 (DIAGNÓSTICO E CRONOGRAMA) ---
+  // Card Diagnóstico
+  doc.setFillColor(252, 252, 252)
+  doc.roundedRect(15, 88, 85, 45, 3, 3, "F")
+  doc.setDrawColor(230, 230, 230)
+  doc.roundedRect(15, 88, 85, 45, 3, 3, "D")
+
+  doc.setTextColor(26, 54, 93)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "bold")
+  doc.text("DIAGNÓSTICO TÉCNICO", 20, 93)
+
+  doc.setFontSize(8)
+  doc.setTextColor(59, 130, 246)
+  doc.text("PROBLEMA RELATADO", 20, 99)
+  doc.setTextColor(80, 80, 80)
+  doc.setFont("helvetica", "normal")
+  const problemText = doc.splitTextToSize(order.problem || "N/A", 75)
+  doc.text(problemText, 20, 103)
+
+  doc.setFontSize(8)
+  doc.setTextColor(59, 130, 246)
+  doc.setFont("helvetica", "bold")
+  doc.text("DIAGNÓSTICO", 20, 115)
+  doc.setTextColor(80, 80, 80)
+  doc.setFont("helvetica", "normal")
+  const diagnosisText = doc.splitTextToSize(order.diagnosis || "N/A", 75)
+  doc.text(diagnosisText, 20, 119)
+
+  // Card Cronograma
+  doc.setFillColor(252, 252, 252)
+  doc.roundedRect(110, 88, 85, 45, 3, 3, "F")
+  doc.setDrawColor(230, 230, 230)
+  doc.roundedRect(110, 88, 85, 45, 3, 3, "D")
+
+  doc.setTextColor(26, 54, 93)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "bold")
+  doc.text("CRONOGRAMA PREVISTO", 115, 93)
+
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(115, 98, 75, 12, 2, 2, "F")
+  doc.setDrawColor(245, 245, 245)
+  doc.roundedRect(115, 98, 75, 12, 2, 2, "D")
+  doc.setFontSize(8)
+  doc.setTextColor(150, 150, 150)
+  doc.text("INÍCIO ESTIMADO", 118, 105)
   doc.setTextColor(26, 54, 93)
   doc.setFont("helvetica", "bold")
-  doc.text("VEÍCULO E EQUIPAMENTO", 15, 85)
-  doc.line(15, 87, 195, 87)
-  
-  doc.setTextColor(0, 0, 0)
-  doc.setFont("helvetica", "normal")
-  doc.text(`Placa: ${order.plate}`, 15, 95)
-  doc.text(`Modelo Veículo: ${order.vehicleModel}`, 15, 100)
-  doc.text(`Marca Equip.: ${order.equipBrand || 'N/A'}`, 110, 95)
-  doc.text(`Modelo Equip.: ${order.equipModel || 'N/A'}`, 110, 100)
+  doc.text(formatDateTime(order.startTime), 185, 105, { align: 'right' })
 
-  // Tabela de itens
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(115, 115, 75, 12, 2, 2, "F")
+  doc.setDrawColor(245, 245, 245)
+  doc.roundedRect(115, 115, 75, 12, 2, 2, "D")
+  doc.setFontSize(8)
+  doc.setTextColor(150, 150, 150)
+  doc.setFont("helvetica", "normal")
+  doc.text("FIM ESTIMADO", 118, 122)
+  doc.setTextColor(26, 54, 93)
+  doc.setFont("helvetica", "bold")
+  doc.text(formatDateTime(order.endTime), 185, 122, { align: 'right' })
+  
+  // Duração Total
+  if (order.startTime && order.endTime) {
+    try {
+      const start = new Date(order.startTime)
+      const end = new Date(order.endTime)
+      const diffTime = Math.abs(end.getTime() - start.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1
+      
+      doc.setFillColor(59, 130, 246)
+      doc.roundedRect(165, 128, 30, 5, 1, 1, "F")
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(7)
+      doc.text(`${diffDays} DIAS TOTAL`, 180, 131.5, { align: 'right' })
+    } catch (e) {}
+  }
+
+
+  // --- TABELA DE ITENS ---
+  doc.setTextColor(26, 54, 93)
+  doc.setFontSize(10)
+  doc.text("ITENS DO ORÇAMENTO", 15, 142)
+
   const services = order.services || []
   const parts = order.parts || []
   const tableData = [
-    ...services.map((s: any) => [s.description, "Serviço", "1", `R$ ${s.value.toFixed(2)}`, `R$ ${s.value.toFixed(2)}`]),
-    ...parts.map((p: any) => [p.name || p.description, "Peça", p.quantity || p.qty, `R$ ${p.value.toFixed(2)}`, `R$ ${((p.quantity || p.qty) * p.value).toFixed(2)}`]),
+    ...services.map((s: any) => [s.description, "Mão de Obra", "1", `R$ ${s.value.toFixed(2)}`, `R$ ${s.value.toFixed(2)}`]),
+    ...parts.map((p: any) => [p.name || p.description, "Peça / Insumo", p.quantity || p.qty, `R$ ${p.value.toFixed(2)}`, `R$ ${((p.quantity || p.qty) * p.value).toFixed(2)}`]),
   ]
 
   autoTable(doc, {
-    startY: 110,
-    head: [["Descrição", "Tipo", "Qtd", "Unitário", "Subtotal"]],
+    startY: 145,
+    head: [["DESCRIÇÃO", "TIPO", "QTD", "UNITÁRIO", "SUBTOTAL"]],
     body: tableData,
-    headStyles: { fillColor: [26, 54, 93], fontSize: 10, halign: 'center' },
+    headStyles: { fillColor: [255, 255, 255], textColor: [150, 150, 150], fontSize: 8, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 9, textColor: [0, 0, 0] },
     columnStyles: {
-      0: { cellWidth: 80 },
-      1: { halign: 'center' },
-      2: { halign: 'center' },
-      3: { halign: 'right' },
-      4: { halign: 'right' },
+      0: { fontStyle: 'bold' },
+      4: { halign: 'right', fontStyle: 'bold' },
     },
-    theme: "striped",
+    theme: "plain",
+    didDrawCell: (data) => {
+       if (data.section === 'body' && data.column.index === 4) {
+          doc.setTextColor(0, 0, 0)
+       }
+    }
   })
 
-  const finalY = (doc as any).lastAutoTable.finalY + 10
-
-  // Totais
-  doc.setFillColor(245, 245, 245)
-  doc.rect(120, finalY, 75, 45, "F")
-  doc.setTextColor(26, 54, 93)
+  let finalY = (doc as any).lastAutoTable.finalY + 10
   
-  const discountValue = order.discountValue || 0
-  const subtotal = order.total + discountValue
-
-  doc.text(`Subtotal:`, 125, finalY + 10)
-  doc.text(`R$ ${subtotal.toFixed(2)}`, 190, finalY + 10, { align: 'right' })
-  
-  if (discountValue > 0) {
-    doc.setTextColor(200, 0, 0)
-    doc.text(`Desconto:`, 125, finalY + 20)
-    doc.text(`- R$ ${discountValue.toFixed(2)}`, 190, finalY + 20, { align: 'right' })
+  if (finalY > 230) {
+    doc.addPage()
+    finalY = 20
   }
 
-  doc.setTextColor(26, 54, 93)
+  // --- SUMMARY BOX (BLUE) ---
+  const boxW = 85
+  const boxH = 55
+  const boxX = 110
+  const boxY = finalY
+
+  doc.setFillColor(26, 54, 93)
+  doc.roundedRect(boxX, boxY, boxW, boxH, 5, 5, "F")
+  
+  doc.setTextColor(200, 200, 200)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "normal")
+  
+  doc.text("Mão de Obra Total:", boxX + 5, boxY + 12)
+  doc.text(`R$ ${Number(order.servicesValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 12, { align: 'right' })
+  
+  doc.text("Peças Total:", boxX + 5, boxY + 20)
+  doc.text(`R$ ${Number(order.partsValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 20, { align: 'right' })
+  
+  doc.text("Deslocamento:", boxX + 5, boxY + 28)
+  doc.text(`R$ ${Number(order.travelValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 28, { align: 'right' })
+  
+  doc.setDrawColor(255, 255, 255, 0.2)
+  doc.line(boxX + 5, boxY + 34, boxX + boxW - 5, boxY + 34)
+  
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(11)
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(12)
-  doc.text(`TOTAL GERAL:`, 125, finalY + 35)
-  doc.text(`R$ ${order.total.toFixed(2)}`, 190, finalY + 35, { align: 'right' })
+  doc.text("Subtotal:", boxX + 5, boxY + 42)
+  const subTotal = (order.servicesValue || 0) + (order.partsValue || 0) + (order.travelValue || 0)
+  doc.text(`R$ ${subTotal.toFixed(2)}`, boxX + boxW - 5, boxY + 42, { align: 'right' })
+
+  doc.setTextColor(255, 215, 0) // Gold/Yellow
+  doc.setFontSize(16)
+  doc.text("TOTAL:", boxX + 5, boxY + 50)
+  doc.text(`R$ ${Number(order.total).toFixed(2)}`, boxX + boxW - 5, boxY + 50, { align: 'right' })
+
+  // Info Final (Bottom Left)
+  doc.setTextColor(100, 100, 100)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "normal")
+  doc.text(`Garantia: ${order.warranty || '90 dias'}`, 15, boxY + 12)
+  doc.text(`Técnico Responsável: ${order.technician || 'Admin'}`, 15, boxY + 20)
 
   return doc
 }
 
 export const generateServiceOrderPDF = (order: any, settings?: any) => {
   if (!order) return
-  const companyInfo = settings || JSON.parse(localStorage.getItem('lider_site_settings') || '{}')
+  const companyInfo = settings || {}
   const doc = buildPDFDoc(order, companyInfo)
   doc.save(`Orcamento_${order.id}.pdf`)
 }
 
+
 export const sendToWhatsApp = (order: any, settings?: any) => {
   if (!order) return
   const phone = settings?.whatsapp?.replace(/\D/g, '') || '5511999999999'
-  const text = `*ORÇAMENTO LIDER REFRIGERAÇÃO - #${order.id}*\n\nOlá ${order.clientName},\nSegue o orçamento referente ao veículo *${order.plate}*.\n\n*Total:* R$ ${order.total.toFixed(2)}\n*Status:* ${order.status}\n\nO PDF detalhado foi gerado. Caso não tenha recebido, por favor nos avise.`
+  const tech = order.technician ? `\n*Técnico:* ${order.technician}` : ''
+  const text = `*ORÇAMENTO LIDER REFRIGERAÇÃO - #${order.id}*\n\nOlá ${order.clientName},\nSegue o orçamento referente ao veículo *${order.plate}*.\n\n*Total:* R$ ${order.total.toFixed(2)}\n*Status:* ${order.status}${tech}\n\nO PDF detalhado foi gerado. Caso não tenha recebido, por favor nos avise.`
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
 }
 

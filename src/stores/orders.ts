@@ -23,7 +23,6 @@ export const useOrderStore = defineStore('orders', () => {
   const createOrder = async (data: any) => {
     const newOrder = await OrderService.createOrder(data)
     orders.value.unshift(newOrder)
-    localStorage.setItem('lider_orders', JSON.stringify(orders.value))
     
     useAuditStore().addLog(
       'Orçamentos', 
@@ -86,8 +85,6 @@ export const useOrderStore = defineStore('orders', () => {
       order.cancelledAt = null
     }
 
-    localStorage.setItem('lider_orders', JSON.stringify(orders.value))
-    
     useAuditStore().addLog(
       'Orçamentos', 
       'EDITOU', 
@@ -99,9 +96,11 @@ export const useOrderStore = defineStore('orders', () => {
     const idx = orders.value.findIndex(o => o.id === orderId)
     if (idx === -1) return
     
+    // Persiste no backend
+    const updatedOrder = await OrderService.updateOrder({ ...orders.value[idx], ...data, id: orderId })
     
-    orders.value[idx] = { ...orders.value[idx], ...data }
-    localStorage.setItem('lider_orders', JSON.stringify(orders.value))
+    // Atualiza localmente com a resposta do servidor
+    orders.value[idx] = updatedOrder
     
     useAuditStore().addLog(
       'Orçamentos', 
@@ -110,13 +109,33 @@ export const useOrderStore = defineStore('orders', () => {
     )
   }
 
+
+  const deleteOrder = async (orderId: string) => {
+    const order = orders.value.find(o => o.id === orderId)
+    if (!order) return
+
+    try {
+      await OrderService.deleteOrder(orderId)
+      orders.value = orders.value.filter(o => o.id !== orderId)
+      
+      useAuditStore().addLog(
+        'Orçamentos', 
+        'EXCLUIU', 
+        `Removeu orçamento do cliente ${order.clientName} (ID: ${orderId})`
+      )
+    } catch (err: any) {
+      alert('Erro ao excluir orçamento: ' + err.message)
+    }
+  }
+
   return {
     orders,
     isLoading,
     loadOrders,
     createOrder,
     updateOrder,
-    changeStatus
+    changeStatus,
+    deleteOrder
   }
 })
 

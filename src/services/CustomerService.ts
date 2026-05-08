@@ -8,7 +8,8 @@ export interface Customer {
   vehicleModel?: string;
   equipBrand?: string;
   equipModel?: string;
-  createdAt?: string;
+  created_at?: string;
+
 }
 
 import { apiFetch } from '../utils/api'

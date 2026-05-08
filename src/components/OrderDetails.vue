@@ -7,12 +7,18 @@ import {
 import { format, parseISO } from 'date-fns'
 import { generateServiceOrderPDF, sendToWhatsApp } from '../utils/exportUtils'
 
+import { useSettingsStore } from '../stores/settings'
+
 const props = defineProps<{
   order: any
   isOpen: boolean
 }>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'edit'])
+
+const settingsStore = useSettingsStore()
+const siteSettings = computed(() => settingsStore.settings)
+
 
 if (!props.order) {
   emit('close')
@@ -36,8 +42,34 @@ const handleWhatsApp = () => {
 }
 
 const handleExportPDF = () => {
-  generateServiceOrderPDF(props.order)
+  generateServiceOrderPDF(props.order, siteSettings.value)
 }
+
+const timelineDays = computed(() => {
+  if (!props.order?.startTime || !props.order?.endTime) return 0
+  try {
+    const start = new Date(props.order.startTime)
+    const end = new Date(props.order.endTime)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays || 1
+  } catch (e) {
+    return 0
+  }
+})
+
+const formatDate = (dateStr: string) => {
+
+  if (!dateStr) return '---'
+  try {
+    const [year, month, day] = dateStr.split('-')
+    if (year && month && day) return `${day}/${month}/${year}`
+    return format(parseISO(dateStr), 'dd/MM/yyyy')
+  } catch (e) {
+    return dateStr
+  }
+}
+
 </script>
 
 <template>
@@ -46,13 +78,18 @@ const handleExportPDF = () => {
       <!-- Header -->
       <div class="px-8 py-6 border-b dark:border-slate-800 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <h2 class="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2">
-              Orçamento
-            </h2>
-            <p class="text-xs text-gray-500 flex items-center gap-1 mt-1">
-              <Calendar :size="12" /> Gerado em: {{ order.date }}
-            </p>
+          <div class="flex items-center gap-4">
+            <div v-if="siteSettings.logo" class="h-14 w-auto max-w-[150px] bg-white p-2 rounded-xl border border-gray-100 shadow-sm flex items-center justify-center">
+               <img :src="siteSettings.logo" class="max-h-full object-contain" alt="Logo" />
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2">
+                Orçamento
+              </h2>
+              <p class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                <Calendar :size="12" /> Gerado em: {{ order.date || format(new Date(), 'dd/MM/yyyy') }}
+              </p>
+            </div>
           </div>
           <div class="flex flex-row flex-wrap items-center gap-2 w-full lg:w-auto">
             <button @click="handleExportPDF" class="flex-1 lg:flex-none px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all">
@@ -158,15 +195,22 @@ const handleExportPDF = () => {
             <h3 class="text-xs font-black text-blue-600 dark:text-blue-400 flex items-center gap-2 uppercase tracking-wider">
               <Clock :size="16" /> Cronograma Previsto
             </h3>
-            <div class="bg-gray-50 dark:bg-slate-950 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 space-y-4 h-full flex flex-col justify-center">
+            <div class="bg-gray-50 dark:bg-slate-950 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 space-y-4 h-full flex flex-col justify-center relative overflow-hidden">
+              <div v-if="timelineDays > 0" class="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-xl text-[10px] font-black uppercase">
+                Duração: {{ timelineDays }} {{ timelineDays === 1 ? 'dia' : 'dias' }}
+              </div>
               <div class="flex justify-between items-center bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm">
                 <span class="text-[10px] font-black text-gray-400 uppercase">Início Estimado</span>
-                <span class="text-sm font-black text-blue-900 dark:text-white">{{ order.startTime || 'Agendar' }}</span>
+                <span v-if="order.startTime" class="text-sm font-black text-blue-900 dark:text-white">{{ formatDate(order.startTime) }}</span>
+                <button v-else @click="emit('edit', order)" class="text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest">Agendar</button>
               </div>
               <div class="flex justify-between items-center bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm">
                 <span class="text-[10px] font-black text-gray-400 uppercase">Fim Estimado</span>
-                <span class="text-sm font-black text-blue-900 dark:text-white">{{ order.endTime || 'Agendar' }}</span>
+                <span v-if="order.endTime" class="text-sm font-black text-blue-900 dark:text-white">{{ formatDate(order.endTime) }}</span>
+                <button v-else @click="emit('edit', order)" class="text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest">Agendar</button>
               </div>
+
+
             </div>
           </div>
         </div>

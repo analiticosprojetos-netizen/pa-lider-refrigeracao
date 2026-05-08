@@ -12,8 +12,18 @@ CREATE TABLE IF NOT EXISTS users (
   financeSubPerms JSON,
   trechoSubPerms JSON,
   avatarUrl LONGTEXT,
+
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Cargos
+CREATE TABLE IF NOT EXISTS roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL
+);
+
+INSERT IGNORE INTO roles (name) VALUES ('ADMIN'), ('CEO'), ('DIRETOR'), ('GERENTE'), ('ANALISTA'), ('MOTORISTA');
+
 
 -- Inserir usuário admin padrão (senha: 1234 -> hash bcrypt)
 -- O hash abaixo é '$2b$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm' que é '1234' no bcrypt
@@ -100,15 +110,90 @@ CREATE TABLE IF NOT EXISTS service_orders (
   report TEXT
 );
 
--- Configurações do Site
+-- Frota
+CREATE TABLE IF NOT EXISTS fleet (
+  id VARCHAR(36) PRIMARY KEY,
+  placa VARCHAR(20) NOT NULL,
+  modelo VARCHAR(100),
+  consumo DECIMAL(10, 2) DEFAULT 0
+);
+
+-- Auditoria
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id VARCHAR(36) PRIMARY KEY,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user VARCHAR(100) NOT NULL,
+  action VARCHAR(50) NOT NULL,
+  module VARCHAR(100) NOT NULL,
+  details TEXT
+);
+
+-- Viagens (Ativas e Finalizadas)
+CREATE TABLE IF NOT EXISTS trips (
+  id VARCHAR(36) PRIMARY KEY,
+  status VARCHAR(20) DEFAULT 'ativa', -- 'ativa', 'finalizada'
+  data_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  data_fim TIMESTAMP NULL,
+  origem VARCHAR(255),
+  destino VARCHAR(255),
+  placa VARCHAR(20),
+  km_inicial INT,
+  km_final INT,
+  distancia DECIMAL(10, 2),
+  eventos JSON,
+  user_name VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Simulações de Frete
+CREATE TABLE IF NOT EXISTS simulations (
+  id VARCHAR(36) PRIMARY KEY,
+  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user_name VARCHAR(100),
+  origem VARCHAR(255),
+
+  destino VARCHAR(255),
+  distancia_km DECIMAL(10, 2),
+  duracao_min INT,
+  consumo DECIMAL(10, 2),
+  preco_diesel DECIMAL(10, 2),
+  custo_combustivel DECIMAL(10, 2),
+  total_pedagios DECIMAL(10, 2),
+  valor_frete DECIMAL(10, 2),
+  custo_total DECIMAL(10, 2),
+  lucro DECIMAL(10, 2),
+  margem DECIMAL(10, 5),
+  custo_por_km DECIMAL(10, 2)
+);
+
+-- Configurações do Site (Expandida)
 CREATE TABLE IF NOT EXISTS site_settings (
   id INT PRIMARY KEY DEFAULT 1,
+  -- Site Content
   banners LONGTEXT,
   specialties LONGTEXT,
   carouselDelay INT DEFAULT 6,
   goalType VARCHAR(50) DEFAULT 'valor',
-  goalTarget DECIMAL(15, 2) DEFAULT 5000
+  goalTarget DECIMAL(15, 2) DEFAULT 5000,
+  -- Institutional Info
+  companyName VARCHAR(255) DEFAULT 'LIDER REFRIGERAÇÃO',
+  whatsapp VARCHAR(50) DEFAULT '(34) 9941 - 0863 ',
+  email VARCHAR(100) DEFAULT 'emailpostallucio@gmail.com',
+  instagram VARCHAR(255),
+  facebook VARCHAR(255),
+  address VARCHAR(255),
+  googleMapsUrl TEXT,
+  latitude VARCHAR(50),
+  longitude VARCHAR(50),
+  cnpj VARCHAR(50),
+  logo LONGTEXT,
+  aboutYears VARCHAR(20) DEFAULT '15+',
+  aboutTitle VARCHAR(255),
+  aboutDescription TEXT,
+  aboutImage LONGTEXT,
+  loginBackground LONGTEXT
 );
 
--- Inserir configuração padrão
+-- Inserir configuração padrão se não existir
 INSERT IGNORE INTO site_settings (id, banners, specialties) VALUES (1, '[]', '[]');
+

@@ -4,6 +4,8 @@ import { Plus, Trash2, Save, X, Search, Calculator, Calendar, Clock, PenTool, Us
 import { useOrderStore } from '../stores/orders'
 import { useInventoryStore } from '../stores/inventory'
 import { useCustomerStore } from '../stores/customers'
+import { useAuthStore } from '../stores/auth'
+import { useSettingsStore } from '../stores/settings'
 import { EQUIPMENT_DATABASE, SERVICE_TYPES } from '../services/OrderService'
 import CurrencyInput from './CurrencyInput.vue'
 import { formatToTitleCase } from '../utils/textUtils'
@@ -17,11 +19,15 @@ const emit = defineEmits(['close', 'saved'])
 const orderStore = useOrderStore()
 const inventoryStore = useInventoryStore()
 const customerStore = useCustomerStore()
+const settingsStore = useSettingsStore()
+
 
 // State
 const formData = ref({
   id: undefined as string | undefined,
+  date: new Date().toISOString().split('T')[0],
   clientName: '',
+
   document: '',
   phone: '',
   email: '',
@@ -44,22 +50,27 @@ const formData = ref({
   parts: [] as any[]
 })
 
-const siteSettings = ref({
-  maxDiscountWarning: 10,
-  maxDiscountDanger: 20
-})
+const settings = computed(() => settingsStore.settings)
 
 onMounted(async () => {
-  const saved = localStorage.getItem('lider_site_settings')
-  if (saved) {
-    const parsed = JSON.parse(saved)
-    siteSettings.value.maxDiscountWarning = parsed.maxDiscountWarning || 10
-    siteSettings.value.maxDiscountDanger = parsed.maxDiscountWarning || 20
-  }
+  const authStore = useAuthStore()
+  await settingsStore.loadSettings()
   
   if (props.initialData) {
-    formData.value = { ...props.initialData }
+    formData.value = { ...formData.value, ...props.initialData }
+    // Garante que as datas estejam no formato YYYY-MM-DD para o input type="date"
+    if (formData.value.startTime) formData.value.startTime = formData.value.startTime.split('T')[0]
+    else formData.value.startTime = ''
+    
+    if (formData.value.endTime) formData.value.endTime = formData.value.endTime.split('T')[0]
+    else formData.value.endTime = ''
+  } else if (authStore.user) {
+
+
+    // Auto-preenche com o usuário logado se for novo orçamento
+    formData.value.technician = formatToTitleCase(authStore.user.username)
   }
+
   await inventoryStore.loadStock()
   await customerStore.loadCustomers()
 })
@@ -197,7 +208,9 @@ const handleSave = async () => {
     total: total.value
   }
 
+  console.log('[DEBUG] OrderForm Payload:', payload);
   // --- GRAVA O CLIENTE E CARRO NA BASE ---
+
   const existingCustomer = customerStore.customers.find(c => c.name.toLowerCase() === formData.value.clientName.toLowerCase())
   const custData = {
     name: formData.value.clientName,
