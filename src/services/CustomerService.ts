@@ -35,5 +35,11 @@ export class CustomerService {
     });
     return response.data;
   }
+
+  static async deleteCustomer(id: string): Promise<void> {
+    await apiFetch(`/customers/${id}`, {
+      method: 'DELETE'
+    });
+  }
 }
 

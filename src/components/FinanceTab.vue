@@ -106,9 +106,9 @@ const editTransactionFromTable = (trx: any) => {
   isNewTrxModalOpen.value = true
 }
 
-const deleteTransactionFromTable = (id: string) => {
+const deleteTransactionFromTable = async (id: string) => {
   if (confirm('Tem certeza que deseja estornar (excluir) este lançamento? Essa ação não pode ser desfeita e afetará o saldo.')) {
-    financeStore.deleteTransaction(id)
+    await financeStore.deleteTransaction(id)
   }
 }
 

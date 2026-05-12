@@ -7,7 +7,7 @@ import {
 } from 'lucide-vue-next'
 import { useCustomerStore } from '../stores/customers'
 import { useAuthStore } from '../stores/auth'
-import { formatToTitleCase } from '../utils/textUtils'
+import { formatToTitleCase, formatDocument, formatPhone } from '../utils/textUtils'
 
 const customerStore = useCustomerStore()
 const authStore = useAuthStore()
@@ -58,9 +58,9 @@ const handleUpdate = async () => {
   isEditModalOpen.value = false
 }
 
-const handleDelete = (id: string) => {
+const handleDelete = async (id: string) => {
   if (confirm('Deseja excluir este cliente?')) {
-    customerStore.deleteCustomer(id)
+    await customerStore.deleteCustomer(id)
   }
 }
 
@@ -124,11 +124,11 @@ const formatDate = (dateStr?: string) => {
                       <p class="font-black text-slate-800 dark:text-gray-100 text-base tracking-tight">{{ customer.name }}</p>
                    </td>
                    <td class="px-8 py-6 text-sm font-bold text-gray-500 dark:text-gray-400">
-                      {{ customer.document || '---' }}
+                      {{ formatDocument(customer.document) || '---' }}
                    </td>
                     <td class="px-8 py-6">
                        <div class="flex items-center gap-2">
-                          <span class="text-sm font-bold text-gray-600 dark:text-gray-300">{{ customer.phone }}</span>
+                          <span class="text-sm font-bold text-gray-600 dark:text-gray-300">{{ formatPhone(customer.phone) }}</span>
                           <button v-if="customer.phone" @click="openWhatsApp(customer.phone)" class="p-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm" title="Conversar no WhatsApp">
                              <MessageCircle :size="14" />
                           </button>
@@ -178,11 +178,11 @@ const formatDate = (dateStr?: string) => {
           <div class="grid grid-cols-2 gap-4">
              <div>
                <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block tracking-widest">CPF / CNPJ</label>
-               <input v-model="form.document" type="text" placeholder="00.000.000/0001-00" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 transition shadow-inner font-bold outline-none" />
+               <input v-model="form.document" @input="form.document = formatDocument(form.document)" type="text" placeholder="00.000.000/0001-00" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 transition shadow-inner font-bold outline-none" />
              </div>
              <div>
                <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block tracking-widest">Telefone</label>
-               <input v-model="form.phone" type="text" placeholder="(11) 99999-9999" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 transition shadow-inner font-bold outline-none" />
+               <input v-model="form.phone" @input="form.phone = formatPhone(form.phone)" type="text" placeholder="(34) 99999-9999" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 transition shadow-inner font-bold outline-none" />
              </div>
           </div>
           <div>
@@ -212,11 +212,11 @@ const formatDate = (dateStr?: string) => {
           <div class="grid grid-cols-2 gap-4">
              <div>
                <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block">CPF / CNPJ</label>
-               <input v-model="editForm.document" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 font-bold outline-none" />
+               <input v-model="editForm.document" @input="editForm.document = formatDocument(editForm.document)" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 font-bold outline-none" />
              </div>
              <div>
                <label class="text-[10px] font-black uppercase text-gray-400 pl-1 mb-2 block">Telefone</label>
-               <input v-model="editForm.phone" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 font-bold outline-none" />
+               <input v-model="editForm.phone" @input="editForm.phone = formatPhone(editForm.phone)" type="text" class="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-blue-600 font-bold outline-none" />
              </div>
           </div>
           <div>

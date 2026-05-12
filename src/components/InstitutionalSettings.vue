@@ -2,8 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { 
   Building2, MapPin, Phone, Globe, Save, Camera, 
-  Info, MessageSquare, Mail, Instagram, Facebook, Map, Fingerprint
+  Info, MessageSquare, Mail, Instagram, Facebook, Map, Fingerprint,
+  QrCode, Share2, Copy, Download, ExternalLink, Printer
 } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 const settings = ref({
   companyName: 'LIDER REFRIGERAÇÃO',
@@ -21,8 +23,55 @@ const settings = ref({
   aboutTitle: 'Excelência em Refrigeração de Transportes',
   aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
   aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
-  loginBackground: ''
+  loginBackground: '',
+  siteUrl: 'https://liderefrigeracao.com.br'
 })
+
+const qrCodeUrl = computed(() => {
+  const url = settings.value.siteUrl || 'https://liderefrigeracao.com.br'
+  return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`
+})
+
+const copyLink = () => {
+  navigator.clipboard.writeText(settings.value.siteUrl)
+  alert('Link copiado para a área de transferência!')
+}
+
+const printQRCode = () => {
+  const win = window.open('', '_blank')
+  if (!win) return
+  win.document.write(`
+    <html>
+      <head>
+        <title>Imprimir QR Code - ${settings.value.companyName}</title>
+        <style>
+          body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+          img { width: 300px; height: 300px; margin-bottom: 20px; }
+          h1 { font-size: 24px; margin: 0; }
+          p { font-size: 14px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <h1>${settings.value.companyName}</h1>
+        <img src="${qrCodeUrl.value}" />
+        <p>${settings.value.siteUrl}</p>
+        <script>window.onload = () => { window.print(); window.close(); }<\/script>
+      </body>
+    </html>
+  `)
+}
+
+const downloadQRCode = async () => {
+  const response = await fetch(qrCodeUrl.value)
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `qrcode_${settings.value.companyName.toLowerCase().replace(/\s+/g, '_')}.png`
+  document.body.appendChild(a)
+  a.click()
+  window.URL.revokeObjectURL(url)
+}
 
 import { SettingsService } from '../services/SettingsService'
 
@@ -212,22 +261,71 @@ const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
                <textarea v-model="settings.aboutDescription" rows="8" class="w-full px-6 py-5 rounded-3xl bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-bold text-sm dark:text-white transition-all resize-none leading-relaxed"></textarea>
             </div>
 
-            <!-- Divisor e Fundo do Login (Separado em baixo) -->
-            <div class="pt-10 border-t dark:border-slate-800">
-               <div class="space-y-3">
-                  <label class="text-[10px] font-black text-blue-900 dark:text-gray-400 uppercase tracking-widest pl-1">IMAGEM DE FUNDO DO LOGIN (TELA DE ENTRADA)</label>
-                  <div @click="handleFileUpload('loginBackground')" class="p-8 bg-blue-50/10 dark:bg-slate-950/40 border-2 border-dashed border-blue-100/50 dark:border-slate-800 rounded-[28px] flex items-center gap-6 cursor-pointer group hover:border-blue-400 transition-all shadow-sm">
-                     <div class="w-32 h-20 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border dark:border-slate-800 flex items-center justify-center text-gray-300 group-hover:text-blue-500 overflow-hidden">
-                        <img v-if="settings.loginBackground" :src="settings.loginBackground" class="w-full h-full object-cover" />
-                        <Camera v-else :size="32" />
-                     </div>
-                     <div>
-                        <p class="text-xs font-black text-blue-900 dark:text-white uppercase transition-colors group-hover:text-blue-600">Fundo da Tela de Login</p>
-                        <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Personalize a imagem que aparece no fundo da página de login.</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
+             <!-- Divisor e Fundo do Login (Separado em baixo) -->
+             <div class="pt-10 border-t dark:border-slate-800 space-y-10">
+                
+                <!-- SEÇÃO QR CODE DIGITAL (NOVA) -->
+                <div class="space-y-6">
+                   <div class="flex items-center gap-3">
+                      <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                         <QrCode class="text-purple-600" :size="18" />
+                      </div>
+                      <h4 class="text-xs font-black uppercase tracking-widest text-purple-900 dark:text-purple-400">Cartão de Visita Digital (QR Code)</h4>
+                   </div>
+
+                   <div class="p-8 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-slate-950/40 dark:to-slate-900/40 rounded-[40px] border border-purple-100 dark:border-slate-800 flex flex-col md:flex-row items-center gap-10">
+                      <!-- QR Code Preview -->
+                      <div class="relative group">
+                         <div class="absolute -inset-4 bg-gradient-to-tr from-purple-500 to-blue-500 rounded-[32px] blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                         <div class="relative w-48 h-48 bg-white p-4 rounded-3xl shadow-2xl border border-white flex items-center justify-center overflow-hidden">
+                            <img :src="qrCodeUrl" class="w-full h-full object-contain" alt="QR Code Site" />
+                         </div>
+                      </div>
+
+                      <div class="flex-1 space-y-6 text-center md:text-left">
+                         <div>
+                            <p class="text-sm font-black text-blue-900 dark:text-white uppercase tracking-tight mb-1">Link do Site / Cartão Digital</p>
+                            <div class="flex items-center gap-2">
+                               <input v-model="settings.siteUrl" type="text" placeholder="https://seusite.com.br" class="flex-1 px-5 py-3 rounded-xl bg-white/60 dark:bg-slate-900 border border-purple-100 dark:border-slate-800 outline-none font-bold text-xs dark:text-white focus:ring-2 focus:ring-purple-400 transition-all" />
+                               <button @click="copyLink" class="p-3 bg-white hover:bg-purple-50 text-purple-600 rounded-xl border border-purple-100 shadow-sm transition-all" title="Copiar Link">
+                                  <Copy :size="16" />
+                               </button>
+                            </div>
+                         </div>
+
+                         <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                            <button @click="downloadQRCode" class="flex items-center gap-2 bg-blue-900 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl">
+                               <Download :size="14" /> Baixar Imagem
+                            </button>
+                            <button @click="printQRCode" class="flex items-center gap-2 bg-white text-blue-900 border border-blue-100 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-md">
+                               <Printer :size="14" /> Imprimir
+                            </button>
+                            <a :href="settings.siteUrl" target="_blank" class="flex items-center gap-2 bg-purple-600 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-xl">
+                               <ExternalLink :size="14" /> Acessar Link
+                            </a>
+                         </div>
+                         
+                         <p class="text-[10px] text-gray-400 font-medium leading-relaxed italic">
+                            O QR Code é atualizado automaticamente ao alterar o link acima. Você pode imprimi-lo para colocar em balcões ou compartilhar a imagem digitalmente.
+                         </p>
+                      </div>
+                   </div>
+                </div>
+
+                <div class="space-y-3">
+                   <label class="text-[10px] font-black text-blue-900 dark:text-gray-400 uppercase tracking-widest pl-1">IMAGEM DE FUNDO DO LOGIN (TELA DE ENTRADA)</label>
+                   <div @click="handleFileUpload('loginBackground')" class="p-8 bg-blue-50/10 dark:bg-slate-950/40 border-2 border-dashed border-blue-100/50 dark:border-slate-800 rounded-[28px] flex items-center gap-6 cursor-pointer group hover:border-blue-400 transition-all shadow-sm">
+                      <div class="w-32 h-20 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border dark:border-slate-800 flex items-center justify-center text-gray-300 group-hover:text-blue-500 overflow-hidden">
+                         <img v-if="settings.loginBackground" :src="settings.loginBackground" class="w-full h-full object-cover" />
+                         <Camera v-else :size="32" />
+                      </div>
+                      <div>
+                         <p class="text-xs font-black text-blue-900 dark:text-white transition-colors group-hover:text-blue-600">Fundo da Tela de Login</p>
+                         <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Personalize a imagem que aparece no fundo da página de login.</p>
+                      </div>
+                   </div>
+                </div>
+             </div>
          </div>
       </div>
     </div>

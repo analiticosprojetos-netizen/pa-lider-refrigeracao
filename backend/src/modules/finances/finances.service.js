@@ -19,7 +19,13 @@ const addTransaction = async (trxData) => {
   return rows[0];
 };
 
+const deleteTransaction = async (id) => {
+  await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
+  return true;
+};
+
 module.exports = {
   getTransactions,
-  addTransaction
+  addTransaction,
+  deleteTransaction
 };

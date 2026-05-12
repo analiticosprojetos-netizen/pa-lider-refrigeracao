@@ -124,8 +124,11 @@ const updateOrderStatus = async (id, status) => {
 };
 
 const deleteOrder = async (id) => {
-  await db.execute('DELETE FROM service_orders WHERE id = ?', [id]);
-  return true;
+  // Primeiro remove transações vinculadas para evitar erros de FK ou manter integridade
+  await db.execute('DELETE FROM transactions WHERE orderId = ?', [id]);
+  // Depois remove a OS
+  const [result] = await db.execute('DELETE FROM service_orders WHERE id = ?', [id]);
+  return result;
 };
 
 module.exports = {

@@ -40,8 +40,14 @@ const updateCustomer = async (id, updates) => {
   return rows[0];
 };
 
+const deleteCustomer = async (id) => {
+  const [result] = await db.execute('DELETE FROM customers WHERE id = ?', [id]);
+  return result;
+};
+
 module.exports = {
   getCustomers,
   addCustomer,
-  updateCustomer
+  updateCustomer,
+  deleteCustomer
 };

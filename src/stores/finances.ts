@@ -34,16 +34,21 @@ export const useFinanceStore = defineStore('finances', () => {
 
   }
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = async (id: string) => {
     const trx = transactions.value.find(t => t.id === id)
-    transactions.value = transactions.value.filter(t => t.id !== id)
-    
-    if (trx) {
+    if (!trx) return
+
+    try {
+      await FinanceService.deleteTransaction(id)
+      transactions.value = transactions.value.filter(t => t.id !== id)
+      
       useAuditStore().addLog(
         'Financeiro', 
         'EXCLUIU', 
         `Excluiu (estornou) ${trx.type} de R$ ${trx.amount}`
       )
+    } catch (err: any) {
+      alert('Erro ao excluir transação: ' + err.message)
     }
   }
 

@@ -8,5 +8,6 @@ router.use(authenticate);
 
 router.get('/', financeController.getTransactions);
 router.post('/', financeController.addTransaction);
+router.delete('/:id', financeController.deleteTransaction);
 
 module.exports = router;

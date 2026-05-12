@@ -279,7 +279,7 @@ const handleExportExcel = () => {
 
     <!-- View: Produtividade -->
     <div v-else-if="currentSubTab === 'produtividade'" class="animate-in fade-in duration-500">
-      <AnalyticsTab />
+      <AnalyticsTab @navigate-to-filter="(filter) => { currentSubTab = 'lista'; statusFilter = filter }" />
     </div>
 
     <!-- Modal Detalhes -->

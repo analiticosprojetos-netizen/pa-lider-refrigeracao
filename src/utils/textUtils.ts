@@ -43,3 +43,50 @@ export const formatDecimal = (value: number | undefined | null): string => {
   if (value === undefined || value === null) return '0,00'
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+
+/**
+ * Máscara dinâmica para CPF ou CNPJ
+ */
+export const formatDocument = (value: string): string => {
+  if (!value) return ''
+  const cleanValue = value.replace(/\D/g, '')
+  
+  if (cleanValue.length <= 11) {
+    // CPF: 000.000.000-00
+    return cleanValue
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1')
+  } else {
+    // CNPJ: 00.000.000/0000-00
+    return cleanValue
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1')
+  }
+}
+
+/**
+ * Máscara para Telefone: (00) 00000-0000
+ */
+export const formatPhone = (value: string): string => {
+  if (!value) return ''
+  const cleanValue = value.replace(/\D/g, '')
+  
+  if (cleanValue.length <= 10) {
+    // Fixo: (00) 0000-0000
+    return cleanValue
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1')
+  } else {
+    // Celular: (00) 00000-0000
+    return cleanValue
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1')
+  }
+}

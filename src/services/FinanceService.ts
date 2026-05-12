@@ -23,4 +23,11 @@ export class FinanceService {
     });
     return response.data;
   }
+
+  static async deleteTransaction(id: string): Promise<boolean> {
+    const response = await apiFetch(`/finances/${id}`, {
+      method: 'DELETE'
+    });
+    return response.success;
+  }
 }

@@ -8,7 +8,7 @@ import { useAuthStore } from '../stores/auth'
 import { useSettingsStore } from '../stores/settings'
 import { EQUIPMENT_DATABASE, SERVICE_TYPES } from '../services/OrderService'
 import CurrencyInput from './CurrencyInput.vue'
-import { formatToTitleCase } from '../utils/textUtils'
+import { formatToTitleCase, formatDocument, formatPhone } from '../utils/textUtils'
 
 const props = defineProps<{
   initialData?: any
@@ -299,11 +299,11 @@ const handleSave = async () => {
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">CPF / CNPJ</label>
-              <input v-model="formData.document" type="text" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
+              <input v-model="formData.document" @input="formData.document = formatDocument(formData.document)" type="text" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
             </div>
             <div class="space-y-1">
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Telefone</label>
-              <input v-model="formData.phone" type="text" placeholder="(00) 00000-0000" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
+              <input v-model="formData.phone" @input="formData.phone = formatPhone(formData.phone)" type="text" placeholder="(34) 99999-9999" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 dark:bg-slate-950 outline-none focus:border-blue-500 transition-all font-bold text-sm dark:text-white" />
             </div>
           </div>
           <div class="space-y-1">

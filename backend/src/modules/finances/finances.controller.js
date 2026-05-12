@@ -18,7 +18,17 @@ const addTransaction = async (req, res, next) => {
   }
 };
 
+const deleteTransaction = async (req, res, next) => {
+  try {
+    await financeService.deleteTransaction(req.params.id);
+    res.status(200).json({ success: true, data: { message: 'Transação excluída com sucesso' } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getTransactions,
-  addTransaction
+  addTransaction,
+  deleteTransaction
 };

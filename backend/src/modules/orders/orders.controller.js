@@ -39,9 +39,18 @@ const updateOrderStatus = async (req, res, next) => {
 
 const deleteOrder = async (req, res, next) => {
   try {
-    await orderService.deleteOrder(req.params.id);
+    console.log(`[DEBUG] Attempting to delete order: "${req.params.id}"`);
+    const result = await orderService.deleteOrder(req.params.id);
+    
+    if (result.affectedRows === 0) {
+      console.warn(`[WARN] No order found in database with ID: "${req.params.id}"`);
+      return res.status(404).json({ success: false, error: 'Orçamento não encontrado no banco de dados' });
+    }
+    
+    console.log(`[DEBUG] Successfully deleted order: "${req.params.id}"`);
     res.status(200).json({ success: true, data: { message: 'Orçamento excluído com sucesso' } });
   } catch (error) {
+    console.error(`[ERROR] Failed to delete order "${req.params.id}":`, error);
     next(error);
   }
 };
