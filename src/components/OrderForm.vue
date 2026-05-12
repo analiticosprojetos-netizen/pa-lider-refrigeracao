@@ -64,9 +64,11 @@ onMounted(async () => {
     
     if (formData.value.endTime) formData.value.endTime = formData.value.endTime.split('T')[0]
     else formData.value.endTime = ''
+
+    // Garante que itens carregados tenham textCase definido
+    formData.value.services = (formData.value.services || []).map((s: any) => ({ ...s, textCase: s.textCase || 'title' }))
+    formData.value.parts = (formData.value.parts || []).map((p: any) => ({ ...p, textCase: p.textCase || 'title' }))
   } else if (authStore.user) {
-
-
     // Auto-preenche com o usuário logado se for novo orçamento
     formData.value.technician = formatToTitleCase(authStore.user.username)
   }
@@ -94,7 +96,7 @@ const filteredModels = computed(() => {
 })
 
 const addService = () => {
-  formData.value.services.push({ id: Math.random().toString(36).substr(2, 9), description: '', value: 0, qty: 1 })
+  formData.value.services.push({ id: Math.random().toString(36).substr(2, 9), description: '', value: 0, qty: 1, textCase: 'title' })
 }
 
 const removeService = (index: number) => {
@@ -102,11 +104,33 @@ const removeService = (index: number) => {
 }
 
 const addPart = () => {
-  formData.value.parts.push({ id: Math.random().toString(36).substr(2, 9), inventoryPartId: '', description: '', value: 0, qty: 1 })
+  formData.value.parts.push({ id: Math.random().toString(36).substr(2, 9), inventoryPartId: '', description: '', value: 0, qty: 1, textCase: 'title' })
 }
 
 const removePart = (index: number) => {
   formData.value.parts.splice(index, 1)
+}
+
+// --- Case transformation helpers ---
+type TextCase = 'title' | 'upper' | 'lower'
+
+const CASE_CYCLE: TextCase[] = ['title', 'upper', 'lower']
+const CASE_LABELS: Record<TextCase, string> = { title: 'Aa', upper: 'AA', lower: 'aa' }
+const CASE_TITLES: Record<TextCase, string> = { title: 'Title Case (padrão)', upper: 'MAIÚSCULO', lower: 'minúsculo' }
+
+const applyCase = (text: string, mode: TextCase): string => {
+  if (!text) return ''
+  if (mode === 'upper') return text.toUpperCase()
+  if (mode === 'lower') return text.toLowerCase()
+  return formatToTitleCase(text)
+}
+
+const cycleCase = (item: any) => {
+  const current: TextCase = item.textCase || 'title'
+  const idx = CASE_CYCLE.indexOf(current)
+  const next = CASE_CYCLE[(idx + 1) % CASE_CYCLE.length]
+  item.textCase = next
+  item.description = applyCase(item.description, next)
 }
 
 const onPartSelect = (index: number, partId: string) => {
@@ -406,7 +430,22 @@ const handleSave = async () => {
               <div class="col-span-1 md:col-span-8 space-y-1.5">
                  <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Serviço / Mão de Obra</label>
                  <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição do Serviço</label>
-                 <input v-model="item.description" @input="item.description = formatToTitleCase(item.description)" placeholder="Ex: Carga de Gás" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm" spellcheck="true" lang="pt-BR" />
+                 <div class="relative flex items-center">
+                   <input
+                     v-model="item.description"
+                     @input="item.description = applyCase(item.description, item.textCase || 'title')"
+                     placeholder="Ex: Carga de Gás"
+                     class="w-full pl-4 pr-14 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm"
+                     spellcheck="true" lang="pt-BR"
+                   />
+                   <button
+                     type="button"
+                     @click="cycleCase(item)"
+                     :title="CASE_TITLES[item.textCase as TextCase || 'title']"
+                     class="absolute right-2 px-2 py-1 rounded-lg text-[10px] font-black border transition-all select-none"
+                     :class="item.textCase === 'upper' ? 'bg-blue-600 text-white border-blue-500' : item.textCase === 'lower' ? 'bg-slate-500 text-white border-slate-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600'"
+                   >{{ CASE_LABELS[item.textCase as TextCase || 'title'] }}</button>
+                 </div>
               </div>
               <div class="col-span-9 md:col-span-3 space-y-1.5">
                  <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Valor</label>
@@ -441,7 +480,22 @@ const handleSave = async () => {
               <div class="grid grid-cols-12 gap-3">
                 <div class="col-span-12 md:col-span-7 space-y-1.5">
                   <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição Manual</label>
-                  <input v-model="part.description" @input="part.description = formatToTitleCase(part.description)" placeholder="Descrição da Peça" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all" spellcheck="true" lang="pt-BR" />
+                  <div class="relative flex items-center">
+                    <input
+                      v-model="part.description"
+                      @input="part.description = applyCase(part.description, part.textCase || 'title')"
+                      placeholder="Descrição da Peça"
+                      class="w-full pl-4 pr-14 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all"
+                      spellcheck="true" lang="pt-BR"
+                    />
+                    <button
+                      type="button"
+                      @click="cycleCase(part)"
+                      :title="CASE_TITLES[part.textCase as TextCase || 'title']"
+                      class="absolute right-2 px-2 py-1 rounded-lg text-[10px] font-black border transition-all select-none"
+                      :class="part.textCase === 'upper' ? 'bg-blue-600 text-white border-blue-500' : part.textCase === 'lower' ? 'bg-slate-500 text-white border-slate-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600'"
+                    >{{ CASE_LABELS[part.textCase as TextCase || 'title'] }}</button>
+                  </div>
                 </div>
                 <div class="col-span-4 md:col-span-2 space-y-1.5">
                   <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Qtd</label>

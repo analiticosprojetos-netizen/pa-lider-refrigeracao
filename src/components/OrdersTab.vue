@@ -8,6 +8,8 @@ import { useAuthStore } from '../stores/auth'
 import OrderForm from './OrderForm.vue'
 import OrderDetails from './OrderDetails.vue'
 import AnalyticsTab from './AnalyticsTab.vue'
+import { exportToExcel } from '../utils/exportUtils'
+
 
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
@@ -84,6 +86,27 @@ const handleDelete = async (orderId: string) => {
     await orderStore.deleteOrder(orderId)
   }
 }
+
+const handleExportExcel = () => {
+  const data = filteredOrders.value.map(o => ({
+    'ID': o.id,
+    'Data': o.date,
+    'Status': o.status,
+    'Cliente': o.clientName,
+    'CPF/CNPJ': o.document,
+    'Telefone': o.phone,
+    'Placa': o.plate,
+    'Equipamento': `${o.equipBrand} ${o.equipModel}`,
+    'Serviço': o.serviceType,
+    'Início': o.startTime,
+    'Fim': o.endTime,
+    'Duração (Dias)': o.startTime && o.endTime ? (Math.ceil(Math.abs(new Date(o.endTime).getTime() - new Date(o.startTime).getTime()) / (1000 * 60 * 60 * 24)) || 1) : 0,
+    'Total': o.total
+  }))
+
+  exportToExcel(data, `Relatorio_Orcamentos_${new Date().toISOString().split('T')[0]}`)
+}
+
 </script>
 
 <template>
@@ -97,10 +120,11 @@ const handleDelete = async (orderId: string) => {
           <input v-model="searchQuery" type="text" placeholder="Buscar orçamento..." 
             class="w-full pl-11 pr-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-600 text-sm dark:text-white shadow-sm font-bold" />
         </div>
-        <button class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-3 py-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-gray-50 transition-all whitespace-nowrap shrink-0">
+        <button @click="handleExportExcel" class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-3 py-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-gray-50 transition-all whitespace-nowrap shrink-0">
           <FileText :size="16" />
           <span class="hidden sm:inline">Exportar Excel</span>
         </button>
+
       </div>
     </div>
 
