@@ -114,11 +114,7 @@ const removePart = (index: number) => {
 // --- Case transformation helpers ---
 type TextCase = 'title' | 'upper' | 'lower'
 
-const CASE_CYCLE: TextCase[] = ['title', 'upper', 'lower']
-const CASE_LABELS: Record<TextCase, string> = { title: 'Aa', upper: 'AA', lower: 'aa' }
-const CASE_TITLES: Record<TextCase, string> = { title: 'Title Case (padrão)', upper: 'MAIÚSCULO', lower: 'minúsculo' }
-
-const applyCase = (text: string, mode: TextCase): string => {
+const applyCase = (text: string, mode: string): string => {
   if (!text) return ''
   if (mode === 'upper') return text.toUpperCase()
   if (mode === 'lower') return text.toLowerCase()
@@ -126,11 +122,31 @@ const applyCase = (text: string, mode: TextCase): string => {
 }
 
 const cycleCase = (item: any) => {
-  const current: TextCase = item.textCase || 'title'
-  const idx = CASE_CYCLE.indexOf(current)
-  const next = CASE_CYCLE[(idx + 1) % CASE_CYCLE.length]
-  item.textCase = next
-  item.description = applyCase(item.description, next)
+  const order = ['title', 'upper', 'lower']
+  const current = item.textCase || 'title'
+  const idx = order.indexOf(current)
+  item.textCase = order[(idx + 1) % order.length]
+  if (item.description) {
+    item.description = applyCase(item.description, item.textCase)
+  }
+}
+
+const getCaseLabel = (item: any): string => {
+  if (item.textCase === 'upper') return 'AA'
+  if (item.textCase === 'lower') return 'aa'
+  return 'Aa'
+}
+
+const getCaseBtnClass = (item: any): string => {
+  if (item.textCase === 'upper') return 'bg-blue-600 text-white border-blue-500'
+  if (item.textCase === 'lower') return 'bg-slate-500 text-white border-slate-400'
+  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600'
+}
+
+const getCaseTooltip = (item: any): string => {
+  if (item.textCase === 'upper') return 'MAIÚSCULO — clique para minúsculo'
+  if (item.textCase === 'lower') return 'minúsculo — clique para Title Case'
+  return 'Title Case — clique para MAIÚSCULO'
 }
 
 const onPartSelect = (index: number, partId: string) => {
@@ -430,22 +446,12 @@ const handleSave = async () => {
               <div class="col-span-1 md:col-span-8 space-y-1.5">
                  <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Serviço / Mão de Obra</label>
                  <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição do Serviço</label>
-                 <div class="relative flex items-center">
-                   <input
-                     v-model="item.description"
-                     @input="item.description = applyCase(item.description, item.textCase || 'title')"
-                     placeholder="Ex: Carga de Gás"
-                     class="w-full pl-4 pr-14 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm"
-                     spellcheck="true" lang="pt-BR"
-                   />
-                   <button
-                     type="button"
-                     @click="cycleCase(item)"
-                     :title="CASE_TITLES[item.textCase as TextCase || 'title']"
-                     class="absolute right-2 px-2 py-1 rounded-lg text-[10px] font-black border transition-all select-none"
-                     :class="item.textCase === 'upper' ? 'bg-blue-600 text-white border-blue-500' : item.textCase === 'lower' ? 'bg-slate-500 text-white border-slate-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600'"
-                   >{{ CASE_LABELS[item.textCase as TextCase || 'title'] }}</button>
-                 </div>
+                 <input
+                    v-model="item.description"
+                    placeholder="Ex: Carga de Gás"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white transition-all shadow-sm"
+                    spellcheck="true" lang="pt-BR"
+                 />
               </div>
               <div class="col-span-9 md:col-span-3 space-y-1.5">
                  <label v-if="idx === 0" class="text-[9px] font-black uppercase text-gray-400 hidden md:block">Valor</label>
@@ -480,22 +486,12 @@ const handleSave = async () => {
               <div class="grid grid-cols-12 gap-3">
                 <div class="col-span-12 md:col-span-7 space-y-1.5">
                   <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Descrição Manual</label>
-                  <div class="relative flex items-center">
-                    <input
+                  <input
                       v-model="part.description"
-                      @input="part.description = applyCase(part.description, part.textCase || 'title')"
                       placeholder="Descrição da Peça"
-                      class="w-full pl-4 pr-14 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all"
+                      class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 outline-none focus:border-blue-500 font-bold text-sm dark:text-white shadow-sm transition-all"
                       spellcheck="true" lang="pt-BR"
                     />
-                    <button
-                      type="button"
-                      @click="cycleCase(part)"
-                      :title="CASE_TITLES[part.textCase as TextCase || 'title']"
-                      class="absolute right-2 px-2 py-1 rounded-lg text-[10px] font-black border transition-all select-none"
-                      :class="part.textCase === 'upper' ? 'bg-blue-600 text-white border-blue-500' : part.textCase === 'lower' ? 'bg-slate-500 text-white border-slate-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600'"
-                    >{{ CASE_LABELS[part.textCase as TextCase || 'title'] }}</button>
-                  </div>
                 </div>
                 <div class="col-span-4 md:col-span-2 space-y-1.5">
                   <label class="text-[9px] font-black uppercase text-gray-400 md:hidden">Qtd</label>

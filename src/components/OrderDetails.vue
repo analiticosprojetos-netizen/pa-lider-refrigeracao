@@ -8,6 +8,7 @@ import { format, parseISO } from 'date-fns'
 import { generateServiceOrderPDF, sendToWhatsApp } from '../utils/exportUtils'
 
 import { useSettingsStore } from '../stores/settings'
+import { useOrderStore } from '../stores/orders'
 
 const props = defineProps<{
   order: any
@@ -17,7 +18,34 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'edit'])
 
 const settingsStore = useSettingsStore()
+const orderStore = useOrderStore()
 const siteSettings = computed(() => settingsStore.settings)
+
+const protocol = computed(() => {
+  if (!props.order) return ''
+  const date = new Date(props.order.createdAt || props.order.date || new Date())
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  
+  // Encontrar a quantidade de orçamentos deste dia
+  const dayStr = props.order.date?.split('T')[0] || format(date, 'yyyy-MM-dd')
+  const sameDayOrders = orderStore.orders
+    .filter(o => {
+      const d = o.date?.split('T')[0] || (o.createdAt ? format(new Date(o.createdAt), 'yyyy-MM-dd') : '')
+      return d === dayStr
+    })
+    .sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return ta - tb
+    })
+  
+  const index = sameDayOrders.findIndex(o => o.id === props.order.id)
+  const sequence = String(index === -1 ? 1 : index + 1).padStart(3, '0')
+  
+  return `${yyyy}${mm}${dd}${sequence}`
+})
 
 
 if (!props.order) {
@@ -42,7 +70,7 @@ const handleWhatsApp = () => {
 }
 
 const handleExportPDF = () => {
-  generateServiceOrderPDF(props.order, siteSettings.value)
+  generateServiceOrderPDF(props.order, siteSettings.value, protocol.value)
 }
 
 const timelineDays = computed(() => {
@@ -87,7 +115,10 @@ const formatDate = (dateStr: string) => {
                 Orçamento
               </h2>
               <p class="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                <Calendar :size="12" /> Gerado em: {{ order.date || format(new Date(), 'dd/MM/yyyy') }}
+                <Calendar :size="12" /> Gerado em: {{ formatDate(order.date) || format(new Date(), 'dd/MM/yyyy') }}
+              </p>
+              <p v-if="protocol" class="text-[10px] font-black uppercase text-blue-600 tracking-wider mt-0.5">
+                Protocolo: #{{ protocol }}
               </p>
             </div>
           </div>

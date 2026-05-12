@@ -171,8 +171,10 @@ onMounted(async () => {
   }
 
   const settingsData = await settingsStore.loadSettings()
-  goalSettings.value.type = settingsData.goalType || 'valor'
-  goalSettings.value.target = Number(settingsData.goalTarget) || 5000
+  if (settingsData) {
+    goalSettings.value.type = settingsData.goalType || 'valor'
+    goalSettings.value.target = Number(settingsData.goalTarget) || 5000
+  }
 
 
   await Promise.all([
@@ -191,8 +193,10 @@ const logout = () => {
 watch(currentTab, (newTab) => {
   if (newTab === 'dashboard') {
     const s = settingsStore.settings
-    goalSettings.value.type = s.goalType || 'valor'
-    goalSettings.value.target = s.goalTarget || 5000
+    if (s) {
+      goalSettings.value.type = s.goalType || 'valor'
+      goalSettings.value.target = s.goalTarget || 5000
+    }
   }
 })
 

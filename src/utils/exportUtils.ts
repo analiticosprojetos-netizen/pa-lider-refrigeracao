@@ -14,31 +14,50 @@ export const exportToExcel = (data: any[], fileName: string) => {
   }
 }
 
-const buildPDFDoc = (order: any, settings: any) => {
+const buildPDFDoc = (order: any, settings: any, protocol?: string) => {
   const companyName = settings.companyName || "LIDER REFRIGERAÇÃO"
   const logo = settings.logo || ""
   const cnpj = settings.cnpj || "00.000.000/0001-00"
   const email = settings.email || "contato@liderefrigeracao.com.br"
   const phone = settings.whatsapp || "(11) 99999-9999"
   const address = settings.address || "Av. Industrial, 1000 - Setor de Transportes"
+  
+  const safeText = (val: any) => String(val ?? '')
+  
+  const formatBRL = (val: any) => {
+    const n = Number(val || 0);
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
-  const formatDateTime = (dateStr: string) => {
+  const formatDateTime = (dateStr: any) => {
     if (!dateStr) return 'Agendar'
     try {
+      const s = String(dateStr)
       // Se for YYYY-MM-DD
-      const parts = dateStr.split('T')[0].split('-')
+      const parts = s.split('T')[0].split('-')
       if (parts.length === 3) {
         return `${parts[2]}/${parts[1]}/${parts[0]}`
       }
       // Fallback para outros formatos
-      return format(parseISO(dateStr), 'dd/MM/yyyy')
+      return format(parseISO(s), 'dd/MM/yyyy')
     } catch (e) {
-      return dateStr
+      return String(dateStr)
     }
   }
 
 
   const doc = new jsPDF()
+  
+  // --- HEADER BACKGROUND GRADIENT (VERSÃO COMPATÍVEL) ---
+  for (let i = 0; i < 42; i++) {
+    const factor = i / 42;
+    // Gradiente suave de azul claro (R:230, G:240, B:255) para branco
+    const r = Math.floor(230 + (255 - 230) * factor);
+    const g = Math.floor(240 + (255 - 240) * factor);
+    const b = Math.floor(255 + (255 - 255) * factor);
+    doc.setFillColor(r, g, b);
+    doc.rect(0, i, 210, 1, 'F');
+  }
   
   // --- HEADER (CLEAN STYLE) ---
   if (logo) {
@@ -56,11 +75,27 @@ const buildPDFDoc = (order: any, settings: any) => {
   doc.setFont("helvetica", "bold")
   doc.text("Orçamento", 15, 32)
   
+  const formatDate = (dateStr: any) => {
+    if (!dateStr) return format(new Date(), 'dd/MM/yyyy')
+    try {
+      const [year, month, day] = dateStr.split('T')[0].split('-')
+      if (year && month && day) return `${day}/${month}/${year}`
+      return format(parseISO(dateStr), 'dd/MM/yyyy')
+    } catch (e) {
+      return dateStr
+    }
+  }
+
   doc.setFontSize(7)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(150, 150, 150)
-  const orderDate = order.date || format(new Date(), 'dd/MM/yyyy')
+  const orderDate = formatDate(order.date)
   doc.text(`Gerado em: ${orderDate}`, 15, 36)
+  if (protocol) {
+    doc.setFont("helvetica", "bold")
+    doc.text(`Protocolo: ${protocol}`, 15, 40)
+    doc.setFont("helvetica", "normal")
+  }
 
   // Info Empresa (Canto Direito)
   doc.setTextColor(100, 100, 100)
@@ -87,7 +122,7 @@ const buildPDFDoc = (order: any, settings: any) => {
   
   doc.setTextColor(0, 0, 0)
   doc.setFontSize(11)
-  doc.text(order.clientName, 20, 61)
+  doc.text(safeText(order.clientName), 20, 61)
   doc.setFontSize(9)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(100, 100, 100)
@@ -108,17 +143,17 @@ const buildPDFDoc = (order: any, settings: any) => {
 
   doc.setTextColor(0, 0, 0)
   doc.setFontSize(11)
-  doc.text(order.plate, 115, 61)
+  doc.text(safeText(order.plate), 115, 61)
   doc.setFontSize(10)
   doc.setTextColor(59, 130, 246) // Azul claro
-  doc.text(order.vehicleModel, 115, 67)
+  doc.text(safeText(order.vehicleModel), 115, 67)
   
   doc.setFontSize(9)
   doc.setTextColor(100, 100, 100)
   doc.setFont("helvetica", "bold")
   doc.text("EQUIPAMENTO", 115, 73)
   doc.setFont("helvetica", "normal")
-  doc.text(`${order.equipBrand} ${order.equipModel}`, 115, 78)
+  doc.text(safeText(`${order.equipBrand || ''} ${order.equipModel || ''}`), 115, 78)
 
   // --- CARDS ROW 2 (DIAGNÓSTICO E CRONOGRAMA) ---
   // Card Diagnóstico
@@ -208,29 +243,43 @@ const buildPDFDoc = (order: any, settings: any) => {
   const services = order.services || []
   const parts = order.parts || []
   const tableData = [
-    ...services.map((s: any) => [s.description, "Mão de Obra", "1", `R$ ${s.value.toFixed(2)}`, `R$ ${s.value.toFixed(2)}`]),
-    ...parts.map((p: any) => [p.name || p.description, "Peça / Insumo", p.quantity || p.qty, `R$ ${p.value.toFixed(2)}`, `R$ ${((p.quantity || p.qty) * p.value).toFixed(2)}`]),
+    ...services.map((s: any) => [safeText(s.description), "Mão de Obra", safeText(s.qty || 1), formatBRL(s.value), formatBRL((s.qty || 1) * s.value)]),
+    ...parts.map((p: any) => [safeText(p.name || p.description), "Peça / Insumo", safeText(p.quantity || p.qty), formatBRL(p.value), formatBRL((p.quantity || p.qty) * p.value)]),
   ]
 
-  autoTable(doc, {
-    startY: 145,
-    head: [["DESCRIÇÃO", "TIPO", "QTD", "UNITÁRIO", "SUBTOTAL"]],
-    body: tableData,
-    headStyles: { fillColor: [255, 255, 255], textColor: [150, 150, 150], fontSize: 8, fontStyle: 'bold' },
-    bodyStyles: { fontSize: 9, textColor: [0, 0, 0] },
-    columnStyles: {
-      0: { fontStyle: 'bold' },
-      4: { halign: 'right', fontStyle: 'bold' },
-    },
-    theme: "plain",
-    didDrawCell: (data) => {
-       if (data.section === 'body' && data.column.index === 4) {
-          doc.setTextColor(0, 0, 0)
-       }
-    }
-  })
+  try {
+    autoTable(doc, {
+      startY: 145,
+      head: [["DESCRIÇÃO", "TIPO", "QTD", "UNITÁRIO", "SUBTOTAL"]],
+      body: tableData,
+      headStyles: { 
+        fillColor: [245, 245, 245], // Cinza mais clarinho
+        textColor: [0, 0, 0], // Preto para contraste no cinza
+        fontSize: 8, 
+        fontStyle: 'bold',
+        halign: 'left'
+      },
+      bodyStyles: { fontSize: 9, textColor: [0, 0, 0] },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        2: { halign: 'center' },
+        3: { halign: 'right' },
+        4: { halign: 'right', fontStyle: 'bold' },
+      },
+      theme: "plain", // Remove o zebrado (listras)
+      margin: { left: 15, right: 15 },
+      didDrawCell: (data) => {
+         if (data.section === 'body' && data.column.index === 4) {
+            doc.setTextColor(0, 0, 0)
+         }
+      }
+    })
+  } catch (e) {
+    console.error("Erro ao gerar tabela no PDF:", e)
+    doc.text("Erro ao carregar itens do orçamento.", 15, 150)
+  }
 
-  let finalY = (doc as any).lastAutoTable.finalY + 10
+  let finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : 150
   
   if (finalY > 230) {
     doc.addPage()
@@ -251,13 +300,13 @@ const buildPDFDoc = (order: any, settings: any) => {
   doc.setFont("helvetica", "normal")
   
   doc.text("Mão de Obra Total:", boxX + 5, boxY + 12)
-  doc.text(`R$ ${Number(order.servicesValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 12, { align: 'right' })
+  doc.text(formatBRL(order.servicesValue), boxX + boxW - 5, boxY + 12, { align: 'right' })
   
   doc.text("Peças Total:", boxX + 5, boxY + 20)
-  doc.text(`R$ ${Number(order.partsValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 20, { align: 'right' })
+  doc.text(formatBRL(order.partsValue), boxX + boxW - 5, boxY + 20, { align: 'right' })
   
   doc.text("Deslocamento:", boxX + 5, boxY + 28)
-  doc.text(`R$ ${Number(order.travelValue || 0).toFixed(2)}`, boxX + boxW - 5, boxY + 28, { align: 'right' })
+  doc.text(formatBRL(order.travelValue), boxX + boxW - 5, boxY + 28, { align: 'right' })
   
   doc.setDrawColor(255, 255, 255, 0.2)
   doc.line(boxX + 5, boxY + 34, boxX + boxW - 5, boxY + 34)
@@ -267,37 +316,48 @@ const buildPDFDoc = (order: any, settings: any) => {
   doc.setFont("helvetica", "bold")
   doc.text("Subtotal:", boxX + 5, boxY + 42)
   const subTotal = (order.servicesValue || 0) + (order.partsValue || 0) + (order.travelValue || 0)
-  doc.text(`R$ ${subTotal.toFixed(2)}`, boxX + boxW - 5, boxY + 42, { align: 'right' })
+  doc.text(formatBRL(subTotal), boxX + boxW - 5, boxY + 42, { align: 'right' })
 
   doc.setTextColor(255, 215, 0) // Gold/Yellow
   doc.setFontSize(16)
   doc.text("TOTAL:", boxX + 5, boxY + 50)
-  doc.text(`R$ ${Number(order.total).toFixed(2)}`, boxX + boxW - 5, boxY + 50, { align: 'right' })
+  doc.text(formatBRL(order.total), boxX + boxW - 5, boxY + 50, { align: 'right' })
 
   // Info Final (Bottom Left)
   doc.setTextColor(100, 100, 100)
   doc.setFontSize(9)
   doc.setFont("helvetica", "normal")
-  doc.text(`Garantia: ${order.warranty || '90 dias'}`, 15, boxY + 12)
-  doc.text(`Técnico Responsável: ${order.technician || 'Admin'}`, 15, boxY + 20)
+  doc.text(safeText(`Garantia: ${order.warranty || '90 dias'}`), 15, boxY + 12)
+  doc.text(safeText(`Técnico Responsável: ${order.technician || 'Admin'}`), 15, boxY + 20)
 
   return doc
 }
 
-export const generateServiceOrderPDF = (order: any, settings?: any) => {
+export const generateServiceOrderPDF = (order: any, settings?: any, protocol?: string) => {
   if (!order) return
   const companyInfo = settings || {}
-  const doc = buildPDFDoc(order, companyInfo)
-  doc.save(`Orcamento_${order.id}.pdf`)
+  const doc = buildPDFDoc(order, companyInfo, protocol)
+  
+  const firstName = order.clientName ? order.clientName.split(' ')[0].toUpperCase() : 'CLIENTE'
+  doc.save(`Orcamento_${firstName}_${protocol || order.id}.pdf`)
 }
 
 
 export const sendToWhatsApp = (order: any, settings?: any) => {
-  if (!order) return
-  const phone = settings?.whatsapp?.replace(/\D/g, '') || '5511999999999'
+  if (!order || !order.phone) {
+    alert('Telefone do cliente não informado.')
+    return
+  }
+  
+  // Limpa o número e garante o prefixo 55 se for brasileiro (10 ou 11 dígitos)
+  let cleanPhone = order.phone.replace(/\D/g, '')
+  if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+    cleanPhone = '55' + cleanPhone
+  }
+
   const tech = order.technician ? `\n*Técnico:* ${order.technician}` : ''
   const text = `*ORÇAMENTO LIDER REFRIGERAÇÃO - #${order.id}*\n\nOlá ${order.clientName},\nSegue o orçamento referente ao veículo *${order.plate}*.\n\n*Total:* R$ ${order.total.toFixed(2)}\n*Status:* ${order.status}${tech}\n\nO PDF detalhado foi gerado. Caso não tenha recebido, por favor nos avise.`
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
+  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank')
 }
 
 // ---- EXPORTAÇÃO DE VIAGENS (GEVI) ----
