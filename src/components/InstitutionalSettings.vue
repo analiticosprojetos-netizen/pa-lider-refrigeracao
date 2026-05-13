@@ -252,7 +252,7 @@ const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
                </div>
                <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-gray-900 dark:text-gray-400 uppercase tracking-widest pl-1">Título da Seção</label>
-                  <input v-model="settings.aboutTitle" type="text" class="w-full px-6 py-4 rounded-2xl bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-black text-sm dark:text-white transition-all" />
+                  <input v-model="settings.aboutTitle" type="text" class="w-full px-6 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 outline-none focus:ring-4 focus:ring-blue-100 font-black text-sm dark:text-white transition-all" />
                </div>
             </div>
 
@@ -322,15 +322,12 @@ const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
                       <div>
                          <p class="text-xs font-black text-blue-900 dark:text-white transition-colors group-hover:text-blue-600">Fundo da Tela de Login</p>
                          <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Personalize a imagem que aparece no fundo da página de login.</p>
-                                </div>
+                      </div>
+                   </div>
+                </div>
              </div>
           </div>
        </div>
-    </div>
-  </div>
-</template>            </div>
-         </div>
-      </div>
     </div>
   </div>
 </template>
