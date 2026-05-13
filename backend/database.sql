@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
   -- Institutional Info
   companyName VARCHAR(255) DEFAULT 'LIDER REFRIGERAÇÃO',
   whatsapp VARCHAR(50) DEFAULT '(34) 9941 - 0863 ',
-  email VARCHAR(100) DEFAULT 'emailpostallucio@gmail.com',
+  email VARCHAR(100) DEFAULT 'oficinaliderrefrigeracao@gmail.com',
   instagram VARCHAR(255),
   facebook VARCHAR(255),
   address VARCHAR(255),
@@ -191,7 +191,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
   aboutTitle VARCHAR(255),
   aboutDescription TEXT,
   aboutImage LONGTEXT,
-  loginBackground LONGTEXT
+  loginBackground LONGTEXT,
+  siteUrl VARCHAR(255) DEFAULT 'https://oficinaliderrefrigeracao.com.br'
 );
 
 -- Inserir configuração padrão se não existir

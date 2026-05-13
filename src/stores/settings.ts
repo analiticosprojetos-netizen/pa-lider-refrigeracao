@@ -19,7 +19,8 @@ export const useSettingsStore = defineStore('settings', () => {
     aboutTitle: '',
     aboutDescription: '',
     aboutImage: '',
-    loginBackground: ''
+    loginBackground: '',
+    siteUrl: 'https://oficinaliderrefrigeracao.com.br'
   })
   
   const isLoading = ref(false)

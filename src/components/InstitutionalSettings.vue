@@ -24,7 +24,7 @@ const settings = ref({
   aboutDescription: 'A Lider Refrigeração nasceu com o compromisso de oferecer soluções técnicas de alta precisão para o transporte de cargas refrigeradas. Entendemos que cada minuto parado representa um prejuízo, por isso focamos em agilidade e qualidade extrema.',
   aboutImage: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80',
   loginBackground: '',
-  siteUrl: 'https://liderefrigeracao.com.br'
+  siteUrl: 'https://oficinaliderrefrigeracao.com.br'
 })
 
 const qrCodeUrl = computed(() => {
@@ -322,10 +322,13 @@ const handleFileUpload = (type: 'logo' | 'aboutImage' | 'loginBackground') => {
                       <div>
                          <p class="text-xs font-black text-blue-900 dark:text-white transition-colors group-hover:text-blue-600">Fundo da Tela de Login</p>
                          <p class="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">Personalize a imagem que aparece no fundo da página de login.</p>
-                      </div>
-                   </div>
-                </div>
+                                </div>
              </div>
+          </div>
+       </div>
+    </div>
+  </div>
+</template>            </div>
          </div>
       </div>
     </div>
