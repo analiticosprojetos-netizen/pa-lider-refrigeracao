@@ -23,8 +23,10 @@ const updatePart = async (id, updates) => {
   const fields = [];
   const values = [];
 
+  const allowedFields = ['name', 'quantity'];
+
   for (const [key, value] of Object.entries(updates)) {
-    if (key !== 'id') {
+    if (allowedFields.includes(key)) {
       fields.push(`${key} = ?`);
       values.push(value);
     }

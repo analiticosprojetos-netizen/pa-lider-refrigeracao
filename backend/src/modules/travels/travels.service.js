@@ -30,8 +30,10 @@ const updateTrip = async (id, tripData) => {
   const fields = [];
   const values = [];
 
+  const allowedFields = ['status', 'data_inicio', 'data_fim', 'origem', 'destino', 'placa', 'km_inicial', 'km_final', 'distancia', 'eventos', 'user_name'];
+
   for (const [key, value] of Object.entries(tripData)) {
-    if (key !== 'id' && key !== 'created_at') {
+    if (allowedFields.includes(key)) {
       fields.push(`${key} = ?`);
       values.push(key === 'eventos' ? JSON.stringify(value) : value);
     }

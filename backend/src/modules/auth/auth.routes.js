@@ -1,21 +1,25 @@
 const express = require('express');
 const authController = require('./auth.controller');
-const { authenticate } = require('../../middlewares/auth.middleware');
+const { authenticate, authorize } = require('../../middlewares/auth.middleware');
+
+const { loginRateLimiter } = require('../../middlewares/rateLimit.middleware');
 
 const router = express.Router();
 
-router.post('/login', authController.login);
+router.post('/login', loginRateLimiter, authController.login);
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getMe);
 router.put('/profile', authenticate, authController.updateProfile);
-router.get('/users', authenticate, authController.getUsers);
-router.post('/users', authenticate, authController.createUser);
-router.put('/users/:id', authenticate, authController.updateUser);
-router.delete('/users/:id', authenticate, authController.deleteUser);
 
-router.get('/roles', authenticate, authController.getRoles);
-router.post('/roles', authenticate, authController.createRole);
-router.delete('/roles/:name', authenticate, authController.deleteRole);
+// Rotas Administrativas - Apenas ADMIN
+router.get('/users', authenticate, authorize(['ADMIN']), authController.getUsers);
+router.post('/users', authenticate, authorize(['ADMIN']), authController.createUser);
+router.put('/users/:id', authenticate, authorize(['ADMIN']), authController.updateUser);
+router.delete('/users/:id', authenticate, authorize(['ADMIN']), authController.deleteUser);
+
+router.get('/roles', authenticate, authorize(['ADMIN']), authController.getRoles);
+router.post('/roles', authenticate, authorize(['ADMIN']), authController.createRole);
+router.delete('/roles/:name', authenticate, authorize(['ADMIN']), authController.deleteRole);
 
 module.exports = router;
 

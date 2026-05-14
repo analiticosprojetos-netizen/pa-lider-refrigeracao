@@ -23,8 +23,10 @@ const updateCustomer = async (id, updates) => {
   const fields = [];
   const values = [];
 
+  const allowedFields = ['name', 'document', 'phone', 'email', 'plate', 'vehicleModel', 'equipBrand', 'equipModel'];
+  
   for (const [key, value] of Object.entries(updates)) {
-    if (key !== 'id' && key !== 'created_at') {
+    if (allowedFields.includes(key)) {
       fields.push(`${key} = ?`);
       values.push(value);
     }

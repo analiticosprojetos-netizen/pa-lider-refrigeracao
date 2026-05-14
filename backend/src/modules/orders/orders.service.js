@@ -77,10 +77,15 @@ const updateOrder = async (id, updates) => {
   const fields = [];
   const values = [];
 
-  console.log(`[DEBUG] Updating order ${id} with:`, updates);
-  for (const [key, value] of Object.entries(updates)) {
+  const allowedFields = [
+    'date', 'clientName', 'document', 'phone', 'email', 'plate', 'vehicleModel', 'equipBrand', 'equipModel',
+    'serviceType', 'problem', 'diagnosis', 'startTime', 'endTime', 'travelValue', 'discountPercent', 'discountValue',
+    'warranty', 'technician', 'observations', 'status', 'services', 'parts', 'partsValue', 'servicesValue',
+    'subtotal', 'total', 'origin', 'report', 'executedAt', 'cancelledAt'
+  ];
 
-    if (key !== 'id' && key !== 'createdAt') {
+  for (const [key, value] of Object.entries(updates)) {
+    if (allowedFields.includes(key)) {
       fields.push(`${key} = ?`);
       if (key === 'services' || key === 'parts') {
         values.push(JSON.stringify(value));

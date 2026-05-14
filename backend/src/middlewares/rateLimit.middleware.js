@@ -21,7 +21,17 @@ const userRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // Limita a 5 tentativas de login por IP
+  validate: false,
+  message: { success: false, message: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   globalRateLimiter,
-  userRateLimiter
+  userRateLimiter,
+  loginRateLimiter
 };
