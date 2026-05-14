@@ -24,6 +24,9 @@ const login = async (identifier, password) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions || '{}') : user.permissions,
+      financeSubPerms: typeof user.financeSubPerms === 'string' ? JSON.parse(user.financeSubPerms || '{}') : user.financeSubPerms,
+      trechoSubPerms: typeof user.trechoSubPerms === 'string' ? JSON.parse(user.trechoSubPerms || '{}') : user.trechoSubPerms,
       avatarUrl: user.avatarUrl
     },
     token
@@ -31,14 +34,22 @@ const login = async (identifier, password) => {
 };
 
 const getMe = async (userId) => {
-  const [rows] = await db.execute('SELECT id, username, email, role, permissions, financeSubPerms, trechoSubPerms, avatarUrl FROM users WHERE id = ?', [userId]);
+  // Atualiza last_seen
+  await db.execute('UPDATE users SET last_seen = NOW() WHERE id = ?', [userId]);
+
+  const [rows] = await db.execute('SELECT id, username, email, role, permissions, financeSubPerms, trechoSubPerms, avatarUrl, last_seen FROM users WHERE id = ?', [userId]);
   const user = rows[0];
 
   if (!user) {
     throw new Error('Usuário não encontrado');
   }
 
-  return user;
+  return {
+    ...user,
+    permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions || '{}') : user.permissions,
+    financeSubPerms: typeof user.financeSubPerms === 'string' ? JSON.parse(user.financeSubPerms || '{}') : user.financeSubPerms,
+    trechoSubPerms: typeof user.trechoSubPerms === 'string' ? JSON.parse(user.trechoSubPerms || '{}') : user.trechoSubPerms
+  };
 };
 
 const updateProfile = async (userId, updateData) => {
@@ -63,13 +74,17 @@ const updateProfile = async (userId, updateData) => {
 };
 
 const getAllUsers = async () => {
-  const [rows] = await db.execute('SELECT id, username, email, role, permissions, financeSubPerms, trechoSubPerms, avatarUrl FROM users');
-  return rows.map(user => ({
-    ...user,
-    permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions || '{}') : user.permissions,
-    financeSubPerms: typeof user.financeSubPerms === 'string' ? JSON.parse(user.financeSubPerms || '{}') : user.financeSubPerms,
-    trechoSubPerms: typeof user.trechoSubPerms === 'string' ? JSON.parse(user.trechoSubPerms || '{}') : user.trechoSubPerms
-  }));
+  const [rows] = await db.execute('SELECT id, username, email, role, permissions, financeSubPerms, trechoSubPerms, avatarUrl, last_seen FROM users');
+  return rows.map(user => {
+    const isOnline = user.last_seen ? (new Date() - new Date(user.last_seen)) < 5 * 60 * 1000 : false;
+    return {
+      ...user,
+      isOnline,
+      permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions || '{}') : user.permissions,
+      financeSubPerms: typeof user.financeSubPerms === 'string' ? JSON.parse(user.financeSubPerms || '{}') : user.financeSubPerms,
+      trechoSubPerms: typeof user.trechoSubPerms === 'string' ? JSON.parse(user.trechoSubPerms || '{}') : user.trechoSubPerms
+    };
+  });
 };
 
 const createUser = async (userData) => {

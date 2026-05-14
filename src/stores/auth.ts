@@ -107,7 +107,14 @@ export const useAuthStore = defineStore('auth', () => {
   const hasPermission = (tab: keyof RolePermissions, action: keyof Permission) => {
     if (!user.value) return false;
     if (user.value.role === 'ADMIN') return true;
-    return user.value.permissions[tab]?.[action] || false;
+    
+    // Proteção extra contra permissões não carregadas ou mal formatadas
+    if (!user.value.permissions) return false;
+    
+    const tabPerms = user.value.permissions[tab];
+    if (!tabPerms) return false;
+    
+    return tabPerms[action] || false;
   };
 
   const hasFinanceSubPerm = (perm: keyof FinanceSubPerms) => {

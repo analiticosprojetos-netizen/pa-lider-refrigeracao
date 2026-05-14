@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useInventoryStore } from '../stores/inventory'
@@ -51,11 +51,33 @@ const FULL_PERMISSIONS = {
   config: { view: true, edit: true, delete: true },
 }
 
-const getUserStatus = (user: any) => {
-  if (user.id === authStore.user?.id) {
-    return { color: 'bg-green-400', animation: 'animate-pulse', label: 'Conectado', active: true }
+const getUserStatus = (u: any) => {
+  const viewer = authStore.user;
+  if (!viewer) return { color: '', animation: '', label: '', active: false };
+
+  // 1. Sempre mostra "Conectado" para o próprio usuário logado
+  if (u.id === viewer.id) {
+    return { color: 'bg-green-400', animation: 'animate-pulse', label: 'Conectado', active: true };
   }
-  return { color: '', animation: '', label: user.role === 'ADMIN' ? 'Administrador' : 'Técnico(a)', active: false }
+
+  // 2. Regra de visibilidade do ADMIN:
+  // Se o alvo (u) é ADMIN, mas o visualizador (viewer) NÃO é ADMIN, oculta o status online.
+  if (u.role === 'ADMIN' && viewer.role !== 'ADMIN') {
+    return { color: '', animation: '', label: 'Administrador', active: false };
+  }
+
+  // 3. Se o usuário estiver online (isOnline vindo do backend)
+  if (u.isOnline) {
+    return { color: 'bg-green-400', animation: 'animate-pulse', label: 'Conectado', active: true };
+  }
+
+  // 4. Caso contrário, mostra apenas o cargo/label offline
+  return { 
+    color: '', 
+    animation: '', 
+    label: u.role === 'ADMIN' ? 'Administrador' : (u.role === 'MOTORISTA' ? 'Motorista' : 'Técnico(a)'), 
+    active: false 
+  };
 }
 
 const isProfileModalOpen = ref(false)
@@ -182,6 +204,21 @@ onMounted(async () => {
     orderStore.loadOrders(),
     financeStore.loadFinances()
   ])
+
+  // Atualiza status da equipe a cada 30 segundos
+  const refreshInterval = setInterval(async () => {
+    try {
+      const users = await AuthService.getUsers()
+      technicalTeam.value = users
+    } catch (err) {
+      console.error('Erro ao atualizar equipe:', err)
+    }
+  }, 30000)
+
+  // Limpa o interval quando o componente for desmontado
+  onUnmounted(() => {
+    clearInterval(refreshInterval)
+  })
 })
 
 const logout = () => {
