@@ -1,0 +1,32 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Navega até a pasta do projeto (ajuste o caminho se necessário)
+            cd /home/${{ secrets.VPS_USER }}/apps/pa-lider-refrigeracao
+            
+            # Puxa as alterações
+            git pull origin main
+            
+            # Cria o arquivo .env no backend a partir da secret
+            echo "${{ secrets.ENV_PROD }}" > backend/.env
+            
+            # Reconstrói a imagem e sobe o container
+            docker compose -f docker-compose.prod.yml up -d --build
+            
+            # Limpa imagens antigas (opcional, para economizar espaço)
+            docker image prune -f

@@ -1,8 +1,8 @@
-export const API_BASE_URL = 'http://localhost:3000/api';
+export const API_BASE_URL = '/api';
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('lider_jwt_token');
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,

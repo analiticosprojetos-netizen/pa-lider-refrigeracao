@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: liderrefrigeracao-prod
+    restart: always
+    environment:
+      - PORT=80
+      - NODE_ENV=production
+    networks:
+      - traefik_public
+      - mysql_shared
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_public"
+      - "traefik.http.routers.liderrefrigeracao-prod.rule=Host(`liderrefrigeracao.com.br`)"
+      - "traefik.http.routers.liderrefrigeracao-prod.entrypoints=websecure"
+      - "traefik.http.routers.liderrefrigeracao-prod.tls=true"
+      - "traefik.http.routers.liderrefrigeracao-prod.tls.certresolver=le"
+      - "traefik.http.routers.liderrefrigeracao-prod.service=liderrefrigeracao-prod"
+      - "traefik.http.services.liderrefrigeracao-prod.loadbalancer.server.port=80"
+
+networks:
+  traefik_public:
+    external: true
+  mysql_shared:
+    external: true
