@@ -17,7 +17,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             # Navega até a pasta do projeto (ajuste o caminho se necessário)
-            cd /home/${{ secrets.VPS_USER }}/apps/pa-lider-refrigeracao
+            cd /var/www/liderRefrigeracao
             
             # Puxa as alterações
             git pull origin main
